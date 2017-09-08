@@ -24,4 +24,9 @@ public class SRNode extends Node {
         }
         return node;
     } // copy
+
+    @Override
+    public int sort()  {
+        throw new RuntimeException("Do not sort ordered trees. Calculation stopped.");
+    }
 }

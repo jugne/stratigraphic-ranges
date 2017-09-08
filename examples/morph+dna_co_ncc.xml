@@ -333,7 +333,7 @@
 
 <run chainLength="150000000" id="mcmc" spec="MCMC">
     <state id="state" storeEvery="5000">
-        <tree id="Tree.t:tree" spec="SRTree" nodetype="beast.evolution.tree.SRNode" name="stateNode">
+        <tree id="Tree.t:tree" spec="beast.evolution.tree.SRTree" nodetype="beast.evolution.tree.SRNode" name="stateNode">
             <trait id="dateTrait.t:tree" spec="beast.evolution.tree.TraitSet" traitname="date-backward" value="
                 Aptenodytes_forsteri = 0.0,
                 Aptenodytes_patagonicus = 0.0,
@@ -827,7 +827,7 @@
         <parameter idref="mutationRate.s:penguins_16srna"/>
     </operator>
 
-    <logger fileName="morph+dna_co1.log" id="tracelog" logEvery="10000" model="@posterior" sanitiseHeaders="true" sort="smart">
+    <logger fileName="morph+dna_co.log" id="tracelog" logEvery="10000" model="@posterior" sanitiseHeaders="true" sort="smart">
         <log idref="posterior"/>
         <log idref="likelihood"/>
         <log idref="prior"/>
@@ -920,9 +920,14 @@
         <log idref="prior"/>
     </logger>
 
-    <logger fileName="morph+dna_co1.trees" id="treelog.t:penguins" logEvery="100000" mode="tree">
-        <log id="TreeWithMetaDataLogger.t:penguins" spec="beast.evolution.tree.TreeWithMetaDataLogger" tree="@Tree.t:tree"/>
+    <logger fileName="morph+dna_co.trees" id="treelog.t:penguins" logEvery="10000" mode="tree">
+        <log idref="Tree.t:tree"/>
     </logger>
+
+
+    <!-- <logger fileName="morph+dna_co1.trees" id="treelog.t:penguins" logEvery="100000" mode="tree">
+        <log id="TreeWithMetaDataLogger.t:penguins" spec="beast.evolution.tree.TreeWithMetaDataLogger" tree="@Tree.t:tree"/>
+    </logger> -->
 
 </run>
 

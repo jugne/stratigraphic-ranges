@@ -208,8 +208,10 @@ public class RandomSRangeTree extends SRTree implements StateNodeInitialiser {
             Node lastOccurrenceNode = lastOccurrenceNodes.get(i);
             for (Node node:newNodes) {
                 if (node.getLeft().getID().equals(firstOccurrenceTaxonNames.get(i))){
-                    node.setRight(lastOccurrenceNode);
+                    Node firstOccur = node.getLeft();
+                    node.setLeft(lastOccurrenceNode);
                     lastOccurrenceNode.setParent(node);
+                    node.setRight(firstOccur);
                     candidates.remove(lastOccurrenceNode);
                 }
             }

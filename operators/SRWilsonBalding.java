@@ -136,7 +136,7 @@ public class SRWilsonBalding extends SRTreeOperator {
         if (pruningFromSRange || pruningFromSA) {
             pruningRange = tree.getRangeOfNode(iP);
         }
-        boolean attachingToSRange = !attachingToLeaf && jP != null && tree.belongToSameSRange(jP,j);
+        boolean attachingToSRange = !attachingToLeaf && jP != null && tree.belongToSameSRange(jP.getNr(),j.getNr());
         if (attachingToLeaf || attachingToSRange) {
             attachingRange = tree.getRangeOfNode(j);
         }
@@ -272,19 +272,19 @@ public class SRWilsonBalding extends SRTreeOperator {
 
         // remove or add nodes to the ranges and calculate the orientation coefficient
         if (pruningFromSRange) {
-            pruningRange.removeNode(iP);
+            pruningRange.removeNodeNr(iP.getNr());
             orientationCoefficient *= 0.5;
         }
         if (pruningFromSA) {
-            pruningRange.removeNode(iP);
-            pruningRange.addNode(CiP);
+            pruningRange.removeNodeNr(iP.getNr());
+            pruningRange.addNodeNr(CiP.getNr());
         }
         if (attachingToLeaf) {
-            attachingRange.removeNode(j);
-            attachingRange.addNode(iP);
+            attachingRange.removeNodeNr(j.getNr());
+            attachingRange.addNodeNr(iP.getNr());
         }
         if (attachingToSRange) {
-            attachingRange.addNodeAfter(jP, iP);
+            attachingRange.addNodeNrAfter(jP.getNr(), iP.getNr());
             orientationCoefficient *= 2.0;
         }
 
@@ -316,7 +316,7 @@ public class SRWilsonBalding extends SRTreeOperator {
 
 
 
-        fHastingsRatio = Math.abs(orientationCoefficient* dimensionCoefficient * newRange / oldRange);
+        fHastingsRatio = Math.abs(orientationCoefficient * dimensionCoefficient * newRange / oldRange);
 
         return Math.log(fHastingsRatio);
 

@@ -8,6 +8,7 @@ import beast.core.Description;
 
 import beast.evolution.speciation.SABirthDeathModel;
 import beast.evolution.tree.*;
+import sranges.StratigraphicRange;
 
 /**
  * @author Alexandra Gavryushkina
@@ -28,6 +29,28 @@ public class SRangesBirthDeathModel extends SABirthDeathModel {
     private double log_q_tilde(double t, double c1, double c2) {
         return 0.5*(t*(lambda + mu + psi) + log_q(t,c1,c2));
     }
+
+    private double log_lambda_times_int_limits_p(double tOld, double tYoung, double c1, double c2) {
+        return Math.log((lambda+mu+psi-c1)*(tOld - tYoung) + 2*Math.log(Math.exp(-c1*tYoung)*(1-c2)+(1+c2)) -
+                2*Math.log(Math.exp(-c1*tOld)*(1-c2)+(1+c2))) - Math.log(2);
+    }
+
+    private Node findAncestralRangeLastNode(Node node) {
+        Node parent = node.getParent();
+        if (parent == null) {
+            return parent;
+        } else {
+            if (parent.isFake()) {
+                return parent;
+            } else if (parent.getChild(0) == node) {
+                return findAncestralRangeLastNode(parent);
+            } else {
+                return null;
+            }
+        }
+    }
+
+
 
     @Override
     public double calculateTreeLogLikelihood(TreeInterface tree)
@@ -106,7 +129,7 @@ public class SRangesBirthDeathModel extends SABirthDeathModel {
                 if  (!node.isDirectAncestor())  {
                     if (node.getHeight() > 0.000000000005 || rho == 0.) {
                         Node fossilParent = node.getParent();
-                        if (((SRTree)tree).belongToSameSRange(node, fossilParent)) {
+                        if (((SRTree)tree).belongToSameSRange(i, fossilParent.getNr())) {
                             logPost += Math.log(psi) + log_q_tilde(node.getHeight(), c1, c2) + log_p0s(node.getHeight(), c1, c2);
                         } else {
                             logPost += Math.log(psi) + log_q(node.getHeight(), c1, c2) + log_p0s(node.getHeight(), c1, c2);
@@ -116,24 +139,34 @@ public class SRangesBirthDeathModel extends SABirthDeathModel {
                     }
                 }
             } else {
-                Node child;
                 if (node.isFake()) {
                     logPost += Math.log(psi);
                     Node parent = node.getParent();
-                    child = node.getNonDirectAncestorChild();
-                    if (parent != null && ((SRTree)tree).belongToSameSRange(parent,node)) {
+                    Node child = node.getNonDirectAncestorChild();
+                    if (parent != null && ((SRTree)tree).belongToSameSRange(parent.getNr(),i)) {
                         logPost += log_q_tilde(node.getHeight(), c1, c2) - log_q(node.getHeight(), c1, c2);
                     }
-                    if (child != null && ((SRTree)tree).belongToSameSRange(node, child)) {
+                    if (child != null && ((SRTree)tree).belongToSameSRange(i,child.getNr())) {
                         logPost += log_q(node.getHeight(), c1, c2)-  log_q_tilde(node.getHeight(), c1, c2);
                     }
                 } else {
                     logPost += Math.log(lambda) - log_q(node.getHeight(), c1, c2);
-                    child = node.getLeft();
                 }
-                if (((SRTree)tree).belongToSameSRange(node, child)) { //This term accounts for not including fossil samples within a stratigraphic range.
-                    logPost += psi*(node.getHeight() - child.getHeight());
-                }
+            }
+        }
+
+        for (StratigraphicRange range:((SRTree)tree).getSRanges()) {
+            Node first =  tree.getNode(range.getNodeNrs().get(0));
+            if (!range.isSingleFossilRange()) {
+                double tFirst =first.getHeight();
+                double tLast = tree.getNode(range.getNodeNrs().get(range.getNodeNrs().size()-1)).getHeight();
+                logPost += psi*(tFirst - tLast);
+            }
+            Node ancestralLast = findAncestralRangeLastNode(first);
+            if (ancestralLast != null) {
+                double tOld = ancestralLast.getHeight();
+                double tYoung = first.getHeight();
+                logPost += log_lambda_times_int_limits_p(tOld, tYoung, c1, c2);
             }
         }
 
