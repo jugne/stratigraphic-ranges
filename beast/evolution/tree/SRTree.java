@@ -24,9 +24,18 @@ public class SRTree extends Tree {
 
     public Input<List<StratigraphicRange>> stratigraphicRangeInput = new Input<>("stratigraphicRange", "all stratigraphic ranges", new ArrayList<>());
 
+    public Input<Tree> treeInput = new Input<>("tree", "tree to start with");
+
     protected ArrayList<StratigraphicRange> sRanges;
     protected ArrayList<StratigraphicRange> storedSRanges;
 
+    @Override
+    public void initAndValidate() {
+        if (treeInput.get() != null) {
+            assignFromWithoutID(treeInput.get());
+        }
+        super.initAndValidate();
+    }
 
     protected void initSRanges() {
         if (stratigraphicRangeInput.get() != null) {
