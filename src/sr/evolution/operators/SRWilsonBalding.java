@@ -1,10 +1,11 @@
-package operators;
+package sr.evolution.operators;
 
-import beast.evolution.tree.Node;
-import beast.evolution.tree.Tree;
-import beast.util.Randomizer;
-import sranges.StratigraphicRange;
-import beast.evolution.tree.SRTree;
+import beast.base.evolution.tree.Node;
+import beast.base.evolution.tree.Tree;
+import beast.base.inference.util.InputUtil;
+import beast.base.util.Randomizer;
+import sr.evolution.sranges.StratigraphicRange;
+import sr.evolution.tree.SRTree;
 
 import java.util.ArrayList;
 
@@ -23,7 +24,7 @@ public class SRWilsonBalding extends SRTreeOperator {
     @Override
     public double proposal() {
 
-        SRTree tree = treeInput.get(this);
+        SRTree tree = (SRTree) InputUtil.get(treeInput, this);
 
         //double x0 = 10;
 
@@ -33,7 +34,7 @@ public class SRWilsonBalding extends SRTreeOperator {
         // choose a random node avoiding root and leaves that are direct ancestors
         int nodeCount = tree.getNodeCount();
 
-        ArrayList<Integer> allowableNodeIndices = new ArrayList<Integer>();
+        ArrayList<Integer> allowableNodeIndices = new ArrayList<>();
         ArrayList<Integer> sRangeInternalNodeNrs = tree.getSRangesInternalNodeNrs();
 
         for (int index=0; index<nodeCount; index++) {
@@ -45,11 +46,6 @@ public class SRWilsonBalding extends SRTreeOperator {
         }
 
         Node i;
-
-//        do {
-//            i = tree.getNode(Randomizer.nextInt(nodeCount));
-//        } while (i.isRoot() || i.isDirectAncestor());
-
 
         int allowableNodeCount = allowableNodeIndices.size();
 
@@ -79,7 +75,7 @@ public class SRWilsonBalding extends SRTreeOperator {
         final int leafNodeCount = tree.getLeafNodeCount();
 
         if (leafNodeCount != tree.getExternalNodes().size()) {
-            System.out.println("node counts are incorrect. NodeCount = " + nodeCount + " leafNodeCount = " + leafNodeCount + " exteranl node count = " + tree.getExternalNodes().size());
+            System.out.println("node counts are incorrect. NodeCount = " + nodeCount + " leafNodeCount = " + leafNodeCount + " external node count = " + tree.getExternalNodes().size());
         }
 
         // make sure that the target branch <jP, j> or target leaf j is above the subtree being moved
@@ -155,8 +151,6 @@ public class SRWilsonBalding extends SRTreeOperator {
             } else {
                 double randomNumberFromExponential;
                 randomNumberFromExponential = Randomizer.nextExponential(1);
-                //newRange = x0 - j.getHeight();
-                //randomNumberFromExponential = Randomizer.nextDouble() * newRange;
                 newRange = Math.exp(randomNumberFromExponential);
                 newAge = j.getHeight() + randomNumberFromExponential;
             }
@@ -299,22 +293,6 @@ public class SRWilsonBalding extends SRTreeOperator {
                 newDimension++;
         }
         dimensionCoefficient = (double) oldDimension / newDimension;
-
-//        for (StratigraphicRange range:sRangeSet.getRanges()) {
-//            ArrayList<Node> nodes = (ArrayList) range.getNodes();
-//            for (int index=0; index< nodes.size(); index++) {
-//                Node node = nodes.get(index);
-//                int nodeNr = node.getNr();
-//                if (!tree.getNode(nodeNr).equals(node)) {
-//                    System.out.println("Node "+ node.toString() + " is not equal to " + tree.getNode(nodeNr));
-//                    System.out.println("in range " + range.getFirstOccurrenceID() + ". Resulting tree: ");
-//                    System.out.println(tree.getRoot().toString());
-//                    System.out.println("node i is " + i.getNr() + ", node j is " + j.getNr());
-//                }
-//            }
-//        }
-
-
 
         fHastingsRatio = Math.abs(orientationCoefficient * dimensionCoefficient * newRange / oldRange);
 

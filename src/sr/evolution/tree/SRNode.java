@@ -1,4 +1,6 @@
-package beast.evolution.tree;
+package sr.evolution.tree;
+
+import beast.base.evolution.tree.Node;
 
 import java.util.TreeMap;
 

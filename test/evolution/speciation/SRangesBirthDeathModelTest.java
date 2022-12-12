@@ -1,14 +1,14 @@
-package test.speciation;
+package test.evolution.speciation;
 
-import beast.core.parameter.RealParameter;
-import beast.evolution.alignment.Taxon;
-import beast.evolution.tree.SRTree;
-import beast.evolution.tree.Tree;
-import beast.util.TreeParser;
+import beast.base.inference.parameter.RealParameter;
+import beast.base.evolution.alignment.Taxon;
+import sr.evolution.tree.SRTree;
+import beast.base.evolution.tree.Tree;
+import beast.base.evolution.tree.TreeParser;
 import junit.framework.TestCase;
-import org.junit.Test;
-import speciation.SRangesBirthDeathModel;
-import sranges.StratigraphicRange;
+import org.junit.jupiter.api.Test;
+import sr.speciation.SRangesBirthDeathModel;
+import sr.evolution.sranges.StratigraphicRange;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -59,7 +59,7 @@ public class SRangesBirthDeathModelTest extends TestCase {
 
         model.initAndValidate();
 
-        assertEquals(-33.29951335631795, model.calculateTreeLogLikelihood(tree), 1e-14);
+        assertEquals(-33.29951335631795, model.calculateLogP(), 1e-14);
 
     }
 }

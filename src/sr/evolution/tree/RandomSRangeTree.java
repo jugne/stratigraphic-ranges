@@ -1,16 +1,15 @@
-package beast.evolution.tree;
+package sr.evolution.tree;
 
-import beast.core.Input;
-import beast.core.StateNode;
-import beast.core.StateNodeInitialiser;
-import beast.evolution.alignment.Alignment;
-import beast.evolution.tree.Node;
-import beast.evolution.tree.SRTree;
-import beast.evolution.tree.TraitSet;
-import beast.evolution.tree.coalescent.PopulationFunction;
-import beast.util.HeapSort;
-import beast.util.Randomizer;
-import sranges.StratigraphicRange;
+import beast.base.core.Input;
+import beast.base.inference.StateNode;
+import beast.base.inference.StateNodeInitialiser;
+import beast.base.evolution.alignment.Alignment;
+import beast.base.evolution.tree.Node;
+import beast.base.evolution.tree.TraitSet;
+import beast.base.evolution.tree.coalescent.PopulationFunction;
+import beast.base.util.HeapSort;
+import beast.base.util.Randomizer;
+import sr.evolution.sranges.StratigraphicRange;
 
 import java.util.*;
 

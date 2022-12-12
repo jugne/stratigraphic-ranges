@@ -1,18 +1,17 @@
-package beast.evolution.tree;
+package sr.evolution.tree;
 
-import beast.core.Input;
-import beast.core.StateNode;
-import beast.core.StateNodeInitialiser;
-import sranges.StratigraphicRange;
+import beast.base.core.Input;
+import beast.base.evolution.tree.Node;
+import beast.base.evolution.tree.Tree;
+import beast.base.evolution.tree.TreeInterface;
+import beast.base.inference.StateNode;
+import sr.evolution.sranges.StratigraphicRange;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
  * @author Alexandra Gavryushkina
- *
  * A labeled oriented tree on stratigraphic ranges under budding speciation.
  * At every internal node, the branch leading to the left child represents the ancestral species
  * and the branch leading to the right child represents the descendant species.
@@ -20,7 +19,7 @@ import java.util.List;
  * if a node is fake then the non-direct ancestor child gets the same left/right orientation as the fake node.
  * If the root is a fake node then the non-direct ancestor child is always left.
  */
-public class SRTree extends Tree {
+public class SRTree extends Tree implements TreeInterface {
 
     public Input<List<StratigraphicRange>> stratigraphicRangeInput = new Input<>("stratigraphicRange", "all stratigraphic ranges", new ArrayList<>());
 
@@ -169,12 +168,12 @@ public class SRTree extends Tree {
         }
         setID(tree.getID());
         //index = tree.index;
-        root = nodes[tree.root.getNr()];
-        root.assignFrom(nodes, tree.root);
-        root.parent = null;
-        nodeCount = tree.nodeCount;
-        internalNodeCount = tree.internalNodeCount;
-        leafNodeCount = tree.leafNodeCount;
+        root = nodes[tree.getRoot().getNr()];
+        root.assignFrom(nodes, tree.getRoot());
+        root.setParent(null);
+        nodeCount = tree.getNodeCount();
+        internalNodeCount = tree.getInternalNodeCount();
+        leafNodeCount = tree.getLeafNodeCount();
         initArrays();
         initSRanges();
     }
@@ -191,12 +190,12 @@ public class SRTree extends Tree {
         if (m_nodes == null) {
             initArrays();
         }
-        root = m_nodes[tree.root.getNr()];
+        root = m_nodes[tree.getRoot().getNr()];
         final Node[] otherNodes = tree.m_nodes;
         final int rootNr = root.getNr();
         assignFrom(0, rootNr, otherNodes);
-        root.height = otherNodes[rootNr].height;
-        root.parent = null;
+        root.setHeight(otherNodes[rootNr].getHeight());
+        root.setParent(null);
         if (otherNodes[rootNr].getLeft() != null) {
             root.setLeft(m_nodes[otherNodes[rootNr].getLeft().getNr()]);
         } else {
@@ -220,8 +219,8 @@ public class SRTree extends Tree {
         for (int i = start; i < end; i++) {
             Node sink = m_nodes[i];
             Node src = otherNodes[i];
-            sink.height = src.height;
-            sink.parent = m_nodes[src.parent.getNr()];
+            sink.setHeight(src.getHeight());
+            sink.setParent(m_nodes[src.getParent().getNr()]);
             if (src.getLeft() != null) {
                 sink.setLeft(m_nodes[src.getLeft().getNr()]);
                 if (src.getRight() != null) {
@@ -264,18 +263,18 @@ public class SRTree extends Tree {
         for (int i = start; i < end; i++) {
             final SRNode sink = (SRNode)m_storedNodes[i];
             final SRNode src = (SRNode)m_nodes[i];
-            sink.height = src.height;
+            sink.setHeight(src.getHeight());
 
-            if ( src.parent != null ) {
-                sink.parent = m_storedNodes[src.parent.getNr()];
+            if ( src.getParent() != null ) {
+                sink.setParent(m_storedNodes[src.getParent().getNr()]);
             } else {
                 // currently only called in the case of sampled ancestor trees
                 // where root node is not always last in the list
-                sink.parent = null;
+                sink.setParent(null);
             }
 
-            final List<Node> children = sink.children;
-            final List<Node> srcChildren = src.children;
+            final List<Node> children = sink.getChildrenMutable();
+            final List<Node> srcChildren = src.getChildren();
 
             if( children.size() == srcChildren.size() ) {
                 // shave some more time by avoiding list clear and add
@@ -283,7 +282,7 @@ public class SRTree extends Tree {
                     final SRNode srcChild = (SRNode)srcChildren.get(k);
                     // don't call addChild, which calls  setParent(..., true);
                     final Node c = m_storedNodes[srcChild.getNr()];
-                    c.parent = sink;
+                    c.setParent(sink);
                     children.set(k, c);
                 }
             } else {
@@ -292,7 +291,7 @@ public class SRTree extends Tree {
                 for (final Node srcChild : srcChildren) {
                     // don't call addChild, which calls  setParent(..., true);
                     final Node c = m_storedNodes[srcChild.getNr()];
-                    c.parent = sink;
+                    c.setParent(sink);
                     children.add(c);
                     //sink.addChild(c);
                 }

@@ -1,10 +1,10 @@
-package sranges;
+package sr.evolution.sranges;
 
-import beast.core.BEASTObject;
-import beast.core.Input;
-import beast.evolution.alignment.Taxon;
-import beast.evolution.tree.Node;
-import beast.evolution.tree.Tree;
+import beast.base.core.BEASTObject;
+import beast.base.core.Input;
+import beast.base.evolution.alignment.Taxon;
+import beast.base.evolution.tree.Node;
+import beast.base.evolution.tree.Tree;
 
 import java.util.ArrayList;
 import java.util.List;

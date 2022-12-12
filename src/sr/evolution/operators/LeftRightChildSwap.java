@@ -1,8 +1,9 @@
-package operators;
+package sr.evolution.operators;
 
-import beast.evolution.tree.Node;
-import beast.evolution.tree.SRTree;
-import beast.util.Randomizer;
+import beast.base.evolution.tree.Node;
+import beast.base.inference.util.InputUtil;
+import sr.evolution.tree.SRTree;
+import beast.base.util.Randomizer;
 
 import java.util.ArrayList;
 
@@ -21,7 +22,7 @@ public class LeftRightChildSwap extends SRTreeOperator {
     @Override
     public double proposal() {
 
-        SRTree tree = treeInput.get(this);
+        SRTree tree = (SRTree) InputUtil.get(treeInput, this);
 
         // choose a random node avoiding root and leaves that are direct ancestors
         int nodeCount = tree.getNodeCount();
@@ -38,12 +39,14 @@ public class LeftRightChildSwap extends SRTreeOperator {
 
 
         if (node == null) {
-            ArrayList<Integer> allowableNodeIndices = new ArrayList<Integer>();
+            ArrayList<Integer> allowableNodeIndices = new ArrayList<>();
 
             for (int index=0; index<nodeCount; index++) {
                 Node candidateNode = tree.getNode(index);
-                //the node is not a leaf or sampled ancestor, the node is not fake, non of its children belongs to the same srange as node
-                if (!candidateNode.isLeaf() && !candidateNode.isFake() && !tree.belongToSameSRange(index, candidateNode.getLeft().getNr()))
+                //the node is not a leaf or sampled ancestor, the node is not fake, none of its children
+                // belongs to the same srange as node
+                if (!candidateNode.isLeaf() && !candidateNode.isFake() &&
+                        !tree.belongToSameSRange(index, candidateNode.getLeft().getNr()))
                     allowableNodeIndices.add(index);
             }
 
