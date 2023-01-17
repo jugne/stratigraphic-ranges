@@ -20,9 +20,9 @@ public class StratigraphicRange extends BEASTObject {
             "occurrence of the taxon");
 
 
-    String firstOccurrenceID="";
+    String firstOccurrenceID=null;
 
-    String lastOccurrenceID="";
+    String lastOccurrenceID=null;
 
     boolean isSingleFossilRange=false;
 
@@ -113,6 +113,9 @@ public class StratigraphicRange extends BEASTObject {
         if (firstOccurrenceID == null && lastOccurrenceID != null) firstOccurrenceID = lastOccurrenceID;
         if (lastOccurrenceID == null && firstOccurrenceID != null) lastOccurrenceID = firstOccurrenceID;
         isSingleFossilRange = true;
+        if (nodes.get(0)==null){
+            nodes.remove(0);
+        }
     }
 
     public boolean isSingleFossilRange() {
@@ -120,7 +123,7 @@ public class StratigraphicRange extends BEASTObject {
                 taxonFirstOccurrenceInput.get().getID().equals(taxonLastOccurrenceInput.get().getID())) {
             isSingleFossilRange = true;
         }
-        if (!isSingleFossilRange && !firstOccurrenceID.equals("") && !lastOccurrenceID.equals("") &&
+        if (!isSingleFossilRange && firstOccurrenceID != null && lastOccurrenceID != null &&
                 firstOccurrenceID.equals(lastOccurrenceID)) {
             isSingleFossilRange = true;
         }
@@ -154,14 +157,14 @@ public class StratigraphicRange extends BEASTObject {
     }
 
     public String getFirstOccurrenceID() {
-        if (firstOccurrenceID.isEmpty() && taxonFirstOccurrenceInput.get() != null) {
+        if (firstOccurrenceID == null && taxonFirstOccurrenceInput.get() != null) {
             firstOccurrenceID = taxonFirstOccurrenceInput.get().getID();
         }
         return firstOccurrenceID;
     }
 
     public String getLastOccurrenceID() {
-        if (lastOccurrenceID.isEmpty() && taxonLastOccurrenceInput.get() != null) {
+        if (lastOccurrenceID == null && taxonLastOccurrenceInput.get() != null) {
             lastOccurrenceID = taxonLastOccurrenceInput.get().getID();
         }
         return lastOccurrenceID;

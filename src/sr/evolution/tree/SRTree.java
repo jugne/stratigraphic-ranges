@@ -7,6 +7,7 @@ import beast.base.evolution.tree.TreeInterface;
 import beast.base.inference.StateNode;
 import sr.evolution.sranges.StratigraphicRange;
 
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,7 +38,7 @@ public class SRTree extends Tree implements TreeInterface {
     }
 
     protected void initSRanges() {
-        if (stratigraphicRangeInput.get() != null) {
+        if (stratigraphicRangeInput.get().size() != 0) {
             sRanges = (ArrayList) stratigraphicRangeInput.get();
             List<Node> externalNodes = getExternalNodes();
             for (StratigraphicRange range:sRanges) {
@@ -302,7 +303,9 @@ public class SRTree extends Tree implements TreeInterface {
     @Override
     public void restore() {
 
-        // necessary for sampled ancestor trees
+        super.restore();
+
+/*        // necessary for sampled ancestor trees
         nodeCount = m_storedNodes.length;
 
         final Node[] tmp = m_storedNodes;
@@ -322,10 +325,11 @@ public class SRTree extends Tree implements TreeInterface {
         hasStartedEditing = false;
 
         for( Node n : m_nodes ) {
+            n.se
             n.isDirty = Tree.IS_CLEAN;
         }
 
-        postCache = null;
+        postCache = null;*/
 
         ArrayList<StratigraphicRange> tmp_ranges = storedSRanges;
         storedSRanges = sRanges;
@@ -380,6 +384,19 @@ public class SRTree extends Tree implements TreeInterface {
             }
         }
         return false;
+    }
+
+    @Override
+    public void log(long sample, PrintStream out) {
+        Tree tree = (Tree) getCurrent();
+        out.print("tree STATE_" + sample + " = ");
+        // Don't sort, this can confuse CalculationNodes relying on the tree
+        //tree.getRoot().sort();
+        System.out.println(tree.getRoot().toString());
+        final String newick = tree.getRoot().toShortNewick(false);
+        System.out.println(newick);
+        out.print(newick);
+        out.print(";");
     }
 
 }

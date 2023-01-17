@@ -26,6 +26,18 @@ public class SRangesBirthDeathModel extends SABirthDeathModel {
 //            "beast.tree on which this operation is performed",
 //            Input.Validate.REQUIRED);
 
+
+    @Override
+    public double q(double t, double c1, double c2) {
+        double v = Math.exp(-c1 * t);
+        return 4 * v / Math.pow(v*(1-c2) + (1+c2), 2.0);
+    }
+
+    @Override
+    public double log_q(double t, double c1, double c2) {
+        return -Math.log(q(t,c1,c2));
+    }
+
     private double q_tilde(double t, double c1, double c2) {
         return Math.sqrt(Math.exp(t*(lambda + mu + psi))*q(t,c1,c2));
     }
@@ -139,7 +151,7 @@ public class SRangesBirthDeathModel extends SABirthDeathModel {
                             logP += Math.log(psi) + log_q(node.getHeight(), c1, c2) + log_p0s(node.getHeight(), c1, c2);
                         }
                     } else {
-                        logP += Math.log(4*rho);
+                        logP += Math.log(rho);
                     }
                 }
             } else {
@@ -159,6 +171,7 @@ public class SRangesBirthDeathModel extends SABirthDeathModel {
             }
         }
 
+        // integrate over fossils in the range. This seems to suggest that we take out the psi in the previous equations
         for (StratigraphicRange range:((SRTree)tree).getSRanges()) {
             Node first =  tree.getNode(range.getNodeNrs().get(0));
             if (!range.isSingleFossilRange()) {

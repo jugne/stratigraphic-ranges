@@ -1,5 +1,6 @@
 package sr.evolution.tree;
 
+import beast.base.core.BEASTInterface;
 import beast.base.evolution.tree.Node;
 
 import java.util.TreeMap;
@@ -30,5 +31,40 @@ public class SRNode extends Node {
     @Override
     public int sort()  {
         throw new RuntimeException("Do not sort ordered trees. Calculation stopped.");
+    }
+
+    /**
+     * @return beast.tree in Newick format, with length and meta data
+     *         information. Unlike toNewick(), here Nodes are numbered, instead of
+     *         using the node labels.
+     *         If there are internal nodes with non-null IDs then their numbers are also printed.
+     *         Also, all internal nodes are labelled if printInternalNodeNumbers
+     *         is set true. This is useful for example when storing a State to file
+     *         so that it can be restored.
+     */
+    @Override
+    public String toShortNewick(final boolean printInternalNodeNumbers) {
+        final StringBuilder buf = new StringBuilder();
+
+        if (!isLeaf()) {
+            buf.append("(");
+            boolean isFirst = true;
+            for (Node child : getChildren()) {
+                if (isFirst)
+                    isFirst = false;
+                else
+                    buf.append(",");
+                buf.append(child.toShortNewick(printInternalNodeNumbers));
+            }
+            buf.append(")");
+        }
+
+        if (isLeaf() || getID() != null || printInternalNodeNumbers) {
+            buf.append(getNr()+1);
+        }
+
+        buf.append(getNewickMetaData());
+        buf.append(":").append(getNewickLengthMetaData()).append(getLength());
+        return buf.toString();
     }
 }
