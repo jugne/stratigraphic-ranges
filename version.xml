@@ -9,6 +9,7 @@
         <provider classname="sr.evolution.operators.LeftRightChildSwap"/>
         <provider classname="sr.evolution.operators.SRTreeOperator"/>
         <provider classname="sr.evolution.operators.SRWilsonBalding"/>
+        <provider classname="sr.evolution.operators.SRLeafToSampledAncestorJump"/>
         <provider classname="sr.evolution.sranges.StratigraphicRange"/>
         <provider classname="sr.evolution.tree.RandomSRangeTree"/>
         <provider classname="sr.evolution.tree.SRNode"/>

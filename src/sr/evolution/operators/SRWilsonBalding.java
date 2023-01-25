@@ -25,7 +25,6 @@ public class SRWilsonBalding extends SRTreeOperator {
     public double proposal() {
 
         SRTree tree = (SRTree) InputUtil.get(treeInput, this);
-
         //double x0 = 10;
 
         double oldMinAge, newMinAge, newRange, oldRange, newAge, fHastingsRatio, dimensionCoefficient, orientationCoefficient;

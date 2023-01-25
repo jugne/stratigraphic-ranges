@@ -35,15 +35,15 @@ public class SRangesBirthDeathModel extends SABirthDeathModel {
 
     @Override
     public double log_q(double t, double c1, double c2) {
-        return -Math.log(q(t,c1,c2));
+        return Math.log(q(t,c1,c2));
     }
 
     private double q_tilde(double t, double c1, double c2) {
-        return Math.sqrt(Math.exp(t*(lambda + mu + psi))*q(t,c1,c2));
+        return Math.sqrt(Math.exp(-t*(lambda + mu + psi))*q(t,c1,c2));
     }
 
     private double log_q_tilde(double t, double c1, double c2) {
-        return 0.5*(t*(lambda + mu + psi) + log_q(t,c1,c2));
+        return 0.5*(-t*(lambda + mu + psi) + log_q(t,c1,c2));
     }
 
     private double log_lambda_times_int_limits_p(double tOld, double tYoung, double c1, double c2) {
@@ -53,12 +53,13 @@ public class SRangesBirthDeathModel extends SABirthDeathModel {
 
     private Node findAncestralRangeLastNode(Node node) {
         Node parent = node.getParent();
+        if (node.isDirectAncestor()){ parent = parent.getParent(); }
         if (parent == null) {
             return parent;
         } else {
             if (parent.isFake()) {
                 return parent;
-            } else if (parent.getChild(0) == node) {
+            } else if (parent.getChild(0) == node||parent.getChild(1) == node) {
                 return findAncestralRangeLastNode(parent);
             } else {
                 return null;
@@ -116,14 +117,14 @@ public class SRangesBirthDeathModel extends SABirthDeathModel {
         }
 
         if (!conditionOnRootInput.get()){
-            logP = -log_q(x0, c1, c2);
+            logP = log_q(x0, c1, c2);
         } else {
             if (tree.getRoot().isFake()){   //when conditioning on the root we assume the process
                 //starts at the time of the first branching event and
                 //that means that the root can not be a sampled ancestor
                 return Double.NEGATIVE_INFINITY;
             } else {
-                logP = -log_q(x1, c1, c2);
+                logP = log_q(x1, c1, c2);
             }
         }
 
@@ -143,12 +144,16 @@ public class SRangesBirthDeathModel extends SABirthDeathModel {
             Node node = tree.getNode(i);
             if (node.isLeaf()) {
                 if  (!node.isDirectAncestor())  {
+                    Node fossilParent = node.getParent();
+//                    Node sibling = fossilParent.getChild(0).getNr()==i ? fossilParent.getChild(1) : fossilParent.getChild(0);
+//                    if (tree.directAncestorInSRange(i))
+//                        return Double.NEGATIVE_INFINITY;
                     if (node.getHeight() > 0.000000000005 || rho == 0.) {
-                        Node fossilParent = node.getParent();
+
                         if (((SRTree)tree).belongToSameSRange(i, fossilParent.getNr())) {
-                            logP += Math.log(psi) + log_q_tilde(node.getHeight(), c1, c2) + log_p0s(node.getHeight(), c1, c2);
+                            logP += Math.log(psi) - log_q_tilde(node.getHeight(), c1, c2) + log_p0s(node.getHeight(), c1, c2);
                         } else {
-                            logP += Math.log(psi) + log_q(node.getHeight(), c1, c2) + log_p0s(node.getHeight(), c1, c2);
+                            logP += Math.log(psi) - log_q(node.getHeight(), c1, c2) + log_p0s(node.getHeight(), c1, c2);
                         }
                     } else {
                         logP += Math.log(rho);
@@ -159,14 +164,15 @@ public class SRangesBirthDeathModel extends SABirthDeathModel {
                     logP += Math.log(psi);
                     Node parent = node.getParent();
                     Node child = node.getNonDirectAncestorChild();
-                    if (parent != null && ((SRTree)tree).belongToSameSRange(parent.getNr(),i)) {
-                        logP += log_q_tilde(node.getHeight(), c1, c2) - log_q(node.getHeight(), c1, c2);
+                    Node DAchild = node.getDirectAncestorChild();
+                    if (parent != null && ((SRTree)tree).belongToSameSRange(parent.getNr(),DAchild.getNr())) {
+                        logP += log_q_tilde(node.getHeight(), c1, c2) + log_q(node.getHeight(), c1, c2);
                     }
                     if (child != null && ((SRTree)tree).belongToSameSRange(i,child.getNr())) {
-                        logP += log_q(node.getHeight(), c1, c2)-  log_q_tilde(node.getHeight(), c1, c2);
+                        logP += - log_q(node.getHeight(), c1, c2) +  log_q_tilde(node.getHeight(), c1, c2);
                     }
                 } else {
-                    logP += Math.log(lambda) - log_q(node.getHeight(), c1, c2);
+                    logP += Math.log(lambda) + log_q(node.getHeight(), c1, c2);
                 }
             }
         }
@@ -183,7 +189,8 @@ public class SRangesBirthDeathModel extends SABirthDeathModel {
             if (ancestralLast != null) {
                 double tOld = ancestralLast.getHeight();
                 double tYoung = first.getHeight();
-                logP += log_lambda_times_int_limits_p(tOld, tYoung, c1, c2);
+                logP += Math.log(1-q(tYoung, c1, c2)/q_tilde(tYoung, c1, c2)*q_tilde(tOld, c1, c2)/q(tOld, c1, c2));
+//                logP += log_lambda_times_int_limits_p(tOld, tYoung, c1, c2);
             }
         }
 

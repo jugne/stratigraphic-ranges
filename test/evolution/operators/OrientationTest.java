@@ -3,12 +3,10 @@ package evolution.operators;
 import beast.base.core.BEASTObject;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
+import beast.base.evolution.operator.ScaleOperator;
 import beast.base.evolution.tree.coalescent.ConstantPopulation;
 import beast.base.inference.*;
 import beast.base.inference.parameter.RealParameter;
-import beast.base.util.Randomizer;
-import beast.base.evolution.alignment.Alignment;
-import beast.base.evolution.alignment.Sequence;
 import beast.base.evolution.alignment.Taxon;
 import beast.base.evolution.alignment.TaxonSet;
 import beast.base.evolution.branchratemodel.StrictClockModel;
@@ -18,9 +16,10 @@ import beast.base.evolution.tree.Node;
 import beast.base.evolution.tree.TraitSet;
 import beast.base.inference.distribution.Prior;
 import beast.base.inference.distribution.Uniform;
+import beast.base.util.Randomizer;
 import junit.framework.Assert;
 import org.junit.Test;
-import sa.evolution.operators.SAWilsonBalding;
+import sa.evolution.operators.SAScaleOperator;
 import sr.evolution.operators.*;
 import sr.evolution.sranges.StratigraphicRange;
 import sr.evolution.tree.RandomSRangeTree;
@@ -38,12 +37,12 @@ import java.util.regex.Pattern;
 
 public class OrientationTest {
 	
-//	String initNewick = "(1:0.05244677605979664,(2:0.21990168652563447,3:1.2199016865256345):0.8325450895341622):0.0;";
+	String initNewick = "((3:1.0,2:0.0)4:1.2851024434956355,1:0.2851024434956355)5:0.0;";
 
 	@Test
 	public void topologyDistribution() throws Exception {
 		
-		Randomizer.setSeed(127);
+		Randomizer.setSeed(Randomizer.nextInt());
 
 		// state
 
@@ -65,6 +64,10 @@ public class OrientationTest {
 
 		StratigraphicRange range1 = new StratigraphicRange();
 		range1.initByName("firstOccurrence", taxon2, "lastOccurrence", taxon3);
+//		StratigraphicRange range1 = new StratigraphicRange();
+//		range1.initByName("firstOccurrence", taxon2, "lastOccurrence", taxon2);
+//		StratigraphicRange range3 = new StratigraphicRange();
+//		range3.initByName("firstOccurrence", taxon3, "lastOccurrence", taxon3);
 		StratigraphicRange range2 = new StratigraphicRange();
 		range2.initByName("firstOccurrence", taxon1, "lastOccurrence", taxon1);
 
@@ -73,9 +76,10 @@ public class OrientationTest {
 		trait.setID("dateTrait.t:tree");
 
 		tree.initByName("trait", trait, "taxonset", taxonSet,"nodetype", SRNode.class.getName(), "stratigraphicRange", range1, "stratigraphicRange", range2);
+//		tree.initByName("trait", trait, "taxonset", taxonSet,"nodetype", SRNode.class.getName(), "stratigraphicRange", range1, "stratigraphicRange", range2, "stratigraphicRange", range3);
 		tree.setID("Tree.t:tree");
 
-		RealParameter origin = new RealParameter("10.0");
+		RealParameter origin = new RealParameter("4.");
 		origin.initByName("lower", "2.0", "upper", "Infinity");
 		origin.setID("origin");
 
@@ -89,8 +93,7 @@ public class OrientationTest {
 		populationModel.initByName("popSize", "1.0");
 
 		RandomSRangeTree init = new RandomSRangeTree();
-		init.initByName("estimate", false, "initial", tree, "nodetype", SRNode.class.getName()
-				, "taxonset", taxonSet, "populationModel", populationModel, "stratigraphicRange", range1, "stratigraphicRange", range2);
+		init.initByName("estimate", false, "initial", tree, "nodetype", SRNode.class.getName(), "taxonset", taxonSet, "populationModel", populationModel, "stratigraphicRange", range1, "stratigraphicRange", range2);
 		init.setID("Randomtree");
 
 		// Set up distributions:
@@ -115,8 +118,8 @@ public class OrientationTest {
 		rho.initByName("estimate", false, "lower", "0.0", "upper", "1.0");
 
 		model.initByName("origin", origin, "tree", tree, "birthRate", birthRate, "deathRate", deathRate,
-				"samplingRate", samplingRate, "removalProbability", removalProbability, "rho", rho);
-		uniform3.initByName("upper", "10.0", "lower", "2.");
+				"samplingRate", samplingRate, "removalProbability", removalProbability, "rho", rho, "conditionOnSampling", true);
+		uniform3.initByName("upper", "1000.0", "lower", "0.");
 		priorDist.initByName("x", origin, "distr", uniform3);
 		
 		List<Distribution> dist21 = new ArrayList<>();
@@ -153,14 +156,26 @@ public class OrientationTest {
 
 		// LeftRightChildSwap
 		LeftRightChildSwap leftRightChildSwap = new LeftRightChildSwap();
-		leftRightChildSwap.initByName("tree", tree, "weight", "60.0");
+		leftRightChildSwap.initByName("tree", tree, "weight", "20.0");
 
 		// SAWilsonBalding
 //		SAWilsonBalding saWilsonBalding = new SAWilsonBalding();
 //		saWilsonBalding.initByName("tree", tree, "weight", "20.0");
 
-		Integer chainLength = 50000000;
-		Integer logEvery = 100;
+		//LeafToSampledAncestorJump
+		SRLeafToSampledAncestorJump LeafToSampledAncestorJump = new SRLeafToSampledAncestorJump();
+		LeafToSampledAncestorJump.initByName("tree", tree, "weight", "20.0", "removalProbability", removalProbability);
+
+		// Origin Scaler
+		ScaleOperator originScaler = new ScaleOperator();
+		originScaler.initByName("parameter", origin, "scaleFactor", "0.9", "weight","3.0");
+
+		// root Scaler
+		SAScaleOperator rootScaler = new SAScaleOperator();
+		rootScaler.initByName("rootOnly", "true", "tree", tree, "scaleFactor", "0.9", "weight","1.0");
+
+		Integer chainLength = 5000000;
+		Integer logEvery = 50;
 		int statesLogged = chainLength / logEvery;
 
 		// Set up logger:
@@ -168,7 +183,6 @@ public class OrientationTest {
 		treeReport.initByName("logEvery", logEvery.toString(),
 				"burnin", "0",
 				"tree", tree,
-//				"geneTree", geneTreeDist,
 				"log", tree,
 				"silent", true);
 
@@ -177,11 +191,13 @@ public class OrientationTest {
 		MCMC mcmc = new MCMC();
 		mcmc.initByName("chainLength", chainLength.toString(),
 						"state", state, 
-				"init", init,
+//				"init", init,
 				"distribution", posterior,
-				"operator", srWilsonBalding,
-				"operator", leftRightChildSwap,
-//				"operator", saWilsonBalding,
+//				"operator", srWilsonBalding,
+//				"operator", leftRightChildSwap,
+				"operator", LeafToSampledAncestorJump,
+				"operator", originScaler,
+				"operator", rootScaler,
 				"logger", treeReport);
 
 		// Run MCMC:
@@ -197,8 +213,10 @@ public class OrientationTest {
 		// The 8 non-oriented topology frequencies have been calculated by Gavryushkina
 		// et al.
 		// (2014)
-		double[] probs = new double[] { 0.778327, 0.043189, 0.043189, 0.078642, 0.006930, 0.006930, 0.038657,
-				0.004135, };
+//		double[] probs = new double[] { 0.778327, 0.043189, 0.043189, 0.078642, 0.006930, 0.006930, 0.038657,
+//				0.004135, };
+		double[] probs = new double[] {0.6358071491891069, 0.36419285081089314};
+
 
 		double tolerance = 0.025;
 		double toleranceOriented = 0.025;
@@ -208,11 +226,11 @@ public class OrientationTest {
 		double[] ss= new double[8];
 		for (int nonOrientedTopologyNr = 0; nonOrientedTopologyNr < 8; nonOrientedTopologyNr++) {
 			s += Arrays.stream(frequencies[nonOrientedTopologyNr]).sum();
-			ss[nonOrientedTopologyNr] = (double) Arrays.stream(frequencies[nonOrientedTopologyNr]).sum() / (double) statesLogged;
+			ss[nonOrientedTopologyNr] = (double) Arrays.stream(frequencies[nonOrientedTopologyNr]).sum() / (double) (statesLogged+1);
 		}
 
-		for (int nonOrientedTopologyNr = 0; nonOrientedTopologyNr < 8; nonOrientedTopologyNr++) {
-			int sumTopology = Arrays.stream(frequencies[nonOrientedTopologyNr]).sum();
+		for (int nonOrientedTopologyNr = 0; nonOrientedTopologyNr < 2; nonOrientedTopologyNr++) {
+			int sumTopology = Arrays.stream(frequencies[6+nonOrientedTopologyNr]).sum();
 			double probTopology = (double) sumTopology / (double) statesLogged;
 			System.out.println("_____________________");
 			System.out.println(probs[nonOrientedTopologyNr]);
@@ -220,40 +238,49 @@ public class OrientationTest {
 			System.out.println(probTopology);
 			Assert.assertEquals(probs[nonOrientedTopologyNr], probTopology, tolerance);
 
-			// For each non-oriented topology, there are four possible orientations
-			// outputed.
-			// We check for topologies with ancestral nodes separately below, because we do
-			// not care for the orientation of Fake node children and therefore there are 2
-			// possible orientations.
-			// Last topology, where nodes 1 and 2 are direct ancestors can have only one
-			// orientation and therefore is not validated.
-			if (nonOrientedTopologyNr == 0 || nonOrientedTopologyNr == 1 || nonOrientedTopologyNr == 2) {
-				for (int j = 0; j < 4; j++) {
-					double frequency = (double) frequencies[nonOrientedTopologyNr][j] / (double) sumTopology;
-					System.out.println(frequency);
-					Assert.assertEquals(frequency, orientedFrequency, toleranceOriented);
-
-				}
-			}
-			if (nonOrientedTopologyNr == 3) {
-				for (int j = 0; j < 2; j++) {
-					double frequency = (double) (frequencies[nonOrientedTopologyNr][j]
-							+ frequencies[nonOrientedTopologyNr][j + 2]) / (double) sumTopology;
-					System.out.println(frequency);
-					Assert.assertEquals(frequency, 0.50, toleranceOriented);
-
-				}
-			}
-
-			if (nonOrientedTopologyNr == 4 || nonOrientedTopologyNr == 5 || nonOrientedTopologyNr == 6) {
+			if (6+nonOrientedTopologyNr == 6) {
 				for (int j = 0; j < 4; j += 2) {
-					double frequency = (double) (frequencies[nonOrientedTopologyNr][j]
-							+ frequencies[nonOrientedTopologyNr][j + 1]) / (double) sumTopology;
-					System.out.println(frequency);
+					double frequency = (double) (frequencies[6+nonOrientedTopologyNr][j]
+							+ frequencies[6+nonOrientedTopologyNr][j + 1]) / (double) sumTopology;
 					Assert.assertEquals(frequency, 0.50, toleranceOriented);
 
 				}
 			}
+
+//			// For each non-oriented topology, there are four possible orientations
+//			// outputed.
+//			// We check for topologies with ancestral nodes separately below, because we do
+//			// not care for the orientation of Fake node children and therefore there are 2
+//			// possible orientations.
+//			// Last topology, where nodes 1 and 2 are direct ancestors can have only one
+//			// orientation and therefore is not validated.
+//			if (nonOrientedTopologyNr == 0 || nonOrientedTopologyNr == 1 || nonOrientedTopologyNr == 2) {
+//				for (int j = 0; j < 4; j++) {
+//					double frequency = (double) frequencies[6+nonOrientedTopologyNr][j] / (double) sumTopology;
+//					System.out.println(frequency);
+//					Assert.assertEquals(frequency, orientedFrequency, toleranceOriented);
+//
+//				}
+//			}
+//			if (nonOrientedTopologyNr == 3) {
+//				for (int j = 0; j < 2; j++) {
+//					double frequency = (double) (frequencies[nonOrientedTopologyNr][j]
+//							+ frequencies[nonOrientedTopologyNr][j + 2]) / (double) sumTopology;
+//					System.out.println(frequency);
+//					Assert.assertEquals(frequency, 0.50, toleranceOriented);
+//
+//				}
+//			}
+//
+//			if (nonOrientedTopologyNr == 4 || nonOrientedTopologyNr == 5 || nonOrientedTopologyNr == 6) {
+//				for (int j = 0; j < 4; j += 2) {
+//					double frequency = (double) (frequencies[nonOrientedTopologyNr][j]
+//							+ frequencies[nonOrientedTopologyNr][j + 1]) / (double) sumTopology;
+//					System.out.println(frequency);
+//					Assert.assertEquals(frequency, 0.50, toleranceOriented);
+//
+//				}
+//			}
 
 		}
 	}

@@ -46,6 +46,8 @@ public class RandomSRangeTree extends SRTree implements StateNodeInitialiser {
 
         initStateNodes();
         super.initAndValidate();
+        initStoredRanges();
+        this.store();
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
@@ -98,6 +100,7 @@ public class RandomSRangeTree extends SRTree implements StateNodeInitialiser {
         if (m_initial.get() != null) {
             m_initial.get().assignFromWithoutID(this);
         }
+//        addOrientationMetadata(this.root.getNr());
     }
 
     private int setNodesNrs(final Node node, int internalNodeCount, int[] n, Map<String,Integer> initial) {
@@ -155,6 +158,7 @@ public class RandomSRangeTree extends SRTree implements StateNodeInitialiser {
             }
 
             root = simulateCoalescent(candidates, demoFunction);
+
             return;
 
         }

@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<beast beautitemplate='Standard' beautistatus='' namespace=":beast.base.core
+:beast.base.inference
+:beast.base.evolution.alignment
+:beast.base.evolution.tree.coalescent
+:beast.base.evolution.tree
+:beast.base.core:beast.base.inference.util
+:beast.evolution.nuc:beast.base.evolution.operator
+:beast.base.inference.operator:beast.base.evolution.sitemodel
+:beast.base.evolution.substitutionmodel
+:beast.base.evolution.likelihood
+:beast.base.util:beast.base.math
+:beast.base.evolution.speciation
+:sr.evolution.operators
+:sr.evolution.sranges
+:sr.evolution.tree
+:sr.speciation
+:sa.evolution.speciation" version="2.0">
+
+    <map name="Uniform">beast.base.inference.distribution.Uniform</map>
+    <map name="Exponential">beast.base.inference.distribution.Exponential</map>
+    <map name="LogNormal">beast.base.inference.distribution.LogNormalDistributionModel</map>
+    <map name="Normal">beast.base.inference.distribution.Normal</map>
+    <map name="Beta">beast.base.inference.distribution.Beta</map>
+    <map name="Gamma">beast.base.inference.distribution.Gamma</map>
+    <map name="LaplaceDistribution">beast.base.inference.distribution.LaplaceDistribution</map>
+    <map name="prior">beast.base.inference.distribution.Prior</map>
+    <map name="InverseGamma">beast.base.inference.distribution.InverseGamma</map>
+    <map name="OneOnX">beast.base.inference.distribution.OneOnX</map>
+
+    <run spec="MCMC" chainLength="1000">
+        <state id="state" storeEvery="100">
+            <tree id="Tree.t:tree" spec="sr.evolution.tree.SRTree" nodetype="sr.evolution.tree.SRNode" name="stateNode">
+                <trait id="dateTrait.t:tree" spec="beast.base.evolution.tree.TraitSet" traitname="date-backward">
+                    <taxa spec="TaxonSet" id="taxonSet">
+                        <taxon spec="Taxon" id="t2"/>
+                        <taxon spec="Taxon" id="t11"/>
+                        <taxon spec="Taxon" id="t12"/>
+                    </taxa>
+                    t2=2., t11=1., t12=0.
+                </trait>
+                <taxonset idref="taxonSet" />
+                <stratigraphicRange id="r1" spec="StratigraphicRange" firstOccurrence="@t11" lastOccurrence="@t12"/>
+                <stratigraphicRange id="r2" spec="StratigraphicRange" firstOccurrence="@t2" lastOccurrence="@t2"/>
+            </tree>
+            <parameter id="origin" lower="0.0" name="stateNode">10.0</parameter>
+            <parameter id="rFBD.t:Species" lower="0.0" name="stateNode" upper="1.0">0.9</parameter>
+        </state>
+
+        <init estimate="false" id="Randomtree" initial="@Tree.t:tree" spec="RandomSRangeTree" nodetype="sr.evolution.tree.SRNode" taxonset="@taxonSet">
+            <populationModel id="ConstantPopulation0.t" spec="ConstantPopulation">
+                <parameter id="randomPopSize.t" name="popSize">1.0</parameter>
+            </populationModel>
+            <stratigraphicRange idref="r1"/>
+            <stratigraphicRange idref="r2"/>
+        </init>
+
+        <distribution id="posterior" spec="CompoundDistribution">
+            <distribution id="prior" spec="CompoundDistribution">
+                <distribution spec="SRangesBirthDeathModel" id="birthDeath" tree="@Tree.t:tree" origin="@origin" conditionOnSampling="true">
+                    <parameter estimate="false" id="birthRate.t:Species" lower="0.0" name="birthRate">2.0</parameter>
+                    <parameter estimate="false" id="deathRate.t:Species" lower="0.0" name="deathRate" upper="1.0">1.0</parameter>
+                    <parameter estimate="false" id="samplingRate.t:Species" lower="0.0" name="samplingRate" upper="1.0">0.5</parameter>
+                    <removalProbability idref="rFBD.t:Species"/>
+                    <parameter id="rhoFBD.t:Species" lower="0.0" name="rho" upper="1.0">0.5</parameter>
+                </distribution>
+                <prior id="originPriorFBD.t:Species" name="distribution" x="@origin">
+                    <Uniform id="Uniform.3" name="distr" upper="10.0"/>
+                </prior>
+            </distribution>
+        </distribution>
+
+        <operator id="originScaler" parameter="@origin" scaleFactor="0.75" spec="ScaleOperator" weight="3.0"/>
+<!--        <operator id="SATreeRootScaler" rootOnly="true" scaleFactor="0.95" spec="SAScaleOperator" tree="@Tree.t:tree" weight="3.0" />-->
+<!--        <operator id="SRWilsonBalding" spec='SRWilsonBalding' weight="20" tree="@Tree.t:tree"/>-->
+<!--        <operator id="LeftRightChildSwap" spec='LeftRightChildSwap' weight="20" tree="@Tree.t:tree"/>-->
+        <operator id="LeafToSampledAncestorJump" spec='sr.evolution.operators.SRLeafToSampledAncestorJump' weight="20" tree="@Tree.t:tree" removalProbability="@rFBD.t:Species"/>
+
+        <logger fileName="validation_WB.trees" id="treelog" logEvery="1" mode="tree">
+            <log idref="Tree.t:tree"/>
+        </logger>
+
+        <logger id="screenlog" logEvery="10" model="@posterior">
+            <log idref="posterior" />
+            <log idref="origin" />
+            <log arg="@posterior" id="ESS.0" spec="util.ESS" />
+            <log idref="prior" />
+        </logger>
+
+    </run>
+
+</beast>

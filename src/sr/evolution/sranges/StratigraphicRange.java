@@ -37,6 +37,8 @@ public class StratigraphicRange extends BEASTObject {
      */
     private List<Integer> nodes = new ArrayList<>();  //
 
+    private List<Integer> directAncestorNodes = new ArrayList<>();  //
+
     @Override
     public void initAndValidate() {
         if (taxonFirstOccurrenceInput.get() != null || taxonLastOccurrenceInput.get() != null) {
@@ -59,7 +61,6 @@ public class StratigraphicRange extends BEASTObject {
     }
 
     public void removeNodeNr(int nodeNr) {
-
         nodes.remove((Integer)nodeNr);
     }
 
