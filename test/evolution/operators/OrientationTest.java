@@ -36,13 +36,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class OrientationTest {
-	
-	String initNewick = "((3:1.0,2:0.0)4:1.2851024434956355,1:0.2851024434956355)5:0.0;";
 
 	@Test
 	public void topologyDistribution() throws Exception {
 		
-		Randomizer.setSeed(Randomizer.nextInt());
+//		Randomizer.setSeed(Randomizer.nextInt());
+		Randomizer.setSeed(42);
 
 		// state
 
@@ -64,10 +63,6 @@ public class OrientationTest {
 
 		StratigraphicRange range1 = new StratigraphicRange();
 		range1.initByName("firstOccurrence", taxon2, "lastOccurrence", taxon3);
-//		StratigraphicRange range1 = new StratigraphicRange();
-//		range1.initByName("firstOccurrence", taxon2, "lastOccurrence", taxon2);
-//		StratigraphicRange range3 = new StratigraphicRange();
-//		range3.initByName("firstOccurrence", taxon3, "lastOccurrence", taxon3);
 		StratigraphicRange range2 = new StratigraphicRange();
 		range2.initByName("firstOccurrence", taxon1, "lastOccurrence", taxon1);
 
@@ -76,7 +71,6 @@ public class OrientationTest {
 		trait.setID("dateTrait.t:tree");
 
 		tree.initByName("trait", trait, "taxonset", taxonSet,"nodetype", SRNode.class.getName(), "stratigraphicRange", range1, "stratigraphicRange", range2);
-//		tree.initByName("trait", trait, "taxonset", taxonSet,"nodetype", SRNode.class.getName(), "stratigraphicRange", range1, "stratigraphicRange", range2, "stratigraphicRange", range3);
 		tree.setID("Tree.t:tree");
 
 		RealParameter origin = new RealParameter("4.");
@@ -179,7 +173,7 @@ public class OrientationTest {
 		int statesLogged = chainLength / logEvery;
 
 		// Set up logger:
-		OrientedTreeLogger treeReport = new OrientedTreeLogger();
+		OrientedThreeSampleTreeLogger treeReport = new OrientedThreeSampleTreeLogger();
 		treeReport.initByName("logEvery", logEvery.toString(),
 				"burnin", "0",
 				"tree", tree,
@@ -193,8 +187,8 @@ public class OrientationTest {
 						"state", state, 
 //				"init", init,
 				"distribution", posterior,
-//				"operator", srWilsonBalding,
-//				"operator", leftRightChildSwap,
+				"operator", srWilsonBalding,
+				"operator", leftRightChildSwap,
 				"operator", LeafToSampledAncestorJump,
 				"operator", originScaler,
 				"operator", rootScaler,
@@ -206,21 +200,18 @@ public class OrientationTest {
 		int[][] frequencies = treeReport.getAnalysis();
 
 		/*
-		 * Eight Possible non-oriented topologies: ((3,2),1) ((3,1),2) (3,(2,1))
-		 * ((3,2)1) (3,(2)1) ((3)1,2) ((3)2,1) (((3)2)1)
+		 * There are two possible non-oriented topologies for three samples,
+		 * two stratigraphic ranges (one with the oldest sample and the other with remaining two):
+		 *  ((3)2,1) (((3)2)1)
 		 */
 
-		// The 8 non-oriented topology frequencies have been calculated by Gavryushkina
-		// et al.
-		// (2014)
-//		double[] probs = new double[] { 0.778327, 0.043189, 0.043189, 0.078642, 0.006930, 0.006930, 0.038657,
-//				0.004135, };
+		// probabilities calculated by separate python script: https://github.com/jugne/sRanges-material/blob/main/integrate_topologies.py
 		double[] probs = new double[] {0.6358071491891069, 0.36419285081089314};
 
 
 		double tolerance = 0.025;
 		double toleranceOriented = 0.025;
-		double orientedFrequency = 0.25;
+		double orientedFrequency = 0.50;
 
 		int s = 0;
 		double[] ss= new double[8];
@@ -242,51 +233,15 @@ public class OrientationTest {
 				for (int j = 0; j < 4; j += 2) {
 					double frequency = (double) (frequencies[6+nonOrientedTopologyNr][j]
 							+ frequencies[6+nonOrientedTopologyNr][j + 1]) / (double) sumTopology;
-					Assert.assertEquals(frequency, 0.50, toleranceOriented);
+					Assert.assertEquals(frequency, orientedFrequency, toleranceOriented);
 
 				}
 			}
-
-//			// For each non-oriented topology, there are four possible orientations
-//			// outputed.
-//			// We check for topologies with ancestral nodes separately below, because we do
-//			// not care for the orientation of Fake node children and therefore there are 2
-//			// possible orientations.
-//			// Last topology, where nodes 1 and 2 are direct ancestors can have only one
-//			// orientation and therefore is not validated.
-//			if (nonOrientedTopologyNr == 0 || nonOrientedTopologyNr == 1 || nonOrientedTopologyNr == 2) {
-//				for (int j = 0; j < 4; j++) {
-//					double frequency = (double) frequencies[6+nonOrientedTopologyNr][j] / (double) sumTopology;
-//					System.out.println(frequency);
-//					Assert.assertEquals(frequency, orientedFrequency, toleranceOriented);
-//
-//				}
-//			}
-//			if (nonOrientedTopologyNr == 3) {
-//				for (int j = 0; j < 2; j++) {
-//					double frequency = (double) (frequencies[nonOrientedTopologyNr][j]
-//							+ frequencies[nonOrientedTopologyNr][j + 2]) / (double) sumTopology;
-//					System.out.println(frequency);
-//					Assert.assertEquals(frequency, 0.50, toleranceOriented);
-//
-//				}
-//			}
-//
-//			if (nonOrientedTopologyNr == 4 || nonOrientedTopologyNr == 5 || nonOrientedTopologyNr == 6) {
-//				for (int j = 0; j < 4; j += 2) {
-//					double frequency = (double) (frequencies[nonOrientedTopologyNr][j]
-//							+ frequencies[nonOrientedTopologyNr][j + 1]) / (double) sumTopology;
-//					System.out.println(frequency);
-//					Assert.assertEquals(frequency, 0.50, toleranceOriented);
-//
-//				}
-//			}
-
 		}
 	}
 
 
-	public static class OrientedTreeLogger extends Logger {
+	public static class OrientedThreeSampleTreeLogger extends Logger {
 		public Input<Integer> burninInput = new Input<>("burnin",
 				"Number of samples to skip (burn in)", Input.Validate.REQUIRED);
 
@@ -306,9 +261,11 @@ public class OrientationTest {
 		boolean silent = false;
 		int[][] duplicate = new int[8][4];
 
-		// There are 8 possible non-oriented topologies for a binary tree with two
-		// ancestral samples and one extant sample. Each of those can be produced
-		// in Beast2 in 4 different orientation.
+		// There are 2 possible non-oriented topologies in our case. Without any restrictions there are 8.
+		// Each of those can be produced in Beast2 in 4 different orientation if no restrictions are applied.
+		// With stratigraphic ranges model restrictions the first topology can have 2 orientations
+		// and second can have only one orientation. We still track all four orientations in case something with
+		// restrictions goes wrong. This would then be caught up at the testing step.
 		int[][] freq = new int[8][4];
 
 		String number = "\\:(\\d+(\\.\\d+)?)(E\\-\\d+)?";

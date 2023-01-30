@@ -128,6 +128,8 @@ public class SRWilsonBalding extends SRTreeOperator {
         //classify the type of move being performed before changing the tree structure
         boolean pruningFromSA = CiP.isDirectAncestor();
         boolean pruningFromSRange = !CiP.isDirectAncestor() && sRangeInternalNodeNrs.contains(iP.getNr());
+        boolean randomAttach = false;
+        boolean randomPrune = !pruningFromSA && !pruningFromSRange;
         if (pruningFromSRange || pruningFromSA) {
             pruningRange = tree.getRangeOfNode(iP);
         }
@@ -228,6 +230,8 @@ public class SRWilsonBalding extends SRTreeOperator {
                 tree.setRootOnly(iP);
             }
             j.setParent(iP);
+            if (!attachingToSRange && !(attachingToLeaf && !jLeft))
+                randomAttach = true;
             if (attachingToSRange || (attachingToLeaf && !jLeft) || Randomizer.nextBoolean()) {
                 iP.setLeft(j);
                 iP.setRight(i);
@@ -239,6 +243,8 @@ public class SRWilsonBalding extends SRTreeOperator {
             j.makeDirty(Tree.IS_FILTHY);
         } else {
             if (iP.getNr() == j.getNr()) {
+                if (!attachingToSRange)
+                    randomAttach = true;
                 if (attachingToSRange || Randomizer.nextBoolean()) { //in special case 1: when attaching to the range
                                                                      //make i right
                                                                      //otherwise choose randomly
@@ -269,16 +275,22 @@ public class SRWilsonBalding extends SRTreeOperator {
             orientationCoefficient *= 0.5;
         }
         if (pruningFromSA) {
-            pruningRange.removeNodeNr(iP.getNr());
-            pruningRange.addNodeNr(CiP.getNr());
+//            pruningRange.removeNodeNr(iP.getNr());
+//            pruningRange.addNodeNr(CiP.getNr());
         }
         if (attachingToLeaf) {
-            attachingRange.removeNodeNr(j.getNr());
-            attachingRange.addNodeNr(iP.getNr());
+//            attachingRange.removeNodeNr(j.getNr());
+//            attachingRange.addNodeNr(iP.getNr());
         }
         if (attachingToSRange) {
             attachingRange.addNodeNrAfter(jP.getNr(), iP.getNr());
             orientationCoefficient *= 2.0;
+        }
+        if (randomAttach){
+            orientationCoefficient *= 2.0;
+        }
+        if (randomPrune){
+            orientationCoefficient *= 0.5;
         }
 
         //newDimension = nodeCount - tree.getDirectAncestorNodeCount() - 1;

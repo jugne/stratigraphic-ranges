@@ -448,10 +448,11 @@ public class SRTree extends Tree implements TreeInterface {
 
     public StratigraphicRange getRangeOfNode(Node node) {
         int nodeNr = node.getNr();
+        if (node.isFake())
+            nodeNr = node.getDirectAncestorChild().getNr();
         for (StratigraphicRange candidate_range:sRanges) {
             if (candidate_range.containsNodeNr(nodeNr)) {
                 return candidate_range;
-
             }
         }
         return null;
