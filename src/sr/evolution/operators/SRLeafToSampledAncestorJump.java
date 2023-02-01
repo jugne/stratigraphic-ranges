@@ -38,7 +38,8 @@ public class SRLeafToSampledAncestorJump extends TreeOperator {
     @Override
     public double proposal() {
 
-        double newHeight, newRange, oldRange;
+        double newHeight, newRange, oldRange, orientationCoefficient;
+        orientationCoefficient = 1;
         int categoryCount = 1;
         if (categoriesInput.get() != null) {
             categoryCount = categoriesInput.get().getUpper() - categoriesInput.get().getLower() +1;
@@ -86,7 +87,7 @@ public class SRLeafToSampledAncestorJump extends TreeOperator {
                 parent.addChild(otherChild);
             }
             parent.makeAllDirty(tree.IS_FILTHY);
-            newRange*=2.;
+            orientationCoefficient*=2.;
         } else {
             newRange = 1;
             SRNode otherChild = (SRNode) getOtherChild(parent,leaf);
@@ -111,7 +112,7 @@ public class SRLeafToSampledAncestorJump extends TreeOperator {
                 parent.addChild(otherChild2);
                 parent.addChild(leaf);
             }
-            oldRange *=2.;
+            orientationCoefficient *=0.5;
             parent.makeAllDirty(tree.IS_FILTHY);
         }
         parent.setHeight(newHeight);
@@ -121,7 +122,7 @@ public class SRLeafToSampledAncestorJump extends TreeOperator {
             return Double.NEGATIVE_INFINITY;
         }
 
-        return Math.log(newRange/oldRange);
+        return Math.log(orientationCoefficient*newRange/oldRange);
     }
 
 	private Integer[] getFitToMoveNodeNrs(SRTree tree) {

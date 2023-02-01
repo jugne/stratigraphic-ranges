@@ -197,7 +197,7 @@ public class SRWilsonBalding extends SRTreeOperator {
                 } else {
                     PiP.setLeft(anotherChild);
                     PiP.setRight(CiP);
-                }  // add <PiP, CiP> keeping the orientation of the edge <PiP,iP>, that is, Or(CiP)=Or(iP)
+                }  // add <PiP, CiP> at random orientation
                 PiP.makeDirty(Tree.IS_FILTHY);
                 CiP.makeDirty(Tree.IS_FILTHY);
             } else {
@@ -222,7 +222,7 @@ public class SRWilsonBalding extends SRTreeOperator {
                 } else {
                     jP.setLeft(CjP);
                     jP.setRight(iP);
-                } // add <jP, iP> keeping the orientation of the edge <jP, j>
+                } // add <jP, iP> choosing the random orientation
 
                 jP.makeDirty(Tree.IS_FILTHY);
             } else {
@@ -255,16 +255,9 @@ public class SRWilsonBalding extends SRTreeOperator {
                     iP.setRight(CiP);
                 }
             }
-            if (CiP.getNr() == j.getNr()) {
-//                if (PiP == null ){//|| Randomizer.nextBoolean()) { //in special case 2: when iP is not the root
-                                                                          //make i the same orientation as iP
-                                                                          //otherwise make i left
+            if (CiP.getNr() == j.getNr()) {//in special case 2: always make i left
                     iP.setLeft(i);
                     iP.setRight(CiP);
-//                } else {
-//                    iP.setLeft(CiP);
-//                    iP.setRight(i);
-//                }
             }
         }
         iP.setHeight(newAge);
@@ -273,14 +266,6 @@ public class SRWilsonBalding extends SRTreeOperator {
         if (pruningFromSRange) {
             pruningRange.removeNodeNr(iP.getNr());
             orientationCoefficient *= 0.5;
-        }
-        if (pruningFromSA) {
-//            pruningRange.removeNodeNr(iP.getNr());
-//            pruningRange.addNodeNr(CiP.getNr());
-        }
-        if (attachingToLeaf) {
-//            attachingRange.removeNodeNr(j.getNr());
-//            attachingRange.addNodeNr(iP.getNr());
         }
         if (attachingToSRange) {
             attachingRange.addNodeNrAfter(jP.getNr(), iP.getNr());
@@ -292,8 +277,6 @@ public class SRWilsonBalding extends SRTreeOperator {
         if (randomPrune){
             orientationCoefficient *= 0.5;
         }
-
-        //newDimension = nodeCount - tree.getDirectAncestorNodeCount() - 1;
 
         newDimension = 0;
         sRangeInternalNodeNrs = tree.getSRangesInternalNodeNrs();
