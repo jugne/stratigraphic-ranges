@@ -33,15 +33,16 @@
             <tree id="Tree.t:tree" spec="sr.evolution.tree.SRTree" nodetype="sr.evolution.tree.SRNode" name="stateNode">
                 <trait id="dateTrait.t:tree" spec="beast.base.evolution.tree.TraitSet" traitname="date-backward">
                     <taxa spec="TaxonSet" id="taxonSet">
+                        <taxon spec="Taxon" id="t1"/>
                         <taxon spec="Taxon" id="t2"/>
-                        <taxon spec="Taxon" id="t11"/>
-                        <taxon spec="Taxon" id="t12"/>
+                        <taxon spec="Taxon" id="t3"/>
                     </taxa>
-                    t2=2., t11=1., t12=0.
+                    t3=2., t2=1., t1=0.
                 </trait>
                 <taxonset idref="taxonSet" />
-                <stratigraphicRange id="r1" spec="StratigraphicRange" firstOccurrence="@t11" lastOccurrence="@t12"/>
+                <stratigraphicRange id="r1" spec="StratigraphicRange" firstOccurrence="@t1" lastOccurrence="@t1"/>
                 <stratigraphicRange id="r2" spec="StratigraphicRange" firstOccurrence="@t2" lastOccurrence="@t2"/>
+                <stratigraphicRange id="r3" spec="StratigraphicRange" firstOccurrence="@t3" lastOccurrence="@t3"/>
             </tree>
             <parameter id="origin" lower="0.0" name="stateNode">10.0</parameter>
             <parameter id="rFBD.t:Species" lower="0.0" name="stateNode" upper="1.0">0.9</parameter>
@@ -53,6 +54,7 @@
             </populationModel>
             <stratigraphicRange idref="r1"/>
             <stratigraphicRange idref="r2"/>
+            <stratigraphicRange idref="r3"/>
         </init>
 
         <distribution id="posterior" spec="CompoundDistribution">
@@ -72,9 +74,9 @@
 
         <operator id="originScaler" parameter="@origin" scaleFactor="0.75" spec="ScaleOperator" weight="3.0"/>
 <!--        <operator id="SATreeRootScaler" rootOnly="true" scaleFactor="0.95" spec="SAScaleOperator" tree="@Tree.t:tree" weight="3.0" />-->
-<!--        <operator id="SRWilsonBalding" spec='SRWilsonBalding' weight="20" tree="@Tree.t:tree"/>-->
+        <operator id="SRWilsonBalding" spec='SRWilsonBalding' weight="20" tree="@Tree.t:tree"/>
 <!--        <operator id="LeftRightChildSwap" spec='LeftRightChildSwap' weight="20" tree="@Tree.t:tree"/>-->
-        <operator id="LeafToSampledAncestorJump" spec='sr.evolution.operators.SRLeafToSampledAncestorJump' weight="20" tree="@Tree.t:tree" removalProbability="@rFBD.t:Species"/>
+<!--        <operator id="LeafToSampledAncestorJump" spec='sr.evolution.operators.SRLeafToSampledAncestorJump' weight="20" tree="@Tree.t:tree" removalProbability="@rFBD.t:Species"/>-->
 
         <logger fileName="validation_WB.trees" id="treelog" logEvery="1" mode="tree">
             <log idref="Tree.t:tree"/>

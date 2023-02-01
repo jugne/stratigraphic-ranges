@@ -53,13 +53,16 @@ public class SRangesBirthDeathModel extends SABirthDeathModel {
 
     private Node findAncestralRangeLastNode(Node node) {
         Node parent = node.getParent();
-        if (node.isDirectAncestor()){ parent = parent.getParent(); }
+        if (node.isDirectAncestor()){
+            parent = parent.getParent();
+            node = node.getParent();
+        }
         if (parent == null) {
             return parent;
         } else {
             if (parent.isFake()) {
                 return parent;
-            } else if (parent.getChild(0) == node||parent.getChild(1) == node) {
+            } else if (parent.getChild(0) == node) {
                 return findAncestralRangeLastNode(parent);
             } else {
                 return null;

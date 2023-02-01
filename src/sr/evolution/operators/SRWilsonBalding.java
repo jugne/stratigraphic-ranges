@@ -191,7 +191,7 @@ public class SRWilsonBalding extends SRTreeOperator {
                 }
                 PiP.removeChild(iP);   // remove <PiP,iP>
                 CiP.setParent(PiP);
-                if (left) {
+                if (Randomizer.nextBoolean()) {
                     PiP.setLeft(CiP);
                     PiP.setRight(anotherChild);
                 } else {
@@ -216,7 +216,7 @@ public class SRWilsonBalding extends SRTreeOperator {
                 }
                 jP.removeChild(j);  // remove <jP, j>
                 iP.setParent(jP);
-                if (jLeft) {
+                if (Randomizer.nextBoolean()) {
                     jP.setLeft(iP);
                     jP.setRight(CjP);
                 } else {
@@ -230,9 +230,9 @@ public class SRWilsonBalding extends SRTreeOperator {
                 tree.setRootOnly(iP);
             }
             j.setParent(iP);
-            if (!attachingToSRange && !(attachingToLeaf && !jLeft))
+            if (!attachingToSRange && !attachingToLeaf)
                 randomAttach = true;
-            if (attachingToSRange || (attachingToLeaf && !jLeft) || Randomizer.nextBoolean()) {
+            if (attachingToSRange || (!attachingToLeaf && Randomizer.nextBoolean())) {
                 iP.setLeft(j);
                 iP.setRight(i);
             } else {
@@ -256,15 +256,15 @@ public class SRWilsonBalding extends SRTreeOperator {
                 }
             }
             if (CiP.getNr() == j.getNr()) {
-                if (PiP == null || PiP.getLeft().getNr() == iP.getNr()) { //in special case 2: when iP is not the root
+//                if (PiP == null ){//|| Randomizer.nextBoolean()) { //in special case 2: when iP is not the root
                                                                           //make i the same orientation as iP
                                                                           //otherwise make i left
                     iP.setLeft(i);
                     iP.setRight(CiP);
-                } else {
-                    iP.setLeft(CiP);
-                    iP.setRight(i);
-                }
+//                } else {
+//                    iP.setLeft(CiP);
+//                    iP.setRight(i);
+//                }
             }
         }
         iP.setHeight(newAge);
@@ -297,6 +297,8 @@ public class SRWilsonBalding extends SRTreeOperator {
 
         newDimension = 0;
         sRangeInternalNodeNrs = tree.getSRangesInternalNodeNrs();
+        if (!sRangeInternalNodeNrs.isEmpty())
+            System.out.println();
         for (int index=0; index<nodeCount; index++) {
             Node node = tree.getNode(index);
             //the node is not the root, it is not a sampled ancestor on a zero branch, it is not an internal node of a stratigraphic range
