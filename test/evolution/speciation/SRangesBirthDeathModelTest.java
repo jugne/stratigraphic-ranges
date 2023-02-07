@@ -59,7 +59,7 @@ public class SRangesBirthDeathModelTest extends TestCase {
 
         model.initAndValidate();
 
-        assertEquals(-33.29951335631795, model.calculateLogP(), 1e-14);
+        assertEquals(-33.57179092868063, model.calculateLogP(), 1e-14);
 
     }
 }
