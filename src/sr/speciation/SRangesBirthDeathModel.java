@@ -169,7 +169,7 @@ public class SRangesBirthDeathModel extends SABirthDeathModel {
                     Node child = node.getNonDirectAncestorChild();
                     Node DAchild = node.getDirectAncestorChild();
                     if (parent != null && ((SRTree)tree).belongToSameSRange(parent.getNr(),DAchild.getNr())) {
-                        logP += log_q_tilde(node.getHeight(), c1, c2) + log_q(node.getHeight(), c1, c2);
+                        logP += - log_q_tilde(node.getHeight(), c1, c2) + log_q(node.getHeight(), c1, c2);
                     }
                     if (child != null && ((SRTree)tree).belongToSameSRange(i,child.getNr())) {
                         logP += - log_q(node.getHeight(), c1, c2) +  log_q_tilde(node.getHeight(), c1, c2);

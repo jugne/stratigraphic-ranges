@@ -3,24 +3,26 @@ package evolution.operators;
 import beast.base.core.BEASTObject;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
-import beast.base.evolution.operator.ScaleOperator;
-import beast.base.evolution.tree.coalescent.ConstantPopulation;
-import beast.base.inference.*;
-import beast.base.inference.parameter.RealParameter;
 import beast.base.evolution.alignment.Taxon;
 import beast.base.evolution.alignment.TaxonSet;
 import beast.base.evolution.branchratemodel.StrictClockModel;
+import beast.base.evolution.operator.ScaleOperator;
 import beast.base.evolution.sitemodel.SiteModel;
 import beast.base.evolution.substitutionmodel.JukesCantor;
 import beast.base.evolution.tree.Node;
 import beast.base.evolution.tree.TraitSet;
+import beast.base.evolution.tree.coalescent.ConstantPopulation;
+import beast.base.inference.*;
 import beast.base.inference.distribution.Prior;
 import beast.base.inference.distribution.Uniform;
+import beast.base.inference.parameter.RealParameter;
 import beast.base.util.Randomizer;
 import junit.framework.Assert;
 import org.junit.Test;
 import sa.evolution.operators.SAScaleOperator;
-import sr.evolution.operators.*;
+import sr.evolution.operators.LeftRightChildSwap;
+import sr.evolution.operators.SRLeafToSampledAncestorJump;
+import sr.evolution.operators.SRWilsonBalding;
 import sr.evolution.sranges.StratigraphicRange;
 import sr.evolution.tree.RandomSRangeTree;
 import sr.evolution.tree.SRNode;
@@ -35,7 +37,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class OrientationTest {
+public class OrientationTest3 {
 
 	@Test
 	public void topologyDistribution() throws Exception {
@@ -62,9 +64,9 @@ public class OrientationTest {
 		SRTree tree = new SRTree();
 
 		StratigraphicRange range1 = new StratigraphicRange();
-		range1.initByName("firstOccurrence", taxon2, "lastOccurrence", taxon3);
+		range1.initByName("firstOccurrence", taxon1, "lastOccurrence", taxon2);
 		StratigraphicRange range2 = new StratigraphicRange();
-		range2.initByName("firstOccurrence", taxon1, "lastOccurrence", taxon1);
+		range2.initByName("firstOccurrence", taxon3, "lastOccurrence", taxon3);
 
 		TraitSet trait = new TraitSet();
 		trait.initByName("traitname", "date-backward", "taxa", taxonSet, "value", "1=2,2=1,3=0");
@@ -87,7 +89,9 @@ public class OrientationTest {
 		populationModel.initByName("popSize", "1.0");
 
 		RandomSRangeTree init = new RandomSRangeTree();
-		init.initByName("estimate", false, "initial", tree, "nodetype", SRNode.class.getName(), "taxonset", taxonSet, "populationModel", populationModel, "stratigraphicRange", range1, "stratigraphicRange", range2);
+		init.initByName("estimate", false, "initial", tree, "nodetype", SRNode.class.getName(),
+				"taxonset", taxonSet, "populationModel", populationModel, "stratigraphicRange",
+				range1, "stratigraphicRange", range2);
 		init.setID("Randomtree");
 
 		// Set up distributions:
@@ -188,8 +192,8 @@ public class OrientationTest {
 //				"init", init,
 				"distribution", posterior,
 				"operator", srWilsonBalding,
-				"operator", leftRightChildSwap,
-				"operator", LeafToSampledAncestorJump,
+//				"operator", leftRightChildSwap,
+//				"operator", LeafToSampledAncestorJump,
 				"operator", originScaler,
 				"operator", rootScaler,
 				"logger", treeReport);
@@ -200,28 +204,27 @@ public class OrientationTest {
 		int[][] frequencies = treeReport.getAnalysis();
 
 		/*
-		 * There are two possible non-oriented topologies for three samples,
-		 * two stratigraphic ranges (one with the oldest sample and the other with remaining two):
-		 *  ((3)2,1) (((3)2)1)
+		 * There are three possible non-oriented topologies for three samples and one range between top two samples:
+		 *  4-((3,2)1); 5-(3,(2)1); 8-(((3)2)1)
 		 */
 
 		// probabilities calculated by separate python script: https://github.com/jugne/sRanges-material/blob/main/integrate_topologies.py
-		double[] probs = new double[] {0.6358071491891069, 0.36419285081089314};
+		double[] probs = new double[] {0, 0, 0, 0.5390864435975525, 0.08012736035537182, 0, 0, 0.38078619604707575};
 
 
 		double tolerance = 0.005;
 		double toleranceOriented = 0.025;
 		double orientedFrequency = 0.50;
 
-		int s = 0;
-		double[] ss= new double[8];
-		for (int nonOrientedTopologyNr = 0; nonOrientedTopologyNr < 8; nonOrientedTopologyNr++) {
-			s += Arrays.stream(frequencies[nonOrientedTopologyNr]).sum();
-			ss[nonOrientedTopologyNr] = (double) Arrays.stream(frequencies[nonOrientedTopologyNr]).sum() / (double) (statesLogged+1);
-		}
+//		int s = 0;
+//		double[] ss= new double[8];
+//		for (int nonOrientedTopologyNr = 0; nonOrientedTopologyNr < 8; nonOrientedTopologyNr++) {
+//			s += Arrays.stream(frequencies[nonOrientedTopologyNr]).sum();
+//			ss[nonOrientedTopologyNr] = (double) Arrays.stream(frequencies[nonOrientedTopologyNr]).sum() / (double) (statesLogged+1);
+//		}
 
-		for (int nonOrientedTopologyNr = 0; nonOrientedTopologyNr < 2; nonOrientedTopologyNr++) {
-			int sumTopology = Arrays.stream(frequencies[6+nonOrientedTopologyNr]).sum();
+		for (int nonOrientedTopologyNr = 0; nonOrientedTopologyNr < 8; nonOrientedTopologyNr++) {
+			int sumTopology = Arrays.stream(frequencies[nonOrientedTopologyNr]).sum();
 			double probTopology = (double) sumTopology / (double) statesLogged;
 			System.out.println("_____________________");
 			System.out.println(probs[nonOrientedTopologyNr]);
@@ -229,21 +232,21 @@ public class OrientationTest {
 			System.out.println(probTopology);
 			Assert.assertEquals(probs[nonOrientedTopologyNr], probTopology, tolerance);
 
-			if (6+nonOrientedTopologyNr == 6) {
-				for (int j = 0; j < 4; j += 2) {
-					double frequency = (double) (frequencies[6+nonOrientedTopologyNr][j]
-							+ frequencies[6+nonOrientedTopologyNr][j + 1]) / (double) sumTopology;
-					Assert.assertEquals(frequency, orientedFrequency, toleranceOriented);
-
-				}
-			}
+//			if (6+nonOrientedTopologyNr == 6) {
+//				for (int j = 0; j < 4; j += 2) {
+//					double frequency = (double) (frequencies[6+nonOrientedTopologyNr][j]
+//							+ frequencies[6+nonOrientedTopologyNr][j + 1]) / (double) sumTopology;
+//					Assert.assertEquals(frequency, orientedFrequency, toleranceOriented);
+//
+//				}
+//			}
 		}
 	}
 
 
 	public static class OrientedThreeSampleTreeLogger extends Logger {
 		public Input<Integer> burninInput = new Input<>("burnin",
-				"Number of samples to skip (burn in)", Input.Validate.REQUIRED);
+				"Number of samples to skip (burn in)", Validate.REQUIRED);
 
 		public Input<Boolean> silentInput = new Input<>("silent",
 				"Don't display final report.", false);

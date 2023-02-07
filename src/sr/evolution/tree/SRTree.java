@@ -52,13 +52,13 @@ public class SRTree extends Tree implements TreeInterface {
                                     range.getFirstOccurrenceID() + " is not a sampled ancestor. Something went wrong in " +
                                     "initializing the stratigraphic range tree."  );
                         }
-                        range.setFirstOccurrenceNodeNr(node.getNr());
+                        range.setFirstOccurrenceNodeNr(this, node.getNr());
                     }
                     if (node.getID().equals(range.getLastOccurrenceID())) {
                         if (node.isDirectAncestor()) {
-                            range.setLastOccurrenceNodeNr(node.getNr());
+                            range.setLastOccurrenceNodeNr(this, node.getNr());
                         } else {
-                            range.setLastOccurrenceNodeNr(node.getNr());
+                            range.setLastOccurrenceNodeNr(this, node.getNr());
                         }
                     }
                 }
@@ -86,7 +86,7 @@ public class SRTree extends Tree implements TreeInterface {
                     for (StratigraphicRange candidateRange:lastRanges) {
                         if (candidateRange.getID().equals(IDwithoutPrefix)) {
                             candidateRange.setFirstOccurrenceID(ID);
-                            candidateRange.setFirstOccurrenceNodeNr(node.getNr());
+                            candidateRange.setFirstOccurrenceNodeNr(this, node.getNr());
                             sRanges.add(candidateRange);
                             lastRanges.remove(candidateRange);
                             found=true;
@@ -98,9 +98,9 @@ public class SRTree extends Tree implements TreeInterface {
                         range.setID(IDwithoutPrefix);
                         range.setFirstOccurrenceID(ID);
                         if (node.isDirectAncestor()) {
-                            range.setFirstOccurrenceNodeNr(node.getNr());
+                            range.setFirstOccurrenceNodeNr(this, node.getNr());
                         } else {
-                            range.setFirstOccurrenceNodeNr(node.getNr());
+                            range.setFirstOccurrenceNodeNr(this, node.getNr());
                         }
                         firstRanges.add(range);
                     }
@@ -114,7 +114,7 @@ public class SRTree extends Tree implements TreeInterface {
                                         "_last at the end.");
                             }
                             candidateRange.setLastOccurrenceID(ID);
-                            candidateRange.setLastOccurrenceNodeNr(node.getNr());
+                            candidateRange.setLastOccurrenceNodeNr(this, node.getNr());
                             sRanges.add(candidateRange);
                             firstRanges.remove(candidateRange);
                             found=true;
@@ -125,7 +125,7 @@ public class SRTree extends Tree implements TreeInterface {
                         StratigraphicRange range = new StratigraphicRange();
                         range.setID(IDwithoutPrefix);
                         range.setLastOccurrenceID(ID);
-                        range.setLastOccurrenceNodeNr(node.getNr());
+                        range.setLastOccurrenceNodeNr(this, node.getNr());
                         lastRanges.add(range);
                     }
                 }
@@ -150,7 +150,7 @@ public class SRTree extends Tree implements TreeInterface {
             StratigraphicRange range_sink = new StratigraphicRange();
             ArrayList<Integer> nodeNrs_src = (ArrayList) range_src.getNodeNrs();
             for (int j=0; j<nodeNrs_src.size(); j++) {
-                range_sink.addNodeNr(nodeNrs_src.get(j));
+                range_sink.addNodeNr(this, nodeNrs_src.get(j));
             }
             range_sink.setFirstOccurrenceID(range_src.getFirstOccurrenceID());
             range_sink.setLastOccurrenceID(range_src.getLastOccurrenceID());
@@ -255,7 +255,7 @@ public class SRTree extends Tree implements TreeInterface {
             range_sink.removeAllNodeNrs();
             for (int i=0; i< range_src.getNodeNrs().size(); i++) {
                 int nodeNr = range_src.getNodeNrs().get(i);
-                range_sink.addNodeNr(nodeNr);
+                range_sink.addNodeNr(this, nodeNr);
             }
         }
     }
@@ -429,7 +429,7 @@ public class SRTree extends Tree implements TreeInterface {
         // from single fossil range
         ArrayList<Integer> internalNodeNrs = new ArrayList<>();
         for (StratigraphicRange range: sRanges) {
-            internalNodeNrs.addAll(range.getInternalNodeNrs());
+            internalNodeNrs.addAll(range.getInternalNodeNrs(this));
         }
         return internalNodeNrs;
     }
@@ -451,7 +451,7 @@ public class SRTree extends Tree implements TreeInterface {
         if (node.isFake())
             nodeNr = node.getDirectAncestorChild().getNr();
         for (StratigraphicRange candidate_range:sRanges) {
-            if (candidate_range.containsNodeNr(nodeNr)) {
+            if (candidate_range.containsNodeNr(this, nodeNr)) {
                 return candidate_range;
             }
         }
@@ -464,9 +464,9 @@ public class SRTree extends Tree implements TreeInterface {
         if (m_nodes[node1Nr].isFake())
             node1Nr = m_nodes[node1Nr].getDirectAncestorChild().getNr();
         if (m_nodes[node2Nr].isFake())
-            node1Nr = m_nodes[node2Nr].getDirectAncestorChild().getNr();
+            node2Nr = m_nodes[node2Nr].getDirectAncestorChild().getNr();
         for (StratigraphicRange range:sRanges) {
-            if (range.containsNodeNr(node1Nr) && range.containsNodeNr(node2Nr)) {
+            if (range.containsNodeNr(this, node1Nr) && range.containsNodeNr(this, node2Nr)) {
                 return true;
             }
         }

@@ -191,7 +191,7 @@ public class SRWilsonBalding extends SRTreeOperator {
                 }
                 PiP.removeChild(iP);   // remove <PiP,iP>
                 CiP.setParent(PiP);
-                if (Randomizer.nextBoolean()) {
+                if (left) {
                     PiP.setLeft(CiP);
                     PiP.setRight(anotherChild);
                 } else {
@@ -216,7 +216,7 @@ public class SRWilsonBalding extends SRTreeOperator {
                 }
                 jP.removeChild(j);  // remove <jP, j>
                 iP.setParent(jP);
-                if (Randomizer.nextBoolean()) {
+                if (jLeft) {
                     jP.setLeft(iP);
                     jP.setRight(CjP);
                 } else {
@@ -264,12 +264,12 @@ public class SRWilsonBalding extends SRTreeOperator {
 
         // remove or add nodes to the ranges and calculate the orientation coefficient
         if (pruningFromSRange) {
-            pruningRange.removeNodeNr(iP.getNr());
-            orientationCoefficient *= 0.5;
+            pruningRange.removeNodeNr(tree, iP.getNr());
+//            orientationCoefficient *= 0.5;
         }
         if (attachingToSRange) {
-            attachingRange.addNodeNrAfter(jP.getNr(), iP.getNr());
-            orientationCoefficient *= 2.0;
+            attachingRange.addNodeNrAfter(tree, jP.getNr(), iP.getNr());
+//            orientationCoefficient *= 2.0;
         }
         if (randomAttach){
             orientationCoefficient *= 2.0;
@@ -280,8 +280,6 @@ public class SRWilsonBalding extends SRTreeOperator {
 
         newDimension = 0;
         sRangeInternalNodeNrs = tree.getSRangesInternalNodeNrs();
-        if (!sRangeInternalNodeNrs.isEmpty())
-            System.out.println();
         for (int index=0; index<nodeCount; index++) {
             Node node = tree.getNode(index);
             //the node is not the root, it is not a sampled ancestor on a zero branch, it is not an internal node of a stratigraphic range

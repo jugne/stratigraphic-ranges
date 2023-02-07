@@ -5,6 +5,7 @@ import beast.base.core.Input;
 import beast.base.evolution.alignment.Taxon;
 import beast.base.evolution.tree.Node;
 import beast.base.evolution.tree.Tree;
+import sr.evolution.tree.SRTree;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,16 +52,25 @@ public class StratigraphicRange extends BEASTObject {
         }
     }
 
-    public boolean containsNodeNr(int nodeNr) {
-        return nodes.contains(nodeNr);
+    public boolean containsNodeNr(SRTree tree, int nodeNr) {
+        int nr = nodeNr;
+        if (tree.getNode(nodeNr).isFake())
+            nr = tree.getNode(nodeNr).getDirectAncestorChild().getNr();
+        return nodes.contains(nr);
     }
 
-    public void addNodeNrAfter(int nodeAfterNr, int nodeNr) {
-        int i= nodes.indexOf(nodeAfterNr)+1;
-        nodes.add(i,nodeNr);
+    public void addNodeNrAfter(SRTree tree, int nodeAfterNr, int nodeNr) {
+        int afterNr = nodeAfterNr;
+        int nr = nodeNr;
+        if (tree.getNode(nodeAfterNr).isFake())
+            afterNr = tree.getNode(nodeAfterNr).getDirectAncestorChild().getNr();
+        if (tree.getNode(nodeNr).isFake())
+            nr = tree.getNode(nodeNr).getDirectAncestorChild().getNr();
+        int i= nodes.indexOf(afterNr)+1;
+        nodes.add(i,nr);
     }
 
-    public void removeNodeNr(int nodeNr) {
+    public void removeNodeNr(SRTree tree, int nodeNr) {
         nodes.remove((Integer)nodeNr);
     }
 
@@ -77,11 +87,14 @@ public class StratigraphicRange extends BEASTObject {
      * the single fossil is treated as the first occurrence
      * @param nodeNr
      */
-    public void setFirstOccurrenceNodeNr(int nodeNr) {
+    public void setFirstOccurrenceNodeNr(SRTree tree, int nodeNr) {
+        int nr = nodeNr;
+        if (tree.getNode(nodeNr).isFake())
+            nr = tree.getNode(nodeNr).getDirectAncestorChild().getNr();
         if (nodes.isEmpty()) {
-            nodes.add(nodeNr);
+            nodes.add(nr);
         } else {
-            nodes.set(0,nodeNr);
+            nodes.set(0,nr);
         }
     }
 
@@ -91,12 +104,15 @@ public class StratigraphicRange extends BEASTObject {
      *
      * @param nodeNr
      */
-    public void setLastOccurrenceNodeNr(int nodeNr) {
+    public void setLastOccurrenceNodeNr(SRTree tree, int nodeNr) {
+        int nr = nodeNr;
+        if (tree.getNode(nodeNr).isFake())
+            nr = tree.getNode(nodeNr).getDirectAncestorChild().getNr();
         if (isSingleFossilRange()) {
             if (nodes.isEmpty()) {
-                nodes.add(nodeNr);
+                nodes.add(nr);
             } else {
-                nodes.set(0,nodeNr);
+                nodes.set(0,nr);
             }
             return;
         } else {
@@ -104,7 +120,7 @@ public class StratigraphicRange extends BEASTObject {
                 nodes.add(null);
             }
         }
-        nodes.add(nodeNr);
+        nodes.add(nr);
     }
 
     public void makeSingleFossilRange() {
@@ -131,10 +147,13 @@ public class StratigraphicRange extends BEASTObject {
         return isSingleFossilRange;
     }
 
-    public List<Integer> getInternalNodeNrs() {
+    public List<Integer> getInternalNodeNrs(SRTree tree) {
         List<Integer> internalNodeNrs = new ArrayList<>();
         for (int i=1; i< nodes.size(); i++) {
             internalNodeNrs.add(nodes.get(i));
+            if (tree.getNode(i).isDirectAncestor()){
+                internalNodeNrs.add(tree.getNode(i).getParent().getNr());
+            }
         }
         return internalNodeNrs;
     }
@@ -171,7 +190,10 @@ public class StratigraphicRange extends BEASTObject {
         return lastOccurrenceID;
     }
 
-    public void addNodeNr(int nodeNr) {
-        nodes.add(nodeNr);
+    public void addNodeNr(SRTree tree, int nodeNr) {
+        int nr = nodeNr;
+        if (tree.getNode(nodeNr).isFake())
+            nr = tree.getNode(nodeNr).getDirectAncestorChild().getNr();
+        nodes.add(nr);
     }
 }
