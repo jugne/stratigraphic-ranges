@@ -43,6 +43,7 @@ public class SRTree extends Tree implements TreeInterface {
         if (stratigraphicRangeInput.get().size() != 0) {
             sRanges = (ArrayList) stratigraphicRangeInput.get();
             List<Node> externalNodes = getExternalNodes();
+            List<Node> unusedNodes = getExternalNodes();
             for (StratigraphicRange range:sRanges) {
                 range.removeAllNodeNrs();
                 for (Node node:externalNodes) {
@@ -53,17 +54,25 @@ public class SRTree extends Tree implements TreeInterface {
                                     "initializing the stratigraphic range tree."  );
                         }
                         range.setFirstOccurrenceNodeNr(this, node.getNr());
+                        unusedNodes.remove(node);
                     }
                     if (node.getID().equals(range.getLastOccurrenceID())) {
-                        if (node.isDirectAncestor()) {
-                            range.setLastOccurrenceNodeNr(this, node.getNr());
-                        } else {
-                            range.setLastOccurrenceNodeNr(this, node.getNr());
-                        }
+                        range.setLastOccurrenceNodeNr(this, node.getNr());
+                        unusedNodes.remove(node);
                     }
                 }
                 range.initAndValidate();
             }
+            for (Node n : unusedNodes){
+                StratigraphicRange tmpRange = new StratigraphicRange();
+                tmpRange.setFirstOccurrenceNodeNr(this, n.getNr());
+                tmpRange.setFirstOccurrenceID(n.getID());
+                tmpRange.setLastOccurrenceNodeNr(this, n.getNr());
+                tmpRange.setLastOccurrenceID(n.getID());
+                tmpRange.initAndValidate();
+                sRanges.add(tmpRange);
+            }
+
         } else {
             sRanges = new ArrayList<>();
             ArrayList<StratigraphicRange> firstRanges = new ArrayList<>();

@@ -40,7 +40,9 @@ public class SRWilsonBalding extends SRTreeOperator {
             Node node = tree.getNode(index);
             //the node is not the root, it is not a sampled ancestor on a zero branch, it is not an internal node of a
             // stratigraphic range
-            if (!node.isRoot() && !node.isDirectAncestor() && !sRangeInternalNodeNrs.contains(node.getNr()))
+
+            if (!node.isRoot() && !node.isDirectAncestor() && !sRangeInternalNodeNrs.contains(node.getNr())
+                && !(node.isFake()&&sRangeInternalNodeNrs.contains(node.getDirectAncestorChild().getNr())))
                 allowableNodeIndices.add(index);
         }
 
@@ -283,7 +285,8 @@ public class SRWilsonBalding extends SRTreeOperator {
         for (int index=0; index<nodeCount; index++) {
             Node node = tree.getNode(index);
             //the node is not the root, it is not a sampled ancestor on a zero branch, it is not an internal node of a stratigraphic range
-            if (!node.isRoot() && !node.isDirectAncestor() && !sRangeInternalNodeNrs.contains(node.getNr()))
+            if (!node.isRoot() && !node.isDirectAncestor() && !sRangeInternalNodeNrs.contains(node.getNr())
+                    && !(node.isFake()&&sRangeInternalNodeNrs.contains(node.getDirectAncestorChild().getNr())))
                 newDimension++;
         }
         dimensionCoefficient = (double) oldDimension / newDimension;
