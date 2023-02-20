@@ -201,7 +201,7 @@ public class SRTree extends Tree implements TreeInterface {
         // invalidate cache
         postCache = null;
 
-        final Tree tree = (Tree) other;
+        final SRTree tree = (SRTree) other;
 //        addOrientationMetadata(tree.getRoot().getNr());
         if (m_nodes == null) {
             initArrays();
