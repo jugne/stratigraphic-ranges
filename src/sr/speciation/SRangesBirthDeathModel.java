@@ -1,14 +1,18 @@
 package sr.speciation;
 
+import beast.base.core.Function;
 import beast.base.core.Input;
+import beast.base.evolution.speciation.SpeciesTreeDistribution;
 import beast.base.evolution.tree.Node;
 import beast.base.core.Citation;
 import beast.base.core.Description;
 
 
+import beast.base.inference.parameter.RealParameter;
 import sa.evolution.speciation.SABirthDeathModel;
 import sr.evolution.tree.SRTree;
 import sr.evolution.sranges.StratigraphicRange;
+import sr.parameterization.Parameterization;
 
 /**
  * @author Alexandra Gavryushkina
@@ -20,20 +24,30 @@ import sr.evolution.sranges.StratigraphicRange;
         "The fossilized birth-death model under different types of speciation")
 @Citation("Gavryushkina A, Warnock RCM, Drummond AJ, Heath TA, Stadler T (2017) \n" +
         "Bayesian total-evidence dating under the fossilized birth-death model with stratigraphic ranges.")
-public class SRangesBirthDeathModel extends SABirthDeathModel {
+public class SRangesBirthDeathModel extends SpeciesTreeDistribution {
 
-//    final public Input<SRTree> treeInput = new Input<>("srTree",
-//            "beast.tree on which this operation is performed",
-//            Input.Validate.REQUIRED);
+    public Input<Parameterization> parameterizationInput = new Input<>("parameterization",
+            "BDMM parameterization",
+            Input.Validate.REQUIRED);
+
+    public Input<Function> finalSampleOffsetInput = new Input<>("finalSampleOffset",
+            "If provided, the difference in time between the final sample and the end of the BD process.",
+            new RealParameter("0.0"));
+
+    public Input<Boolean> conditionOnSurvival = new Input<>("conditionOnSurvival",
+            "Condition on at least one surviving lineage. (Default true.)",
+            true);
+
+    private Parameterization parameterization;
+    private Function finalSampleOffset;
 
 
-    @Override
+
     public double q(double t, double c1, double c2) {
         double v = Math.exp(-c1 * t);
         return 4 * v / Math.pow(v*(1-c2) + (1+c2), 2.0);
     }
 
-    @Override
     public double log_q(double t, double c1, double c2) {
         return Math.log(q(t,c1,c2));
     }
