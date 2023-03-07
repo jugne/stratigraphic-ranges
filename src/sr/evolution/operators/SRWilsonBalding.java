@@ -129,17 +129,19 @@ public class SRWilsonBalding extends SRTreeOperator {
 
         //classify the type of move being performed before changing the tree structure
         boolean pruningFromSA = CiP.isDirectAncestor();
-        boolean pruningFromSRange = !CiP.isDirectAncestor() && sRangeInternalNodeNrs.contains(iP.getNr());
+//        boolean pruningFromSRange = !CiP.isDirectAncestor() && sRangeInternalNodeNrs.contains(iP.getNr());
         boolean randomAttach = false;
+        boolean pruningFromSRange = false;
+        if (!CiP.isDirectAncestor()) {
+            pruningRange = tree.getSharedRange(iP.getNr(), CiP.getNr());
+            pruningFromSRange = pruningRange != null;
+        }
         boolean randomPrune = !pruningFromSA && !pruningFromSRange;
-        if (pruningFromSRange || pruningFromSA) {
-            pruningRange = tree.getRangeOfNode(iP);
+        boolean attachingToSRange = false;
+        if (!attachingToLeaf && jP != null){
+            attachingRange = tree.getSharedRange(jP.getNr(),j.getNr());
+            attachingToSRange = attachingRange!=null;
         }
-        boolean attachingToSRange = !attachingToLeaf && jP != null && tree.belongToSameSRange(jP.getNr(),j.getNr());
-        if (attachingToLeaf || attachingToSRange) {
-            attachingRange = tree.getRangeOfNode(j);
-        }
-
 
 
         //Hastings numerator calculation + newAge of iP
@@ -267,11 +269,9 @@ public class SRWilsonBalding extends SRTreeOperator {
         // remove or add nodes to the ranges and calculate the orientation coefficient
         if (pruningFromSRange) {
             pruningRange.removeNodeNr(tree, iP.getNr());
-//            orientationCoefficient *= 0.5;
         }
         if (attachingToSRange) {
             attachingRange.addNodeNrAfter(tree, jP.getNr(), iP.getNr());
-//            orientationCoefficient *= 2.0;
         }
         if (randomAttach){
             orientationCoefficient *= 2.0;

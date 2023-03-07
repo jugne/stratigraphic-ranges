@@ -467,18 +467,23 @@ public class SRTree extends Tree implements TreeInterface {
         return null;
     }
 
-
-
-    public boolean belongToSameSRange(int node1Nr, int node2Nr) {
+    public StratigraphicRange getSharedRange(int node1Nr, int node2Nr){
         if (m_nodes[node1Nr].isFake())
             node1Nr = m_nodes[node1Nr].getDirectAncestorChild().getNr();
         if (m_nodes[node2Nr].isFake())
             node2Nr = m_nodes[node2Nr].getDirectAncestorChild().getNr();
         for (StratigraphicRange range:sRanges) {
             if (range.containsNodeNr(this, node1Nr) && range.containsNodeNr(this, node2Nr)) {
-                return true;
+                return range;
             }
         }
+        return null;
+    }
+
+
+    public boolean belongToSameSRange(int node1Nr, int node2Nr) {
+        if (getSharedRange(node1Nr, node2Nr)!=null)
+            return true;
         return false;
     }
 
@@ -488,9 +493,7 @@ public class SRTree extends Tree implements TreeInterface {
         out.print("tree STATE_" + sample + " = ");
         // Don't sort, this can confuse CalculationNodes relying on the tree
         //tree.getRoot().sort();
-        System.out.println(tree.getRoot().toString());
         final String newick = tree.getRoot().toShortNewick(false);
-        System.out.println(newick);
         out.print(newick);
         out.print(";");
     }

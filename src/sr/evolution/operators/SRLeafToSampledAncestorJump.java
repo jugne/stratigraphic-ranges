@@ -39,6 +39,7 @@ public class SRLeafToSampledAncestorJump extends TreeOperator {
     public double proposal() {
 
         double newHeight, newRange, oldRange, orientationCoefficient;
+        StratigraphicRange sameRange = null;
         orientationCoefficient = 1;
         int categoryCount = 1;
         if (categoriesInput.get() != null) {
@@ -77,27 +78,36 @@ public class SRLeafToSampledAncestorJump extends TreeOperator {
             }
 
             SRNode otherChild = (SRNode) getOtherChild(parent,leaf);
-            if (Randomizer.nextBoolean()){
+            sameRange = tree.getSharedRange(otherChild.getNr(),leaf.getNr());
+            if (sameRange==null && Randomizer.nextBoolean()){
                 parent.removeAllChildren(true);
-                parent.addChild(otherChild);
                 parent.addChild(leaf);
+                parent.addChild(otherChild);
             } else {
                 parent.removeAllChildren(true);
-                parent.addChild(leaf);
                 parent.addChild(otherChild);
+                parent.addChild(leaf);
+                if (sameRange!=null)
+                    sameRange.removeNodeNr(tree, parent.getNr());
             }
             parent.makeAllDirty(tree.IS_FILTHY);
-            orientationCoefficient*=2.;
+            if (sameRange==null)
+                orientationCoefficient*=2.;
         } else {
             newRange = 1;
             SRNode otherChild = (SRNode) getOtherChild(parent,leaf);
             //make sure that the branch where a new sampled node to appear is not above that sampled node
-            if (otherChild.getHeight() >= leaf.getHeight() ){//|| parent.getLeft().getNr()!=otherChild.getNr())  {
+            if (otherChild.getHeight() >= leaf.getHeight() )
                 return Double.NEGATIVE_INFINITY;
-            }
+
             if (parent.isRoot()) {
                 oldRange = Math.exp(parent.getHeight() - leaf.getHeight());
             } else {
+                int siblingNr =  getOtherChild(parent, leaf).getNr();
+                int grandParentNr =   parent.getParent().getNr();
+                if (tree.belongToSameSRange(siblingNr,grandParentNr))
+                    return Double.NEGATIVE_INFINITY;
+
                 oldRange = parent.getParent().getHeight() - leaf.getHeight();
             }
             newHeight = leaf.getHeight();
@@ -106,13 +116,21 @@ public class SRLeafToSampledAncestorJump extends TreeOperator {
                 categoriesInput.get().setValue(index, -1);
             }
 
-            SRNode otherChild2 = (SRNode) getOtherChild(parent,leaf);
-            if (parent.getChild(0).getNr()!=otherChild2.getNr()){
+            sameRange = tree.getSharedRange(otherChild.getNr(),leaf.getNr());
+            StratigraphicRange leafRange = tree.getRangeOfNode(leaf);
+            if (parent.getChild(0).getNr()!=otherChild.getNr()){
                 parent.removeAllChildren(true);
-                parent.addChild(otherChild2);
+                parent.addChild(otherChild);
                 parent.addChild(leaf);
             }
-            orientationCoefficient *=0.5;
+            if (sameRange == null) {
+                orientationCoefficient *= 0.5;
+            } else {
+                System.out.println("There is a bug in the SRLeafToSampledAncestorJump operator. " +
+                        "Please report this to the developers!");
+                System.exit(1);
+            }
+            leafRange.removeNodeNr(tree, parent.getNr());
             parent.makeAllDirty(tree.IS_FILTHY);
         }
         parent.setHeight(newHeight);
