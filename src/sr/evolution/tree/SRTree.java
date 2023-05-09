@@ -201,13 +201,13 @@ public class SRTree extends Tree implements TreeInterface {
         // invalidate cache
         postCache = null;
 
-        final SRTree tree = (SRTree) other;
+        final Tree tree = (Tree) other;
 //        addOrientationMetadata(tree.getRoot().getNr());
         if (m_nodes == null) {
             initArrays();
         }
         root = m_nodes[tree.getRoot().getNr()];
-        final Node[] otherNodes = tree.m_nodes;
+        final Node[] otherNodes = tree.getNodesAsArray();
         final int rootNr = root.getNr();
         assignFrom(0, rootNr, otherNodes);
         root.setHeight(otherNodes[rootNr].getHeight());
@@ -489,11 +489,11 @@ public class SRTree extends Tree implements TreeInterface {
 
     @Override
     public void log(long sample, PrintStream out) {
-        Tree tree = (Tree) getCurrent();
+        SRTree tree = (SRTree) getCurrent();
         out.print("tree STATE_" + sample + " = ");
         // Don't sort, this can confuse CalculationNodes relying on the tree
         //tree.getRoot().sort();
-        final String newick = tree.getRoot().toShortNewick(false);
+        final String newick = ((SRNode) tree.getRoot()).toShortNewickForLog(false);
         out.print(newick);
         out.print(";");
     }

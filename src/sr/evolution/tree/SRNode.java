@@ -42,8 +42,8 @@ public class SRNode extends Node {
      *         is set true. This is useful for example when storing a State to file
      *         so that it can be restored.
      */
-    @Override
-    public String toShortNewick(final boolean printInternalNodeNumbers) {
+
+    public String toShortNewickForLog(final boolean printInternalNodeNumbers) {
         final StringBuilder buf = new StringBuilder();
 
         if (!isLeaf()) {
@@ -54,7 +54,7 @@ public class SRNode extends Node {
                     isFirst = false;
                 else
                     buf.append(",");
-                buf.append(child.toShortNewick(printInternalNodeNumbers));
+                buf.append(((SRNode) child).toShortNewickForLog(printInternalNodeNumbers));
             }
             buf.append(")");
         }
