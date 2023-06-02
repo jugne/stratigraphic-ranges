@@ -487,6 +487,45 @@ public class SRTree extends Tree implements TreeInterface {
         return false;
     }
 
+    /**
+     * Adds the orientation (donor-recipient) metadata.
+     */
+    public void addOrientationMetadata() {
+        addOrientationMetadataNode(getRoot().getNr());
+    }
+
+    /**
+     * Add orientation metadata to each node. Left (0) child is always a ancestor species.
+     * Right (1) child is always a new species. Allows for: - tree state to be stored
+     * and restored from file even when BEAST applies sorting. - metadata can be
+     * used to color the output tree lineages for donors and recipients.
+     *
+     * @param subtreeRootNr the node number
+     */
+    private void addOrientationMetadataNode(int subtreeRootNr) {
+        Node subRoot = this.getNode(subtreeRootNr);
+        if (subRoot.isRoot()) {
+            subRoot.metaDataString = "orientation=left";
+        }
+
+        if (!subRoot.isLeaf()) {
+            if (subRoot.isFake()) {
+                subRoot.getLeft().metaDataString = subRoot.metaDataString;
+                subRoot.getRight().metaDataString = subRoot.metaDataString;
+            } else if (subRoot.getChildCount()==1){
+                subRoot.getLeft().metaDataString = subRoot.metaDataString;
+            } else {
+                subRoot.getLeft().metaDataString = "orientation=left";
+                subRoot.getRight().metaDataString = "orientation=right";
+            }
+
+            addOrientationMetadataNode(subRoot.getLeft().getNr());
+            if(subRoot.getChildCount()!=1){
+                addOrientationMetadataNode(subRoot.getRight().getNr());
+            }
+        }
+    }
+
     @Override
     public void log(long sample, PrintStream out) {
         SRTree tree = (SRTree) getCurrent();

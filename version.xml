@@ -15,6 +15,7 @@
         <provider classname="sr.evolution.tree.SRNode"/>
         <provider classname="sr.evolution.tree.SRTree"/>
         <provider classname="sr.speciation.SRangesBirthDeathModel"/>
+        <provider classname="sr.util.TreeWithMetadataLogger"/>
     </service>
 </package>
 
