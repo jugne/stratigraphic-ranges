@@ -4,6 +4,7 @@ import beast.base.core.Input;
 import beast.base.evolution.tree.Node;
 import beast.base.evolution.tree.Tree;
 import beast.base.evolution.tree.TreeInterface;
+import beast.base.evolution.tree.TreeParser;
 import beast.base.inference.StateNode;
 import sr.evolution.sranges.StratigraphicRange;
 
@@ -202,6 +203,7 @@ public class SRTree extends Tree implements TreeInterface {
         postCache = null;
 
         final Tree tree = (Tree) other;
+        sr.util.Tools.orientateNodeChildren(tree.getRoot().getNr(), tree);
 //        addOrientationMetadata(tree.getRoot().getNr());
         if (m_nodes == null) {
             initArrays();
@@ -319,7 +321,20 @@ public class SRTree extends Tree implements TreeInterface {
 
     @Override
     public void fromXML(final org.w3c.dom.Node node) {
-        super.fromXML(node);
+        final String newick = node.getTextContent();
+        final TreeParser parser = new TreeParser();
+        try {
+            parser.thresholdInput.setValue(1e-10, parser);
+        } catch (Exception e1) {
+            e1.printStackTrace();
+        }
+        try {
+            parser.offsetInput.setValue(0, parser);
+            setRoot(parser.parseNewick(newick));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        initArrays();
         orientateTree();
     }
 
@@ -364,36 +379,10 @@ public class SRTree extends Tree implements TreeInterface {
      * Orientates the tree according to stored (donor-recipient) metadata.
      */
     public void orientateTree() {
-        orientateNodeChildren(getRoot().getNr());
+        sr.util.Tools.orientateNodeChildren(getRoot().getNr(), this);
     }
 
-    /**
-     * Orientate node children depending on stored metadata.
-     *
-     * @param subtreeRootNr the none number
-     */
-    private void orientateNodeChildren(int subtreeRootNr) {
-        Node subTreeRoot = this.getNode(subtreeRootNr);
-        if (!subTreeRoot.isLeaf()) {
-            if(subTreeRoot.getChild(0).metaDataString == null)
-                return;
-            if ((!subTreeRoot.isFake() && !subTreeRoot.getChild(0).metaDataString.contains("orientation=donor"))
-                    || (subTreeRoot.isFake() && subTreeRoot.getChild(1).getHeight() != subTreeRoot.getHeight())) {
-                Node left = subTreeRoot.getChild(1);
-                Node right = subTreeRoot.getChild(0);
 
-                subTreeRoot.removeAllChildren(false);
-
-//                subTreeRoot.setLeft(left);
-//                subTreeRoot.setRight(right);
-				subTreeRoot.addChild(left);
-				subTreeRoot.addChild(right);
-            }
-
-            orientateNodeChildren(subTreeRoot.getChild(0).getNr());
-            orientateNodeChildren(subTreeRoot.getChild(1).getNr());
-        }
-    }
 
     /**
      * Add orientation metadata to each node. Left (0) child is always a donor.
@@ -406,7 +395,7 @@ public class SRTree extends Tree implements TreeInterface {
     public void addOrientationMetadata(int subtreeRootNr) {
         Node subRoot = this.getNode(subtreeRootNr);
         if (subRoot.isRoot()) {
-            subRoot.metaDataString = "orientation=donor";
+            subRoot.metaDataString = "orientation=left";
         }
 
         if (!subRoot.isLeaf()) {
@@ -416,8 +405,8 @@ public class SRTree extends Tree implements TreeInterface {
             } else if (subRoot.getChildCount()==1){
                 subRoot.getLeft().metaDataString = subRoot.metaDataString;
             } else {
-                subRoot.getLeft().metaDataString = "orientation=donor";
-                subRoot.getRight().metaDataString = "orientation=recipient";
+                subRoot.getLeft().metaDataString = "orientation=left";
+                subRoot.getRight().metaDataString = "orientation=right";
             }
 
             addOrientationMetadata(subRoot.getLeft().getNr());
@@ -432,6 +421,15 @@ public class SRTree extends Tree implements TreeInterface {
 
     public ArrayList<StratigraphicRange> getSRanges() {
         return  sRanges;
+    }
+    public Integer getNonSingleSRangeCount() {
+        int count = 0;
+        for (StratigraphicRange range: sRanges) {
+            if (!range.isSingleFossilRange()) {
+                count++;
+            }
+        }
+        return  count;
     }
 
     public ArrayList<Integer> getSRangesInternalNodeNrs() { // nodes that do not represent the first occurrences, does not include nodes
