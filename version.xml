@@ -14,8 +14,11 @@
         <provider classname="sr.evolution.tree.RandomSRangeTree"/>
         <provider classname="sr.evolution.tree.SRNode"/>
         <provider classname="sr.evolution.tree.SRTree"/>
+        <provider classname="sr.evolution.tree.SpeciationLogger"/>
+        <provider classname="sr.evolution.tree.SampledAncestorLogger"/>
         <provider classname="sr.speciation.SRangesBirthDeathModel"/>
         <provider classname="sr.util.TreeWithMetadataLogger"/>
+        <provider classname="sr.util.Tools"/>
     </service>
 </package>
 

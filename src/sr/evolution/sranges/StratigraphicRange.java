@@ -12,6 +12,7 @@ import java.util.List;
 
 /**
  *@author Alexandra Gavryushkina
+ * @author Ugne Stolz
  */
 public class StratigraphicRange extends BEASTObject {
 
