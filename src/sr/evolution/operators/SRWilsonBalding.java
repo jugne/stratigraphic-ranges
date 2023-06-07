@@ -10,7 +10,9 @@ import sr.evolution.tree.SRTree;
 import java.util.ArrayList;
 
 /**
- *@author Alexandra Gavryushkina
+ * Implements the Wilson-Balding proposal for the sRange tree.
+ * @author Alexandra Gavryushkina
+ * @author Ugne Stolz
  */
 public class SRWilsonBalding extends SRTreeOperator {
 

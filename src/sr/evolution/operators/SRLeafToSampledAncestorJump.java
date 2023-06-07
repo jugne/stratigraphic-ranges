@@ -16,6 +16,7 @@ import java.util.*;
 
 /**
  * @author Alexandra Gavryushkina
+ * @author Ugne Stolz
  */
 
 @Description("Implements a narrow move between trees of different dimensions (number of nodes in trees)." +
@@ -24,7 +25,7 @@ import java.util.*;
         "parent (the height of the leaf remains unchanged). In the second case, the sampled internal node becomes " +
         "a leaf by inserting a new parent node at a height which is uniformly chosen on the interval " +
         " between the sampled node height and its old parent height.")
-public class SRLeafToSampledAncestorJump extends TreeOperator {
+public class SRLeafToSampledAncestorJump extends SRTreeOperator {
 
     public Input<IntegerParameter> categoriesInput = new Input<IntegerParameter>("rateCategories", "rate category per branch");
 

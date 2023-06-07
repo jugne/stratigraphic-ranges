@@ -12,6 +12,7 @@ import sr.evolution.sranges.StratigraphicRange;
 
 /**
  * @author Alexandra Gavryushkina
+ * @author Ugne Stolz
  */
 
 

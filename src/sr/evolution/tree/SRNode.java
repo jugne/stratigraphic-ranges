@@ -7,6 +7,8 @@ import java.util.TreeMap;
 
 /**
  * Created by gavryusa on 04/05/17.
+ * @author Alexandra Gavryushkina
+ * @author Ugne Stolz
  */
 public class SRNode extends Node {
 

@@ -9,7 +9,7 @@ import beast.base.inference.CalculationNode;
 import java.io.PrintStream;
 
 /**
- * @author Alexandra Gavryushkina
+ * @author Ugne Stolz with the main code copied from SA package by Alexandra Gavryushkina
  */
 public class SampledAncestorLogger extends CalculationNode implements Loggable, Function {
     public Input<SRTree> treeInput = new Input<>("tree", "tree to report SA count for.", Input.Validate.REQUIRED);

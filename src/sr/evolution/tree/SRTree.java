@@ -14,12 +14,12 @@ import java.util.List;
 
 /**
  * @author Alexandra Gavryushkina
+ * @author Ugne Stolz
  * A labeled oriented tree on stratigraphic ranges under budding speciation.
- * At every internal node, the branch leading to the left child represents the ancestral species
+ * At every internal node contains metadata on its orientation.
+ * Branch leading to the left child represents the ancestral species
  * and the branch leading to the right child represents the descendant species.
- * Branches starting with sampled ancestors inheret the orientation from the parental branches:
- * if a node is fake then the non-direct ancestor child gets the same left/right orientation as the fake node.
- * If the root is a fake node then the non-direct ancestor child is always left.
+ * Sampled ancestors are always attached from left, with the appropriate metadata recorded.
  */
 public class SRTree extends Tree implements TreeInterface {
 
@@ -395,7 +395,7 @@ public class SRTree extends Tree implements TreeInterface {
     public void addOrientationMetadata(int subtreeRootNr) {
         Node subRoot = this.getNode(subtreeRootNr);
         if (subRoot.isRoot()) {
-            subRoot.metaDataString = "orientation=left";
+            subRoot.metaDataString = "orientation=ancestor";
         }
 
         if (!subRoot.isLeaf()) {
@@ -405,8 +405,8 @@ public class SRTree extends Tree implements TreeInterface {
             } else if (subRoot.getChildCount()==1){
                 subRoot.getLeft().metaDataString = subRoot.metaDataString;
             } else {
-                subRoot.getLeft().metaDataString = "orientation=left";
-                subRoot.getRight().metaDataString = "orientation=right";
+                subRoot.getLeft().metaDataString = "orientation=ancestor";
+                subRoot.getRight().metaDataString = "orientation=descendant";
             }
 
             addOrientationMetadata(subRoot.getLeft().getNr());
@@ -494,7 +494,7 @@ public class SRTree extends Tree implements TreeInterface {
 
     /**
      * Add orientation metadata to each node. Left (0) child is always a ancestor species.
-     * Right (1) child is always a new species. Allows for: - tree state to be stored
+     * Right (1) child is always a descendant species. Allows for: - tree state to be stored
      * and restored from file even when BEAST applies sorting. - metadata can be
      * used to color the output tree lineages for donors and recipients.
      *
@@ -503,7 +503,7 @@ public class SRTree extends Tree implements TreeInterface {
     private void addOrientationMetadataNode(int subtreeRootNr) {
         Node subRoot = this.getNode(subtreeRootNr);
         if (subRoot.isRoot()) {
-            subRoot.metaDataString = "orientation=left";
+            subRoot.metaDataString = "orientation=ancestor";
         }
 
         if (!subRoot.isLeaf()) {
@@ -513,8 +513,8 @@ public class SRTree extends Tree implements TreeInterface {
             } else if (subRoot.getChildCount()==1){
                 subRoot.getLeft().metaDataString = subRoot.metaDataString;
             } else {
-                subRoot.getLeft().metaDataString = "orientation=left";
-                subRoot.getRight().metaDataString = "orientation=right";
+                subRoot.getLeft().metaDataString = "orientation=ancestor";
+                subRoot.getRight().metaDataString = "orientation=descendant";
             }
 
             addOrientationMetadataNode(subRoot.getLeft().getNr());

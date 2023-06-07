@@ -36,7 +36,7 @@ public class Tools {
 		if (!subTreeRoot.isLeaf()) {
 			if(subTreeRoot.getChild(0).metaDataString == null)
 				return;
-			if ((!subTreeRoot.isFake() && !subTreeRoot.getChild(0).metaDataString.contains("orientation=left"))
+			if ((!subTreeRoot.isFake() && !subTreeRoot.getChild(0).metaDataString.contains("orientation=ancestor"))
 					|| (subTreeRoot.isFake() && subTreeRoot.getChild(1).getHeight() != subTreeRoot.getHeight())) {
 				Node left = subTreeRoot.getChild(1);
 				Node right = subTreeRoot.getChild(0);
