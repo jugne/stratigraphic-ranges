@@ -1,3 +1,9 @@
+# Table of Contents
+- [SRTreeOperator](#srtreeoperator)
+- [SRWilsonBalding](#srwilsonbalding)
+- [SRLeafToSampledAncestorJump](#srleaftosampledancestorjump)
+- [LeftRightChildSwap](#leftrightchildswap)
+
 # SRTreeOperator
 
 The `SRTreeOperator` class is an abstract class that extends the `Operator` class and serves as a base class for operators in the sRange tree.
