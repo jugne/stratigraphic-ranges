@@ -1,4 +1,6 @@
-This folder contains classes for sRanges tree and nodes.
+This folder contains classes for sRanges tree and nodes. Below the code structure and functionality for each class is outlined.
+
+
 
 # Table of Contents
 - [SRTree](#srtree)
