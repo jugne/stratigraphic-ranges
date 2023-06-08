@@ -2,6 +2,13 @@
 
 The `StratigraphicRange` class represents a range of occurrences for a taxon in a phylogenetic tree.
 
+## Table of Contents
+- [Package](#package)
+- [Class Description](#class-description)
+- [Input Fields](#input-fields)
+- [Instance Variables](#instance-variables)
+- [Methods](#methods)
+
 ## Package
 
 `sr.evolution.sranges`
