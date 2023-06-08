@@ -1,22 +1,31 @@
-# SRTree
+# Tree classes
+
+## Table of Contents
+- [SRTree](#srtree)
+- [SRNode](#srnode)
+- [RandomSRangeTree](#randomsrangetree)
+- [SampledAncestorLogger](#sampledancestorlogger)
+- [SpeciationLogger](#speciationlogger)
+
+## SRTree
 
 The `SRTree` class represents a labeled oriented tree on stratigraphic ranges under budding speciation. It extends the `Tree` class and implements the `TreeInterface`.
 
-## Class Description
+### Class Description
 
 The `SRTree` class represents a labeled oriented tree on stratigraphic ranges. It contains metadata on the orientation of internal nodes, where the left child represents the ancestral species, and the right child represents the descendant species. Sampled ancestors are always attached from the left, and appropriate metadata is recorded.
 
-### Input Fields
+#### Input Fields
 
 - `stratigraphicRangeInput`: Represents all stratigraphic ranges as a list of `StratigraphicRange` objects.
 - `treeInput`: Represents the tree to start with as a `Tree` object.
 
-### Instance Variables
+#### Instance Variables
 
 - `sRanges`: An `ArrayList` of `StratigraphicRange` objects representing the stratigraphic ranges.
 - `storedSRanges`: An `ArrayList` of stored `StratigraphicRange` objects.
 
-### Methods
+#### Methods
 
 - `initAndValidate()`: Initializes and validates the object, assigns the tree if provided, and initializes the stratigraphic ranges.
 - `initSRanges()`: Initializes the stratigraphic ranges based on the input or inferred from the tree structure.
@@ -38,41 +47,41 @@ The `SRTree` class represents a labeled oriented tree on stratigraphic ranges. I
 - `belongToSameSRange()`: Checks if two nodes belong to the same stratigraphic range.
 - `log()`: Logs the state of the tree.
 
-# SRNode
+## SRNode
 
 The `SRNode` class represents a node in a labeled oriented tree on stratigraphic ranges. It extends the `Node` class.
 
-## Class Description
+### Class Description
 
 The `SRNode` class represents a node in a labeled oriented tree on stratigraphic ranges.
 
-### Methods
+#### Methods
 
 - `copy()`: Returns a deep copy of the node.
 - `sort()`: Throws a runtime exception indicating that ordered trees should not be sorted.
 - `toShortNewickForLog(boolean printInternalNodeNumbers)`: Returns the tree in Newick format with length and metadata information. Nodes are numbered instead of using node labels. Internal nodes with non-null IDs are also printed. If `printInternalNodeNumbers` is set to true, all internal nodes are labeled, which is useful for storing the state to a file.
 
-# RandomSRangeTree
+## RandomSRangeTree
 
 The `RandomSRangeTree` class extends the `SRTree` class and implements the `StateNodeInitialiser` interface. It represents a random tree with stratigraphic ranges.
 
-## Class Description
+### Class Description
 
 The `RandomSRangeTree` class represents a random tree with stratigraphic ranges.
 
-### Inputs
+#### Inputs
 
 - `taxaInput`: Input of type `Alignment` representing the set of taxa to initialize the tree specified by the alignment.
 - `populationFunctionInput`: Input of type `PopulationFunction` representing the population function for generating coalescent (required).
 
-### Fields
+#### Fields
 
 - `nrOfTaxa`: Total number of taxa.
 - `children`: An array of lists to store the children of each node.
 - `taxa`: A set to store the taxa.
 - `nextNodeNr`: Number of the next internal node, used when creating new internal nodes.
 
-### Methods
+#### Methods
 
 - `initAndValidate()`: Initializes and validates the tree by setting up taxa, initializing state nodes, and calling the `initAndValidate()` method of the superclass.
 - `swap(List list, int i, int j)`: Swaps elements in a list at indices `i` and `j`.
@@ -90,19 +99,19 @@ The `RandomSRangeTree` class represents a random tree with stratigraphic ranges.
 - `nodeList`: An ArrayList to store the nodes.
 - `activeNodeCount`: The number of active nodes.
 
-# SampledAncestorLogger
+## SampledAncestorLogger
 
 The `SampledAncestorLogger` class extends the `CalculationNode` class and implements the `Loggable` and `Function` interfaces. It represents a logger for reporting sampled ancestor (SA) count in a tree.
 
-## Class Description
+### Class Description
 
 The `SampledAncestorLogger` class is responsible for logging the SA count in a tree.
 
-### Inputs
+#### Inputs
 
 - `treeInput`: Input of type `SRTree` representing the tree to report the SA count for (required).
 
-### Methods
+#### Methods
 
 - `initAndValidate()`: Initializes and validates the logger.
 - `init(PrintStream out)`: Initializes the logger for logging.
@@ -112,22 +121,22 @@ The `SampledAncestorLogger` class is responsible for logging the SA count in a t
 - `getArrayValue()`: Returns the SA count as an array value.
 - `getArrayValue(int iDim)`: Returns the SA count as an array value for a specific dimension.
 
-# SpeciationLogger
+## SpeciationLogger
 
 The `SpeciationLogger` class extends the `CalculationNode` class and implements the `Loggable` and `Function` interfaces. It represents a logger for reporting speciation events in a tree.
 
-## Class Description
+### Class Description
 
 The `SpeciationLogger` class is responsible for logging speciation events in a tree.
 
-### Inputs
+#### Inputs
 
 - `treeInput`: Input of type `SRTree` representing the tree to report the speciation events for (required).
 - `sepStringInput`: Input of type `String` representing the separator string for ranges (default: "_").
 - `directStringInput`: Input of type `String` representing the string to indicate speciation direction (default: ">").
 - `onlyFirstInput`: Input of type `Boolean` indicating if only the first descendant should be logged (default: true).
 
-### Methods
+#### Methods
 
 - `initAndValidate()`: Initializes and validates the logger.
 - `init(PrintStream out)`: Initializes the logger for logging.
@@ -136,5 +145,3 @@ The `SpeciationLogger` class is responsible for logging speciation events in a t
 - `getDimension()`: Returns the dimension of the logged data (1 in this case).
 - `getArrayValue()`: Returns the speciation count as an array value.
 - `getArrayValue(int iDim)`: Returns the speciation count as an array value for a specific dimension.
-
-
