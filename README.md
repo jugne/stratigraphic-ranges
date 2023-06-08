@@ -12,7 +12,9 @@
 
 ## Introduction
 
-sRanges is a BEAST2 package for performing phylodynamic inference under the birth-death stratigraphic ranges model. Depending on data interpretation it can be used for both macroevolution and epidemiology.
+sRanges is a BEAST2.7 package for performing phylodynamic inference under the birth-death stratigraphic ranges model. Depending on data interpretation it can be used for both macroevolution and epidemiology.
+
+THe dependencies on other BEAST2.7 packages can be found in `version.xml` file.
 
 ## Data
 
