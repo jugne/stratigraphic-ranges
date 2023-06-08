@@ -1,3 +1,5 @@
+This folder contains operators for trees with stratigraphic ranges. Below the code structure and functionality for each operator is outlined.
+
 # Table of Contents
 - [SRTreeOperator](#srtreeoperator)
 - [SRWilsonBalding](#srwilsonbalding)
