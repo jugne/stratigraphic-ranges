@@ -1,6 +1,5 @@
 package sr.speciation;
 
-import beast.base.core.Input;
 import beast.base.evolution.tree.Node;
 import beast.base.core.Citation;
 import beast.base.core.Description;

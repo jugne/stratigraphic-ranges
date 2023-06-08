@@ -17,7 +17,7 @@ import java.util.List;
 import static sr.util.Tools.removeLastSubstring;
 
 /**
- * @author Alexandra Gavryushkina
+ * @author Ugne Stolz
  */
 public class SpeciationLogger extends CalculationNode implements Loggable, Function {
     public Input<SRTree> treeInput = new Input<>("tree",
@@ -73,15 +73,11 @@ public class SpeciationLogger extends CalculationNode implements Loggable, Funct
                 if (onlyFirstInput.get() && !tree.getNode(i).isLeaf()) {
                     String key = removeLastSubstring(sepStringInput.get(), range.getFirstOccurrenceID()) +
                             directStringInput.get()  + removeLastSubstring(sepStringInput.get(), Tools.getFirstLeafID(right));
-                    if (speciationsCounter.get(key)==null)
-                        System.out.println("key = " + key);
                     speciationsCounter.put(key, 1);
                 } else {
                     for (Node l : right.getAllLeafNodes()){
                         String key = removeLastSubstring(sepStringInput.get(),range.getFirstOccurrenceID()) +
                                 directStringInput.get()  + removeLastSubstring(sepStringInput.get(),l.getID());
-                        if (speciationsCounter.get(key)==null)
-                            System.out.println("key = " + key);
                         speciationsCounter.put(key, 1);
                     }
                 }
