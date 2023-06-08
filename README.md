@@ -39,6 +39,10 @@ The Beauti template is currently not available. You can find examples of BEAST2 
 
 ### Tree Encoding
 
+We model a labeled oriented tree on stratigraphic ranges. It contains metadata on the orientation of internal nodes, where the left child represents the ancestral species (donor), and the right child represents the descendant species (recipient). For every branch, it's metadata is recorded at the child node and represents the ancestral/descendant assignment. Sampled ancestors are always attached from the left, and appropriate metadata is recorded.
+
+Note that while trees are logged with correct node orientation, metadata should be referenced when allocating branch label.
+
 ### Clock and Substitution Models
 
 Clock and substitution models implemented in BEAST2 are allowed.
