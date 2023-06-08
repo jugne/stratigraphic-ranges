@@ -49,9 +49,17 @@ Note that while trees are logged with correct node orientation, metadata should 
 
 Clock and substitution models implemented in BEAST2 are allowed.
 
-## Contributing
+## For developers
+
+### Repository structure
+
+### Contributing
 
 Pull requests are welcome. If you have major suggestions, please discuss them before any real effort is put into development.
+
+## Acknowledgements
+
+The sRanges are developed by Alexandra (Sasha) Gavryushkina and Ugne Stolz. 
 
 ## License
 
