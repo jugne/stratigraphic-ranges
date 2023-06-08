@@ -12,7 +12,7 @@
 
 ## Introduction
 
-sRanges is a BEAST2 package for performing phylodynamic inference under both the birth-death stratigraphic ranges model for macroevolution and epidemiology.
+sRanges is a BEAST2 package for performing phylodynamic inference under the birth-death stratigraphic ranges model. Depending on data interpretation it can be used for both macroevolution and epidemiology.
 
 ## Data
 
@@ -20,7 +20,7 @@ sRanges uses three types of data to inform the inference:
 
 - **Genetic sequence alignment**
 - **Morphological characters alignment**
-- **Sampling data**
+- **Sampling data, including range of a taxa**
 
 Sampling at present and through time is allowed, as well as having sampled ancestors. The data includes the time and uncertainty of these samples. Stratigraphic ranges are represented by two nodes marking the beginning and end of taxa (species or host), and data and time uncertainty can be associated with either of these nodes. Samples of the same taxa in between are integrated out by the model and are not needed.
 
