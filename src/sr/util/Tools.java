@@ -60,4 +60,28 @@ public class Tools {
 		return false;
 	}
 
+	public static Set<String> taxaNamesToSpeciesNames(Set<String> taxonNames, String splitCharacter){
+		Set<String> speciesNames = new HashSet<>();
+		for(String taxonName : taxonNames){
+			speciesNames.add(removeLastSubstring(splitCharacter, taxonName));
+		}
+		List<String> list = new ArrayList<>(speciesNames);
+		Collections.sort(list); // Sort the list alphabetically
+
+		Set<String> sortedSpeciesNames = new LinkedHashSet<>(list); // Convert the sorted list back to a set
+
+		return sortedSpeciesNames;
+	}
+
+	public static Integer getSpeciesNumber(Set<String> speciesNames, String id ){
+		Iterator<String> it = speciesNames.iterator();
+		int i = 0;
+		while (it.hasNext()){
+			if(it.next().contains(id))
+				return i;
+			i++;
+		}
+		return -1;
+	}
+
 }
