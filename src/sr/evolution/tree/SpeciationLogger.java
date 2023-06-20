@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
+import static sr.util.Tools.getSeparatingLengthAndNodeCount;
 import static sr.util.Tools.removeLastSubstring;
 
 /**
@@ -31,10 +32,10 @@ public class SpeciationLogger extends CalculationNode implements Loggable, Funct
                     "It will separate the donor range and recipient species.",
             ">");
 
-    public Input<Boolean> onlyFirstInput = new Input<>("onlyFirst",
-            "If true, only the first descendant is logged " ,
-            Boolean.TRUE);
-    HashMap<String, Integer> speciationsCounter = new HashMap<>();
+//    public Input<Boolean> onlyFirstInput = new Input<>("onlyFirst",
+//            "If true, only the first descendant is logged " ,
+//            Boolean.FALSE);
+    HashMap<String, double[]> speciationsCounter = new HashMap<>();
     List<String> keys = new ArrayList<>();
     @Override
     public void initAndValidate() {
@@ -50,7 +51,8 @@ public class SpeciationLogger extends CalculationNode implements Loggable, Funct
                 String key = removeLastSubstring(sepStringInput.get(), range.getFirstOccurrenceID()) +
                         directStringInput.get() + removeLastSubstring(sepStringInput.get(), leaf.getID());
                 if (speciationsCounter.get(key)==null){
-                    speciationsCounter.put(key, 0);
+                    double[] vals = new double[2];
+                    speciationsCounter.put(key, vals);
                     keys.add(key);
                     out.print(key + "\t");
                 }
@@ -70,21 +72,38 @@ public class SpeciationLogger extends CalculationNode implements Loggable, Funct
                 Node right = tree.getNode(i);
                 if (!tree.getNode(i).isLeaf())
                     right = tree.getNode(i).getRight();
-                if (onlyFirstInput.get() && !tree.getNode(i).isLeaf()) {
-                    String key = removeLastSubstring(sepStringInput.get(), range.getFirstOccurrenceID()) +
-                            directStringInput.get()  + removeLastSubstring(sepStringInput.get(), Tools.getFirstLeafID(right));
-                    speciationsCounter.put(key, 1);
-                } else {
-                    for (Node l : right.getAllLeafNodes()){
-                        String key = removeLastSubstring(sepStringInput.get(),range.getFirstOccurrenceID()) +
-                                directStringInput.get()  + removeLastSubstring(sepStringInput.get(),l.getID());
-                        speciationsCounter.put(key, 1);
-                    }
+//                if (onlyFirstInput.get() && !tree.getNode(i).isLeaf()) {
+//                    String key = removeLastSubstring(sepStringInput.get(), range.getFirstOccurrenceID()) +
+//                            directStringInput.get()  + removeLastSubstring(sepStringInput.get(), Tools.getFirstLeafID(right));
+//                    double[] vals = getSeparatingLengthAndNodeCount(tree.getNode(i), right);
+//                    speciationsCounter.put(key, vals);
+//                } else {
+                if (right.isLeaf() && !right.getID().contains("last")){
+                    String key = removeLastSubstring(sepStringInput.get(),range.getFirstOccurrenceID()) +
+                            directStringInput.get()  + removeLastSubstring(sepStringInput.get(),right.getID());
+                    double[] vals = getSeparatingLengthAndNodeCount(right.getParent(), right);
+                    if (right.isDirectAncestor())
+                        vals[1] = vals[1] - 1;
+                    speciationsCounter.put(key, vals);
                 }
+                    for (Node l : right.getAllLeafNodes()){
+                        if (!l.getID().contains("last")){
+                            String key = removeLastSubstring(sepStringInput.get(),range.getFirstOccurrenceID()) +
+                                    directStringInput.get()  + removeLastSubstring(sepStringInput.get(),l.getID());
+                            double[] vals = getSeparatingLengthAndNodeCount(tree.getNode(i), l);
+                            if (l.isDirectAncestor())
+                                vals[1] = vals[1] - 1;
+                            speciationsCounter.put(key, vals);
+                        }
+                    }
+//                }
             }
         }
         for (String s : keys) {
-            out.print(speciationsCounter.get(s) + "\t");
+//            out.print(speciationsCounter.get(s) + "\t");
+            out.print(String.join(",", Arrays.stream(speciationsCounter.get(s))
+                    .mapToObj(Double::toString)
+                    .toArray(String[]::new))+ "\t");
         }
 
     }
