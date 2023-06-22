@@ -32,6 +32,13 @@ public class SpeciationLogger extends CalculationNode implements Loggable, Funct
                     "It will separate the donor range and recipient species.",
             ">");
 
+    public Input<Boolean> relogInput = new Input<>("relog",
+            "If true, this logger is run after the analysis completes. " +
+                    "Default false.",
+            false);
+
+
+
 //    public Input<Boolean> onlyFirstInput = new Input<>("onlyFirst",
 //            "If true, only the first descendant is logged " ,
 //            Boolean.FALSE);
@@ -56,10 +63,6 @@ public class SpeciationLogger extends CalculationNode implements Loggable, Funct
                     keys.add(key);
                     out.print(key + "\t");
                 }
-//                    System.out.println("key = " + key);
-//                speciationsCounter.putIfAbsent(key, 0);
-//                keys.add(key);
-//                out.print(key + "\t");
             }
         }
     }
@@ -67,17 +70,31 @@ public class SpeciationLogger extends CalculationNode implements Loggable, Funct
     @Override
     public void log(long nSample, PrintStream out) {
         final SRTree tree = treeInput.get();
+        tree.orientateTree();
+        tree.initSRanges();
         for (StratigraphicRange range : tree.getSRanges()) {
+            List<Integer> internalNodeNrs = range.getInternalNodeNrs(tree);
+            if (relogInput.get() && !range.isSingleFossilRange()){
+                SRNode start = (SRNode) tree.getNode(range.getNodeNrs().get(0));
+                SRNode child = (SRNode) start.getParent().getLeft();
+                int childNr = child.getNr();
+                if (child.isFake())
+                    childNr=child.getDirectAncestorChild().getNr();
+                while (childNr != internalNodeNrs.get(0)){
+                    range.addNodeNrAfter(tree, start.getNr(), child.getNr());
+                    start = child;
+                    child = (SRNode) start.getLeft();
+                    childNr = child.getNr();
+                    if (child.isFake())
+                        childNr=child.getDirectAncestorChild().getNr();
+                }
+            }
+            if (range.getInternalNodeNrs(tree).size() == 1)
+                continue;
             for (Integer i : range.getInternalNodeNrs(tree)) {
                 Node right = tree.getNode(i);
                 if (!tree.getNode(i).isLeaf())
                     right = tree.getNode(i).getRight();
-//                if (onlyFirstInput.get() && !tree.getNode(i).isLeaf()) {
-//                    String key = removeLastSubstring(sepStringInput.get(), range.getFirstOccurrenceID()) +
-//                            directStringInput.get()  + removeLastSubstring(sepStringInput.get(), Tools.getFirstLeafID(right));
-//                    double[] vals = getSeparatingLengthAndNodeCount(tree.getNode(i), right);
-//                    speciationsCounter.put(key, vals);
-//                } else {
                 if (right.isLeaf() && !right.getID().contains("last")){
                     String key = removeLastSubstring(sepStringInput.get(),range.getFirstOccurrenceID()) +
                             directStringInput.get()  + removeLastSubstring(sepStringInput.get(),right.getID());
@@ -104,7 +121,9 @@ public class SpeciationLogger extends CalculationNode implements Loggable, Funct
             out.print(String.join(",", Arrays.stream(speciationsCounter.get(s))
                     .mapToObj(Double::toString)
                     .toArray(String[]::new))+ "\t");
+            speciationsCounter.put(s, new double[]{0,0});
         }
+
 
     }
 

@@ -63,8 +63,8 @@ public class StratigraphicRange extends BEASTObject {
     public void addNodeNrAfter(SRTree tree, int nodeAfterNr, int nodeNr) {
         int afterNr = nodeAfterNr;
         int nr = nodeNr;
-        if (tree.getNode(nodeAfterNr).isFake())
-            afterNr = tree.getNode(nodeAfterNr).getDirectAncestorChild().getNr();
+        if (tree.getNode(afterNr).isFake())
+            afterNr = tree.getNode(afterNr).getDirectAncestorChild().getNr();
         if (tree.getNode(nodeNr).isFake())
             nr = tree.getNode(nodeNr).getDirectAncestorChild().getNr();
         int i= nodes.indexOf(afterNr)+1;

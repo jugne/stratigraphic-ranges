@@ -426,7 +426,8 @@ public class SRangesAndSACladeSetComparator extends Runnable {
     private void output(PrintStream out, PrintStream svg, String clade, Double support1, double support2, Graphics2D g, double h1, double h2,
                         double lo1, double lo2, double hi1, double hi2) {
         if (verbose || System.out != out) {
-            out.println(clade.replaceAll(" ", "") + " " + support1 + " " + support2);
+            out.println(clade.replaceAll(" ", "") + " " + support1 + " " + support2 + " " + h1 +
+                    " " + lo1 + " " + hi1 + " " + h2 + " " + lo2 + " " + hi2);
         }
 //		if ((support1 < 0.1 && support2 > 0.9) ||
 //			(support2 < 0.1 && support1 > 0.9)) {

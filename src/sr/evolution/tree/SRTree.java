@@ -95,10 +95,10 @@ public class SRTree extends Tree implements TreeInterface {
                     prefix = ID.substring(i+1);
                 }
                 if (prefix.equals("first")) {
-                    if (!node.isDirectAncestor()) {
-                        throw new RuntimeException("The first occurrence always has to be a sampled ancestor but " +
-                                node.getID() + " is not a sampled ancestor.");
-                    }
+//                    if (!node.isDirectAncestor()) {
+//                        throw new RuntimeException("The first occurrence always has to be a sampled ancestor but " +
+//                                node.getID() + " is not a sampled ancestor.");
+//                    }
                     boolean found = false;
                     for (StratigraphicRange candidateRange:lastRanges) {
                         if (candidateRange.getID().equals(IDwithoutPrefix)) {
@@ -147,14 +147,13 @@ public class SRTree extends Tree implements TreeInterface {
                     }
                 }
             }
-            if (!firstRanges.isEmpty()) {
-                throw new RuntimeException("There are taxa with first occurrence only " + firstRanges.toString() +". " +
-                        "Single fossil ranges can not have _first at the end." );
+            if (!lastRanges.isEmpty()) {
+                throw new RuntimeException("There are taxa with last occurrence only " + lastRanges.toString() );
             }
-            for (StratigraphicRange range:lastRanges) {
+            for (StratigraphicRange range:firstRanges) {
                 range.makeSingleFossilRange();
             }
-            sRanges.addAll(lastRanges);
+            sRanges.addAll(firstRanges);
         }
 
         initStoredRanges();
