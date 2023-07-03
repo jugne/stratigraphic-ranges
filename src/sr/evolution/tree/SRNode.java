@@ -1,6 +1,7 @@
 package sr.evolution.tree;
 
 import beast.base.core.BEASTInterface;
+import beast.base.core.Log;
 import beast.base.evolution.tree.Node;
 
 import java.util.TreeMap;
@@ -32,7 +33,8 @@ public class SRNode extends Node {
 
     @Override
     public int sort()  {
-        throw new RuntimeException("Do not sort ordered trees. Calculation stopped.");
+        Log.warning("Do not sort ordered trees. Tree not sorted");
+        return 0;
     }
 
     /**
