@@ -30,20 +30,20 @@ The `SRTree` class represents a labeled oriented tree on stratigraphic ranges. I
 ### Methods
 
 - `initAndValidate()`: Initializes and validates the object, assigns the tree if provided, and initializes the stratigraphic ranges.
-- `initSRanges()`: Initializes the stratigraphic ranges based on the input or inferred from the tree structure.
+- `initSRanges()`: Initializes the stratigraphic ranges based on the input or inferred from the provided tree structure.
 - `initStoredRanges()`: Initializes the stored stratigraphic ranges based on the current stratigraphic ranges.
 - `assignFrom()`: Copies all values from an existing tree.
 - `assignFromFragile()`: Copies the tree structure only.
 - `assignFrom()`, `assignFromFragile()`, `assignFrom()` (helper): Helper methods for tree assignment.
 - `store()`: Stores the current state of the tree and stratigraphic ranges.
 - `restore()`: Restores the tree and stratigraphic ranges from the stored state.
-- `fromXML()`: Populates the tree from XML data.
+- `fromXML()`: Populates the tree from XML file data.
 - `orientateTree()`: Orients the tree according to stored metadata.
-- `addOrientationMetadata()`, `addOrientationMetadataNode()`: Adds orientation metadata (donor-recipient) to each node.
-- `getSRanges()`: Retrieves the stratigraphic ranges.
+- `addOrientationMetadata()`, `addOrientationMetadataNode()`: Adds orientation metadata to each node.
+- `getSRanges()`: Retrieves the stratigraphic ranges of the tree.
 - `getNonSingleSRangeCount()`: Retrieves the count of non-single fossil stratigraphic ranges.
 - `getSRangesInternalNodeNrs()`: Retrieves the internal node numbers in the stratigraphic ranges.
-- `sRangesContainsID()`: Checks if the stratigraphic ranges contain a specific taxon ID.
+- `sRangesContainsID()`: Checks if the stratigraphic ranges contain a specific taxon ID and output the range containing it.
 - `getRangeOfNode()`: Retrieves the stratigraphic range to which a node belongs.
 - `getSharedRange()`: Retrieves the shared stratigraphic range between two nodes.
 - `belongToSameSRange()`: Checks if two nodes belong to the same stratigraphic range.

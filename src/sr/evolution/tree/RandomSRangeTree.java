@@ -20,7 +20,7 @@ public class RandomSRangeTree extends SRTree implements StateNodeInitialiser {
 
     final public Input<Alignment> taxaInput = new Input<>("taxa", "set of taxa to initialise tree specified by alignment");
 
-    final public Input<PopulationFunction> populationFunctionInput = new Input<>("populationModel", "population function for generating coalescent???", Input.Validate.REQUIRED);
+    final public Input<PopulationFunction> populationFunctionInput = new Input<>("populationModel", "population function for generating coalescent", Input.Validate.REQUIRED);
 
     // total nr of taxa
     int nrOfTaxa;

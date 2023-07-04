@@ -84,4 +84,22 @@ public class Tools {
 		return -1;
 	}
 
+	public static double[] getSeparatingLengthAndNodeCount(Node parent, Node child){
+		double length = 0.;
+		double nodeCount =0.;
+		length += child.getLength();
+		Node tmpParent = child.getParent();
+		while (parent.getNr() != tmpParent.getNr()){
+			nodeCount++;
+			child = tmpParent;
+			length += child.getLength();
+			tmpParent = tmpParent.getParent();
+		}
+		return new double[]{length, nodeCount};
+	}
+
+	private static void increaseLastDouble(List<Double> list, double value) {
+		list.set(list.size() - 1, list.get(list.size() - 1) + value);
+	}
+
 }

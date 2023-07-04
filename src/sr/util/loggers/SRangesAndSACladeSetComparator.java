@@ -412,11 +412,11 @@ public class SRangesAndSACladeSetComparator extends Runnable {
 
         g.setColor(Color.black);
         g.setFont(new Font("Arial",Font.PLAIN, 50));
-        g.drawString(tree1.getPath(), 120, 1170);
+        g.drawString("sampled ancestor tree", 120, 1170);
 
         AffineTransform orig = g.getTransform();
         g.rotate(-Math.PI/2);
-        g.drawString(tree2.getPath(), -880, 40);
+        g.drawString("stratigraphic range tree", -880, 40);
         g.setTransform(orig);
 
         g.setColor(Color.red);
