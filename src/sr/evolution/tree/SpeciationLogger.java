@@ -22,7 +22,7 @@ import static sr.util.Tools.removeLastSubstring;
  */
 public class SpeciationLogger extends CalculationNode implements Loggable, Function {
     public Input<SRTree> treeInput = new Input<>("tree",
-            "tree to report SA count for.",
+            "sRange tree for speciation logging.",
             Input.Validate.REQUIRED);
     public Input<String> sepStringInput = new Input<>("sep",
             "separator string for ranges",
@@ -71,7 +71,8 @@ public class SpeciationLogger extends CalculationNode implements Loggable, Funct
     public void log(long nSample, PrintStream out) {
         final SRTree tree = treeInput.get();
         tree.orientateTree();
-        tree.initSRanges();
+        if (relogInput.get())
+            tree.initSRanges();
         for (StratigraphicRange range : tree.getSRanges()) {
             List<Integer> internalNodeNrs = range.getInternalNodeNrs(tree);
             if (relogInput.get() && !range.isSingleFossilRange()){

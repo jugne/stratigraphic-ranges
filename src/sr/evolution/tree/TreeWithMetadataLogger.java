@@ -1,20 +1,23 @@
-package sr.util;
+package sr.evolution.tree;
 
 import beast.base.core.*;
 import beast.base.evolution.branchratemodel.BranchRateModel;
+import beast.base.inference.CalculationNode;
 import beast.base.inference.StateNode;
 import beast.base.inference.parameter.Parameter;
-import sr.evolution.tree.SRNode;
-import sr.evolution.tree.SRTree;
+import sr.evolution.sranges.StratigraphicRange;
 
 import java.io.PrintStream;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+
+import static sr.util.Tools.removeLastSubstring;
 
 @Description("Based on the SpeciesTreeLogger class, but without node sorting")
-public class TreeWithMetadataLogger extends BEASTObject implements Loggable {
+public class TreeWithMetadataLogger extends CalculationNode implements Loggable  {
 	final public Input<SRTree> srTeeInput = new Input<>("tree",
 			"The range tree to be logged.", Input.Validate.REQUIRED);
     final public Input<BranchRateModel> clockModelInput = new Input<>("branchratemodel", "rate to be logged with branches of the tree");
@@ -25,14 +28,29 @@ public class TreeWithMetadataLogger extends BEASTObject implements Loggable {
 	final public Input<Boolean> logOrientationInput = new Input<>("logOrientation",
 			"report if node is donor or recipient", true);
 
+    final public Input<Boolean> logRangesInput = new Input<>("logRanges",
+            "should stratigraphic ranges be logged (useful for plotting sRange trees)", true);
+
+    final public Input<Boolean> logRangeNamesInput = new Input<>("logRangeNames",
+            "If true, a unique name will be logger for each range. " +
+                    "If false, metadata will only indicate that it's a range, without a name.", true);
+
+    final public Input<Boolean> relogInput = new Input<>("relog",
+            "If true, this logger is run after the analysis completes. " +
+                    "Default false.",
+            false);
+
     boolean someMetaDataNeedsLogging;
     boolean substitutions = false;
+    boolean relog = relogInput.get();
+    boolean logRanges = logRangesInput.get();
 
     private DecimalFormat df;
 
     @Override
     public void initAndValidate() {
-		if (parameterInput.get().size() == 0 && clockModelInput.get() == null && !logOrientationInput.get()) {
+		if (parameterInput.get().size() == 0 && clockModelInput.get() == null
+                && !logOrientationInput.get() && !logRangesInput.get()) {
             someMetaDataNeedsLogging = false;
             return;
         }
@@ -40,6 +58,9 @@ public class TreeWithMetadataLogger extends BEASTObject implements Loggable {
 
         // without substitution model, reporting substitutions == reporting branch lengths 
         if (clockModelInput.get() != null) {
+            if (relogInput.get()) {
+                throw new IllegalArgumentException("Cannot relog with branch rate model specified");
+            }
             substitutions = substitutionsInput.get();
         }
 
@@ -63,7 +84,9 @@ public class TreeWithMetadataLogger extends BEASTObject implements Loggable {
     @Override
     public void log(long nSample, PrintStream out) {
         // make sure we get the current version of the inputs
-        SRTree srTree = (SRTree) srTeeInput.get().getCurrent();
+        final SRTree srTree = (SRTree) srTeeInput.get().getCurrent();
+        if (relog && logRanges)
+            srTree.initSRanges();
 
         srTree.addOrientationMetadata();
         List<Function> metadata = parameterInput.get();
@@ -76,7 +99,7 @@ public class TreeWithMetadataLogger extends BEASTObject implements Loggable {
         // write out the log tree with meta data
         out.print("tree STATE_" + nSample + " = ");
 //        tree.getRoot().sort();
-		out.print(toNewick((SRNode) srTree.getRoot(), metadata, branchRateModel));
+		out.print(toNewick(srTree, (SRNode) srTree.getRoot(), metadata, branchRateModel));
         //out.print(tree.getRoot().toShortNewick(false));
         out.print(";");
     }
@@ -97,14 +120,14 @@ public class TreeWithMetadataLogger extends BEASTObject implements Loggable {
         }
     }
 
-	String toNewick(SRNode node, List<Function> metadataList, BranchRateModel branchRateModel) {
+	String toNewick(SRTree tree, SRNode node, List<Function> metadataList, BranchRateModel branchRateModel) {
         StringBuffer buf = new StringBuffer();
         if (node.getLeft() != null) {
             buf.append("(");
-            buf.append(toNewick((SRNode) node.getLeft(), metadataList, branchRateModel));
+            buf.append(toNewick(tree, (SRNode) node.getLeft(), metadataList, branchRateModel));
             if (node.getRight() != null) {
                 buf.append(',');
-                buf.append(toNewick((SRNode) node.getRight(), metadataList, branchRateModel));
+                buf.append(toNewick(tree, (SRNode) node.getRight(), metadataList, branchRateModel));
             }
             buf.append(")");
         } else {
@@ -148,8 +171,24 @@ public class TreeWithMetadataLogger extends BEASTObject implements Loggable {
             if (branchRateModel != null) {
                 buf.append("rate=");
                 appendDouble(buf, branchRateModel.getRateForBranch(node));
-				if (logOrientationInput.get()) {
+				if (logRanges) {
                     buf.append(",");
+                }
+            }
+            if (logRanges){
+                StratigraphicRange range = tree.getRangeOfNode(node);
+                String id = node.isFake() ? node.getDirectAncestorChild().getID() : node.getID();
+
+                if (range !=null && !range.isSingleFossilRange() && (id==null || !id.equals(range.getFirstOccurrenceID()))){
+                    buf.append("range=");
+                    if (logRangeNamesInput.get()){
+                        buf.append(removeLastSubstring("_", range.getLastOccurrenceID()));
+                    } else {
+                        buf.append("range");
+                    }
+                    if (logOrientationInput.get()) {
+                        buf.append(",");
+                    }
                 }
             }
 
