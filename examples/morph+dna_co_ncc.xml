@@ -939,14 +939,14 @@
         <log idref="birthDeath"/>
     </logger>
 
-    <logger fileName="morph+dna_co.trees" id="treelog.t:penguins" logEvery="10000" mode="tree">
-        <log idref="Tree.t:tree"/>
+<!--    <logger fileName="morph+dna_co.trees" id="treelog.t:penguins" logEvery="10000" mode="tree">-->
+<!--        <log idref="Tree.t:tree"/>-->
+<!--    </logger>-->
+
+    <logger fileName="$(filebase).trees" id="treelog.t:penguins" logEvery="10000" mode="tree" >
+        <log id="TreeWithMetaDataLogger.t:penguins" spec="sr.evolution.tree.TreeWithMetadataLogger"
+            tree="@Tree.t:tree"/>
     </logger>
-
-
-    <!-- <logger fileName="morph+dna_co1.trees" id="treelog.t:penguins" logEvery="100000" mode="tree">
-        <log id="TreeWithMetaDataLogger.t:penguins" spec="beast.base.evolution.TreeWithMetaDataLogger" tree="@Tree.t:tree"/>
-    </logger> -->
 
 </run>
 
