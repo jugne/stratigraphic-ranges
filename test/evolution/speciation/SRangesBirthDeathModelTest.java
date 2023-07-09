@@ -1,4 +1,4 @@
-package test.evolution.speciation;
+package evolution.speciation;
 
 import beast.base.inference.parameter.RealParameter;
 import beast.base.evolution.alignment.Taxon;
@@ -6,7 +6,7 @@ import sr.evolution.tree.SRTree;
 import beast.base.evolution.tree.Tree;
 import beast.base.evolution.tree.TreeParser;
 import junit.framework.TestCase;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 import sr.speciation.SRangesBirthDeathModel;
 import sr.evolution.sranges.StratigraphicRange;
 
