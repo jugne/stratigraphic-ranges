@@ -2,6 +2,8 @@ package sr.util;
 
 import beast.base.evolution.tree.Node;
 import beast.base.evolution.tree.Tree;
+import sr.evolution.sranges.StratigraphicRange;
+import sr.evolution.tree.SRNode;
 import sr.evolution.tree.SRTree;
 
 import java.util.*;
@@ -100,6 +102,39 @@ public class Tools {
 
 	private static void increaseLastDouble(List<Double> list, double value) {
 		list.set(list.size() - 1, list.get(list.size() - 1) + value);
+	}
+
+	public static double getStartSubrangeLength(StratigraphicRange range, SRTree tree){
+		int size = range.getNodeNrs().size();
+		int startNr = range.getNodeNrs().get(0);
+		int afterStartNr = range.getNodeNrs().get(1);
+		SRNode start = (SRNode) tree.getNode(startNr);
+		SRNode afterStart = (SRNode) tree.getNode(afterStartNr);
+		while (!afterStart.isFake()) {
+			afterStartNr++;
+			afterStart = (SRNode) tree.getNode(afterStartNr);
+		}
+		return afterStart.getHeight() - start.getHeight();
+	}
+
+	public static double getEndSubrangeLength(StratigraphicRange range, SRTree tree) {
+		int size = range.getNodeNrs().size();
+		int endNr = range.getNodeNrs().get(size-1);
+		int beforEndNr = range.getNodeNrs().get(size-2);
+		SRNode end = (SRNode) tree.getNode(endNr);
+		SRNode beforeEnd = (SRNode) tree.getNode(beforEndNr);
+		while (!beforeEnd.isFake() || beforEndNr == 0) {
+			beforEndNr--;
+			beforeEnd = (SRNode) tree.getNode(beforEndNr);
+		}
+		if (beforEndNr == 0){
+			return 0;
+		} else if(beforeEnd.isFake()){
+			return end.getHeight() - beforeEnd.getHeight();
+		} else {
+			throw new RuntimeException("Something went wrong in getEndSubrangeLength. " +
+					"It might have been called with a single node range. This should not happen.");
+		}
 	}
 
 }
