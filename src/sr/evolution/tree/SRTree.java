@@ -1,7 +1,6 @@
 package sr.evolution.tree;
 
 import beast.base.core.Input;
-import beast.base.evolution.alignment.TaxonSet;
 import beast.base.evolution.tree.Node;
 import beast.base.evolution.tree.Tree;
 import beast.base.evolution.tree.TreeInterface;
@@ -11,7 +10,6 @@ import sr.evolution.sranges.StratigraphicRange;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -26,8 +24,6 @@ import java.util.List;
 public class SRTree extends Tree implements TreeInterface {
 
     public Input<List<StratigraphicRange>> stratigraphicRangeInput = new Input<>("stratigraphicRange", "all stratigraphic ranges", new ArrayList<>());
-    public Input<List<TaxonSet>> taxonsetsInput = new Input<>("taxonsets",
-            "a separate list of taxa for samples collected from the same patient", new ArrayList<>());
 
     public Input<Tree> treeInput = new Input<>("tree", "tree to start with");
 
@@ -56,14 +52,14 @@ public class SRTree extends Tree implements TreeInterface {
             sRanges = (ArrayList) stratigraphicRangeInput.get();
             List<Node> externalNodes = getExternalNodes();
             List<Node> unusedNodes = getExternalNodes();
-            for (StratigraphicRange range : sRanges) {
+            for (StratigraphicRange range:sRanges) {
                 range.removeAllNodeNrs();
-                for (Node node : externalNodes) {
-                    if (node.getID().equals(range.getFirstOccurrenceID()) && !range.isSingleFossilRange()) {
+                for (Node node:externalNodes) {
+                    if(node.getID().equals(range.getFirstOccurrenceID()) && !range.isSingleFossilRange()) {
                         if (!node.isDirectAncestor()) {
                             throw new RuntimeException("The first occurrence always has to be a sampled ancestor but " +
                                     range.getFirstOccurrenceID() + " is not a sampled ancestor. Something went wrong in " +
-                                    "initializing the stratigraphic range tree.");
+                                    "initializing the stratigraphic range tree."  );
                         }
                         range.setFirstOccurrenceNodeNr(this, node.getNr());
                         unusedNodes.remove(node);
@@ -75,7 +71,7 @@ public class SRTree extends Tree implements TreeInterface {
                 }
                 range.initAndValidate();
             }
-            for (Node n : unusedNodes) {
+            for (Node n : unusedNodes){
                 StratigraphicRange tmpRange = new StratigraphicRange();
                 tmpRange.setFirstOccurrenceNodeNr(this, n.getNr());
                 tmpRange.setFirstOccurrenceID(n.getID());
@@ -84,58 +80,6 @@ public class SRTree extends Tree implements TreeInterface {
                 tmpRange.initAndValidate();
                 sRanges.add(tmpRange);
             }
-
-        } else if (taxonsetsInput.get().size()>0){
-            int nSets = taxonsetsInput.get().size();
-            for (int i = 0; i < nSets; i++)
-                sRanges.add(new StratigraphicRange());
-            for (Node leaf :  getExternalNodes()){
-                int i = 0;
-                for (TaxonSet t : taxonsetsInput.get()) {
-                    List<String> tmp = t.asStringList();
-                    if (tmp.contains(leaf.getID())) {
-                        sRanges.get(i).addNodeNr(this, leaf.getNr());
-                        break;
-                    } else {
-                        i += 1;
-                    }
-                }
-            }
-
-//            List<Node> unusedNodes = getExternalNodes();
-            for (StratigraphicRange range : sRanges) {
-                range.getNodeNrs().sort((a,b)->Double.compare(getNode(a).getHeight(),getNode(b).getHeight()));
-
-                range.setFirstOccurrenceNodeNr(this, range.getNodeNrs().get(0));
-                range.setFirstOccurrenceID(getNode(range.getNodeNrs().get(0)).getID());
-//                unusedNodes.remove(getNode(range.getNodeNrs().get(0)));
-
-                range.setLastOccurrenceID(getNode(range.getNodeNrs().get(range.getNodeNrs().size()-1)).getID());
-                range.setLastOccurrenceNodeNr(this, range.getNodeNrs().get(range.getNodeNrs().size()-1));
-//                unusedNodes.remove(getNode(range.getNodeNrs().get(range.getNodeNrs().size()-1)));
-                range.initAndValidate();
-            }
-
-//            for (TaxonSet set: taxonsetsInput.get()){
-//                StratigraphicRange range = new StratigraphicRange();
-//                for (Node n : unusedNodes){
-//
-//                }
-//            }
-//
-//            for (Node leaf : getExternalNodes()){
-//                for (TaxonSet set : taxonsetsInput.get()) {
-//                    StratigraphicRange range = new StratigraphicRange();
-//
-//
-//                    range.setID(set.getID());
-//                    range.setFirstOccurrenceID(set.getID());
-//                    range.setLastOccurrenceID(set.getID());
-//                    range.initAndValidate();
-//                    sRanges.add(range);
-//                }
-//            }
-
 
         } else {
             sRanges = new ArrayList<>();
