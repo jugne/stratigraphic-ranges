@@ -2,6 +2,7 @@ package sr.evolution.tree;
 
 import beast.base.core.*;
 import beast.base.evolution.branchratemodel.BranchRateModel;
+import beast.base.evolution.tree.Node;
 import beast.base.inference.CalculationNode;
 import beast.base.inference.StateNode;
 import beast.base.inference.parameter.Parameter;
@@ -42,13 +43,14 @@ public class TreeWithMetadataLogger extends CalculationNode implements Loggable 
 
     boolean someMetaDataNeedsLogging;
     boolean substitutions = false;
-    boolean relog = relogInput.get();
+    boolean relog;
     boolean logRanges = logRangesInput.get();
 
     private DecimalFormat df;
 
     @Override
     public void initAndValidate() {
+        relog = relogInput.get();
 		if (parameterInput.get().size() == 0 && clockModelInput.get() == null
                 && !logOrientationInput.get() && !logRangesInput.get()) {
             someMetaDataNeedsLogging = false;
@@ -58,7 +60,7 @@ public class TreeWithMetadataLogger extends CalculationNode implements Loggable 
 
         // without substitution model, reporting substitutions == reporting branch lengths 
         if (clockModelInput.get() != null) {
-            if (relogInput.get()) {
+            if (relog) {
                 throw new IllegalArgumentException("Cannot relog with branch rate model specified");
             }
             substitutions = substitutionsInput.get();
@@ -85,9 +87,21 @@ public class TreeWithMetadataLogger extends CalculationNode implements Loggable 
     public void log(long nSample, PrintStream out) {
         // make sure we get the current version of the inputs
         final SRTree srTree = (SRTree) srTeeInput.get().getCurrent();
-        if (relog && logRanges)
+        if (relog && logRanges){
             srTree.initSRanges();
-
+            for (StratigraphicRange range : srTree.getSRanges()) {
+                int firstNr = range.getNodeNrs().get(0);
+                Node first = srTree.getNode(range.getNodeNrs().get(0));
+                first = first.isDirectAncestor() ? first.getParent() : first;
+                Node last = srTree.getNode(range.getNodeNrs().get(range.getNodeNrs().size() - 1));
+                while (!range.isSingleFossilRange() && firstNr !=last.getNr()){
+                    int nr = first.getLeft().isFake() ? first.getLeft().getDirectAncestorChild().getNr(): first.getLeft().getNr();
+                    range.addNodeNrAfter(srTree, first.getNr(), nr);
+                    firstNr = nr;
+                    first = srTree.getNode(nr).isDirectAncestor() ? srTree.getNode(nr).getParent(): srTree.getNode(nr);
+                }
+            }
+        }
         srTree.addOrientationMetadata();
         List<Function> metadata = parameterInput.get();
         for (int i = 0; i < metadata.size(); i++) {

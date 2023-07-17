@@ -15,6 +15,7 @@ import java.util.*;
 
 import javax.imageio.ImageIO;
 
+import beast.base.inference.parameter.RealParameter;
 import beastfx.app.tools.Application;
 import beastfx.app.util.OutFile;
 import beastfx.app.util.TreeFile;
@@ -60,14 +61,23 @@ public class SRangesAndSACladeSetComparator extends Runnable {
     final public Input<Double> thresholdInput = new Input<>("threshold", "posterior support level of clades that will be ignored", 0.0);
 
     final public Input<String> taxonSetSAInput = new Input<>("taxonsetSA",
-            "comma separated taxons in SA tree that are equivalent to taxons in sRanges tree. " +
+            "comma separated taxa in SA tree that are equivalent to taxons in sRanges tree. " +
                     "Use only if there are spelling differences or species renaming.",
             "");
 
     final public Input<String> taxonSetSRangesInput = new Input<>("taxonsetSRanges",
-            "comma separated taxons in sRanges tree that are equivalent to taxons in SA tree. " +
+            "comma separated taxa in sRanges tree that are equivalent to taxons in SA tree. " +
                     "Use only if there are spelling differences or species renaming.",
             "");
+
+    final public Input<String> compareTaxonInput = new Input<>("compareTaxon",
+            "comma separated taxa in sRanges tree that the figure and log file should be produced for " +
+                    "Use only if not all taxa in the sRanges tree should be compared.",
+            "");
+
+    final public Input<Double> scalingInput = new Input<>("scaling",
+            "scaling factor for clade ages " +
+                    "If not specified the highest tree in both trees is used as scaling factor.");
 
     private double n;
     private boolean verbose;
@@ -118,6 +128,8 @@ public class SRangesAndSACladeSetComparator extends Runnable {
 
 
     double maxHeight = 0.0;
+
+    double maxHeight2 = 0.0;
     int problemCount = 0;
     int interestCount = 0;
     int inconsistentHeightIntervals = 0;
@@ -128,6 +140,9 @@ public class SRangesAndSACladeSetComparator extends Runnable {
 
     @Override
     public void run() throws Exception {
+        if (scalingInput.get()!=null){
+            maxHeight = scalingInput.get();
+        }
         if ((!taxonSetSAInput.get().isEmpty() && taxonSetSRangesInput.get().isEmpty()) ||
                 (taxonSetSAInput.get().isEmpty() && !taxonSetSRangesInput.get().isEmpty())) {
             throw new IllegalArgumentException("taxonSetSA and taxonSetSRanges must be both specified or both empty");
@@ -151,6 +166,7 @@ public class SRangesAndSACladeSetComparator extends Runnable {
         CladeSetWithHeights cladeSet2 = getCladeSet(src2Input.get().getPath(), true);
         double n2 = n;
         process(src1Input.get(), src2Input.get(), "", cladeSet1, n1, cladeSet2, n2);
+        System.out.println("maxHeight2 = " + maxHeight2);
     }
 
     void process(TreeFile tree1, TreeFile tree2, String suffix,
@@ -232,15 +248,17 @@ public class SRangesAndSACladeSetComparator extends Runnable {
                 Arrays.sort(heights1);
                 double lo1 = heights1[(int)(heights1.length * 0.025)];
                 double hi1 = heights1[(int)(heights1.length * 0.975)];
+                double max1 = heights1[heights1.length-1];
 
                 double [] heights2 = cladeSet2.nodeHeights.get(cladeSet2.get(i));
                 Arrays.sort(heights2);
                 double lo2 = heights2[(int)(heights2.length * 0.025)];
                 double hi2 = heights2[(int)(heights2.length * 0.975)];
+                double max2 = heights2[heights2.length-1];
 
                 double support1 = cladeMap.get(clade);
                 output(out, svg, clade,support1, support2, g, h1, h2,
-                        lo1, lo2, hi1, hi2);
+                        lo1, lo2, hi1, hi2, max1, max2);
                 // System.out.println((h1 - h2) + " " + (100 * (h1 - h2) / h1));
 
                 maxDiff = Math.max(maxDiff, Math.abs(cladeMap.get(clade) - support2));
@@ -277,7 +295,12 @@ public class SRangesAndSACladeSetComparator extends Runnable {
                 }
             } else {
                 // clade is not in set1
-                output(out, svg, clade, 0.0, support2, g, 0, h2, 0, h2, 0, h2);
+                double [] heights2 = cladeSet2.nodeHeights.get(cladeSet2.get(i));
+                Arrays.sort(heights2);
+                double lo2 = heights2[(int)(heights2.length * 0.025)];
+                double hi2 = heights2[(int)(heights2.length * 0.975)];
+                double max2 = heights2[heights2.length-1];
+                output(out, svg, clade, 0.0, support2, g, 0, h2, 0, lo2, 0, hi2, 0, max2);
                 maxDiff = Math.max(maxDiff, support2);
                 if (support2> 0.01) {
                     meanDiff += support2;
@@ -293,7 +316,12 @@ public class SRangesAndSACladeSetComparator extends Runnable {
         // process left-overs of clades in set1 that are not in set2
         for (String clade : cladeMap.keySet()) {
             double h1 = cladeHeightMap.get(clade);
-            output(out, svg, clade, cladeMap.get(clade), 0.0, g, h1, 0.0, h1, 0, h1, 0);
+            double [] heights1 = cladeSet1.nodeHeights.get(cladeSet1.get(cladeToIndexMap.get(clade)));
+            Arrays.sort(heights1);
+            double lo1 = heights1[(int)(heights1.length * 0.025)];
+            double hi1 = heights1[(int)(heights1.length * 0.975)];
+            double max1 = heights1[heights1.length-1];
+            output(out, svg, clade, cladeMap.get(clade), 0.0, g, h1, 0.0, lo1, 0, hi1, 0, max1, 0.0);
             double s = cladeMap.get(clade);
             maxDiff = Math.max(maxDiff, s);
             if (s> 0.01) {
@@ -424,7 +452,20 @@ public class SRangesAndSACladeSetComparator extends Runnable {
     }
 
     private void output(PrintStream out, PrintStream svg, String clade, Double support1, double support2, Graphics2D g, double h1, double h2,
-                        double lo1, double lo2, double hi1, double hi2) {
+                        double lo1, double lo2, double hi1, double hi2, double max1, double max2) {
+        if (compareTaxonInput.get()!=null){
+            List<String> cladeList = Arrays.asList(clade
+                    .replaceAll(" ", "")
+                    .replaceAll("\\{", "")
+                    .replaceAll("}", "")
+                    .split(","));
+            List<String> compareOnly = Arrays.asList(compareTaxonInput.get().split(","));
+            if (!compareOnly.containsAll(cladeList)){
+                return;
+            }
+            maxHeight2 = Double.max(maxHeight2, max2);
+            maxHeight2 = Double.max(maxHeight2, max1);
+        }
         if (verbose || System.out != out) {
             out.println(clade.replaceAll(" ", "") + " " + support1 + " " + support2 + " " + h1 +
                     " " + lo1 + " " + hi1 + " " + h2 + " " + lo2 + " " + hi2);
@@ -508,15 +549,18 @@ public class SRangesAndSACladeSetComparator extends Runnable {
         CladeSetWithHeights cladeSet1 = new CladeSetWithHeights(tree, rangesTree);
         n = 1;
         int thin = thinningInput.get();
-        maxHeight = Math.max(maxHeight, tree.getRoot().getHeight());
+        if (scalingInput.get()==null) {
+            maxHeight = Math.max(maxHeight, tree.getRoot().getHeight());
+        }
 
         while (srcTreeSet.hasNext()) {
             // System.out.println(n);
             tree = srcTreeSet.next();
             cladeSet1.add(tree, rangesTree);
             n++;
-
-            maxHeight = Math.max(maxHeight, tree.getRoot().getHeight());
+            if (scalingInput.get()==null) {
+                maxHeight = Math.max(maxHeight, tree.getRoot().getHeight());
+            }
             int j = 1;
             while (j < thin && srcTreeSet.hasNext()) {
                 tree = srcTreeSet.next();
@@ -730,11 +774,19 @@ public class SRangesAndSACladeSetComparator extends Runnable {
             return getTotalNodeHeight(bits) / getFrequency(i);
         }
 
+        public double getMaxNodeHeight(int i) {
+            BitSet bits = get(i);
+            double[] d = nodeHeights.get(bits);
+            Arrays.sort(d);
+            return d[d.length-1];
+        }
+
         double getTotalNodeHeight(BitSet bits) {
             Double tnh = totalNodeHeight.get(bits);
             if (tnh == null) return 0.0;
             return tnh;
         }
+
 
         private void addNodeHeight(BitSet bits, double height) {
             totalNodeHeight.put(bits, (getTotalNodeHeight(bits) + height));
