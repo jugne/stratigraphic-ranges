@@ -188,7 +188,11 @@ public class SRangesBirthDeathModel extends SABirthDeathModel {
                 }
             } else {
                 if (node.isFake()) {
-                    logP += Math.log(psi);
+                    if (r == 1) {
+                        System.out.println("r = 1 but there are sampled ancestors in the tree");
+                        System.exit(0);
+                    }
+                    logP += Math.log(psi) + Math.log(1 - r);
                     Node parent = node.getParent();
                     Node child = node.getNonDirectAncestorChild();
                     Node DAchild = node.getDirectAncestorChild();
@@ -212,12 +216,12 @@ public class SRangesBirthDeathModel extends SABirthDeathModel {
                 int rangeSize =  range.getNodeNrs().size();
                 if (!integrateOverRanges && rangeSize > 2){
                     if (useStartPeriod)
-                        logP += psi*(getStartSubrangeLength(range, tree));
+                        logP += (psi*(1-r))*(getStartSubrangeLength(range, tree));
                     if (useEndPeriod)
-                        logP += psi*(getEndSubrangeLength(range, tree));
+                        logP += (psi*(1-r))*(getEndSubrangeLength(range, tree));
                 } else {
                     double tLast = tree.getNode(range.getNodeNrs().get(range.getNodeNrs().size()-1)).getHeight();
-                    logP += psi*(tFirst - tLast);
+                    logP += (psi*(1-r))*(tFirst - tLast);
                 }
 
 //                if (useStartPeriod){
