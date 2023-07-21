@@ -10,6 +10,7 @@ import sr.evolution.sranges.StratigraphicRange;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -51,9 +52,11 @@ public class SRTree extends Tree implements TreeInterface {
         if (stratigraphicRangeInput.get().size() != 0) {
             sRanges = (ArrayList) stratigraphicRangeInput.get();
             List<Node> externalNodes = getExternalNodes();
+            externalNodes.sort(Comparator.comparingDouble(Node::getHeight));
             List<Node> unusedNodes = getExternalNodes();
             for (StratigraphicRange range:sRanges) {
                 range.removeAllNodeNrs();
+                List<String> withinIds = range.getWithinRangeOccurenceIDs();
                 for (Node node:externalNodes) {
                     if(node.getID().equals(range.getFirstOccurrenceID()) && !range.isSingleFossilRange()) {
                         if (!node.isDirectAncestor()) {
@@ -62,6 +65,10 @@ public class SRTree extends Tree implements TreeInterface {
                                     "initializing the stratigraphic range tree."  );
                         }
                         range.setFirstOccurrenceNodeNr(this, node.getNr());
+                        unusedNodes.remove(node);
+                    }
+                    if (withinIds!=null && withinIds.contains(node.getID())) {
+                        range.addWithinRangeNodeNr(this, node.getNr());
                         unusedNodes.remove(node);
                     }
                     if (node.getID().equals(range.getLastOccurrenceID())) {

@@ -55,16 +55,11 @@ public class SRLeafToSampledAncestorJump extends SRTreeOperator {
 
 		SRNode leaf = (SRNode) tree.getNode(fitLeafNodeNrs[Randomizer.nextInt(fitLeafNodeNrs.length)]);
         SRNode parent = (SRNode) leaf.getParent();
-        if (Math.abs(leaf.getHeight()-parent.getHeight())>0 && Math.abs(leaf.getHeight()-parent.getHeight())<0.00000005){
-            System.out.println("");
-        }
 
         if (leaf.isDirectAncestor()) {
             oldRange = 1;
             if (parent.isRoot()) {
                 final double randomNumber = Randomizer.nextExponential(1);
-                if (randomNumber<0.00000005)
-                    System.out.println("");
                 newHeight = parent.getHeight() + randomNumber;
                 newRange = Math.exp(randomNumber);
             } else {

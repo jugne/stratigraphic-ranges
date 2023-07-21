@@ -111,6 +111,7 @@ public class SRangesBirthDeathModel extends SABirthDeathModel {
     boolean integrateOverRanges;
     boolean useStartPeriod;
     boolean useEndPeriod;
+    boolean samplingStartsAtFirstSample;
     @Override
     public void initAndValidate() {
         if (!integrateOverRangesInput.get() && (startPeriodInput.get() || endPeriodInput.get())) {
@@ -194,6 +195,7 @@ public class SRangesBirthDeathModel extends SABirthDeathModel {
                     }
                     logP += Math.log(psi) + Math.log(1 - r);
                     Node parent = node.getParent();
+
                     Node child = node.getNonDirectAncestorChild();
                     Node DAchild = node.getDirectAncestorChild();
                     if (parent != null && tree.belongToSameSRange(parent.getNr(),DAchild.getNr())) {

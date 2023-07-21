@@ -3,12 +3,14 @@ package sr.evolution.sranges;
 import beast.base.core.BEASTObject;
 import beast.base.core.Input;
 import beast.base.evolution.alignment.Taxon;
+import beast.base.evolution.alignment.TaxonSet;
 import beast.base.evolution.tree.Node;
 import beast.base.evolution.tree.Tree;
 import sr.evolution.tree.SRTree;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  *@author Alexandra Gavryushkina
@@ -21,10 +23,15 @@ public class StratigraphicRange extends BEASTObject {
     public final Input<Taxon> taxonLastOccurrenceInput = new Input<Taxon>("lastOccurrence", "A BEAST taxon object that corresponds to the last " +
             "occurrence of the taxon");
 
+    public final Input<TaxonSet> taxonOcurenceInput = new Input<>("occurenceTaxonSet",
+            "a separate list of taxa for samples collected from the same patient");
+
+
 
     String firstOccurrenceID=null;
 
     String lastOccurrenceID=null;
+    List<String> withinRangeOccurenceIDs = null;
 
     boolean isSingleFossilRange=false;
 
@@ -43,6 +50,18 @@ public class StratigraphicRange extends BEASTObject {
 
     @Override
     public void initAndValidate() {
+        if (taxonOcurenceInput.get()!=null){
+            taxonFirstOccurrenceInput.set(taxonOcurenceInput.get().getTaxonSet().stream().findFirst().get());
+
+            int sampleCount = taxonOcurenceInput.get().getTaxonCount();
+            if (sampleCount>1){
+                taxonLastOccurrenceInput.set(taxonOcurenceInput.get().getTaxonSet().stream().reduce((first, second) -> second).get());
+                if (sampleCount>2){
+                    withinRangeOccurenceIDs = taxonOcurenceInput.get().getTaxonSet().stream().skip(1).limit(sampleCount-2).map(taxon -> taxon.getID()).collect(java.util.stream.Collectors.toList());
+                }
+            }
+        }
+
         if (taxonFirstOccurrenceInput.get() != null || taxonLastOccurrenceInput.get() != null) {
             if (taxonFirstOccurrenceInput == null || taxonLastOccurrenceInput.get() == null) {
                 throw new RuntimeException("Either firstOccurrence or lastOccurence is not specified. Either specify both or none");
@@ -124,6 +143,21 @@ public class StratigraphicRange extends BEASTObject {
         nodes.add(nr);
     }
 
+    /**
+     * adds within range node, before the last occurence.
+     *
+     * @param nodeNr
+     */
+    public void addWithinRangeNodeNr(SRTree tree, int nodeNr) {
+        if (isSingleFossilRange())
+            throw new RuntimeException("Attempt to add a node to a single fossil range");
+        if (nodes.size()<2) {
+            nodes.add(nodeNr);
+        }
+        int oneBeforeLastNr = nodes.get(nodes.size()-2);
+        addNodeNrAfter(tree, oneBeforeLastNr, nodeNr);
+    }
+
     public void makeSingleFossilRange() {
         if (firstOccurrenceID != null && lastOccurrenceID != null && !firstOccurrenceID.equals(lastOccurrenceID))
             throw new RuntimeException("First and last occurrences of taxon "+ getID() + "are not equal but an attempt" +
@@ -189,6 +223,13 @@ public class StratigraphicRange extends BEASTObject {
             lastOccurrenceID = taxonLastOccurrenceInput.get().getID();
         }
         return lastOccurrenceID;
+    }
+    public List<String> getWithinRangeOccurenceIDs(){
+        if (withinRangeOccurenceIDs == null && taxonOcurenceInput.get() != null) {
+            Set<Taxon> taxonSet = taxonOcurenceInput.get().getTaxonSet();
+            withinRangeOccurenceIDs = taxonSet.stream().skip(1).limit(taxonSet.size()-2).map(taxon -> taxon.getID()).collect(java.util.stream.Collectors.toList());
+        }
+        return withinRangeOccurenceIDs;
     }
 
     public void addNodeNr(SRTree tree, int nodeNr) {

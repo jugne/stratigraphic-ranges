@@ -20,6 +20,9 @@ public class TransmissionParameterization extends SABDParameterization {
     public Input<RealParameter> samplingProportionInput = new Input<>("samplingProportion",
             "Sampling proportion skyline.", Input.Validate.REQUIRED);
 
+    public Input<RealParameter> samplingStartInput = new Input<>("samplingStart",
+            "Age (backwards in time) at which sampling started.", Input.Validate.REQUIRED);
+
     public Input<RealParameter> removalProbInput = new Input<>("removalProb",
             "Removal prob skyline.", Input.Validate.REQUIRED);
 
