@@ -70,9 +70,10 @@ public class SpeciationLogger extends CalculationNode implements Loggable, Funct
     @Override
     public void log(long nSample, PrintStream out) {
         final SRTree tree = treeInput.get();
-        tree.orientateTree();
-        if (relogInput.get())
+        if (relogInput.get()){
+            tree.orientateTree();
             tree.initSRanges();
+        }
         for (StratigraphicRange range : tree.getSRanges()) {
             List<Integer> internalNodeNrs = range.getInternalNodeNrs(tree);
             if (relogInput.get() && !range.isSingleFossilRange()){
