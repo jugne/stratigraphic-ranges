@@ -18,6 +18,7 @@
         <provider classname="sr.evolution.tree.TipAgeLogger"/>
         <provider classname="sr.evolution.tree.SpeciationLogger"/>
         <provider classname="sr.evolution.tree.SampledAncestorLogger"/>
+        <provider classname="sr.speciation.TransmissionParameterization"/>
         <provider classname="sr.speciation.SRangesBirthDeathModel"/>
         <provider classname="sr.util.Tools"/>
     </service>

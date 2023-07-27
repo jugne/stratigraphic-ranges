@@ -6,9 +6,8 @@ import beast.base.core.Citation;
 import beast.base.core.Description;
 
 
+import beast.base.evolution.tree.TreeDistribution;
 import beast.base.inference.parameter.RealParameter;
-import sa.evolution.speciation.SABDParameterization;
-import sa.evolution.speciation.SABirthDeathModel;
 import sr.evolution.tree.SRTree;
 import sr.evolution.sranges.StratigraphicRange;
 
@@ -26,9 +25,9 @@ import static sr.util.Tools.getStartSubrangeLength;
         "The fossilized birth-death model under different types of speciation")
 @Citation("Gavryushkina A, Warnock RCM, Drummond AJ, Heath TA, Stadler T (2017) \n" +
         "Bayesian total-evidence dating under the fossilized birth-death model with stratigraphic ranges.")
-public class SRangesBirthDeathModel extends SABirthDeathModel {
+public class SRangesBirthDeathModel extends TreeDistribution {
 
-    public Input<SABDParameterization> parameterizationInput = new Input<>("parameterization", "The parameterization to use.");
+    public Input<TransmissionParameterization> parameterizationInput = new Input<>("parameterization", "The parameterization to use.");
     final public Input<Boolean> integrateOverRangesInput = new Input<Boolean>("integrateOverRanges",
             "If true, there should be no samples in between range bounds and these samples are integrated over." +
                     "Otherwise, no integration happens. You should not provide in between samples, " +
@@ -44,24 +43,56 @@ public class SRangesBirthDeathModel extends SABirthDeathModel {
             "If true, integrate over sampling between last non-empty sample of the range and empty end sample at the end.",
             false);
 
+    public Input<RealParameter> rhoProbability =
+            new Input<RealParameter>("rho", "Probability of an individual to be sampled at present", (RealParameter)null);
 
-    @Override
-    public double q(double t, double c1, double c2) {
-        double v = Math.exp(-c1 * t);
-        return 4 * v / Math.pow(v*(1-c2) + (1+c2), 2.0);
+    // if the tree likelihood is condition on sampling at least one individual then set to true one of the inputs:
+    public Input<Boolean> conditionOnSamplingInput = new Input<Boolean>("conditionOnSampling", "the tree " +
+            "likelihood is conditioned on sampling at least one individual if condition on origin or at least one individual on both sides of the root if condition on root", false);
+//    public Input<Boolean> conditionOnRhoSamplingInput = new Input<Boolean>("conditionOnRhoSampling", "the tree " +
+//            "likelihood is conditioned on sampling at least one individual in present if condition on origin or at lease one extant individual on both sides of the root if condition on root", false);
+
+    public Input<Boolean> conditionOnRootInput = new Input<Boolean>("conditionOnRoot", "the tree " +
+            "likelihood is conditioned on the root height otherwise on the time of origin", false);
+
+    protected double r[] = new double[2];
+    protected double lambda[] = new double[2];
+    protected double mu[] = new double[2];
+    protected double psi[] = new double[2];
+    protected double A[] = new double[2];
+    protected double B[] = new double[2];
+    protected double origin;
+    protected double rho[] = new double[2];
+    protected double intervalEndTimes[] = new double[2];
+
+
+    public double q_i(double t,double t_i, int i) {
+        double v = Math.exp(-A[i]*(t-t_i));
+        return 4 * v / Math.pow(v*(1-B[i]) + (1+B[i]), 2.0);
     }
 
-    @Override
-    public double log_q(double t, double c1, double c2) {
-        return Math.log(q(t,c1,c2));
+    public double log_q_i(double t, double t_i, int i) {
+        return Math.log(q_i(t, t_i, i));
     }
 
-    private double q_tilde(double t, double c1, double c2) {
-        return Math.sqrt(Math.exp(-t*(lambda + mu + psi))*q(t,c1,c2));
+    private double q_i_tilde(double t, double t_i, int i) {
+        return Math.sqrt(Math.exp(-(lambda[i] + mu[i] + psi[i])*(t-t_i))*q_i(t, t_i, i));
     }
 
-    private double log_q_tilde(double t, double c1, double c2) {
-        return 0.5*(-t*(lambda + mu + psi) + log_q(t,c1,c2));
+    private double log_q_i_tilde(double t, double t_i, int i) {
+        return 0.5*(-(lambda[i] + mu[i] + psi[i])*(t-t_i) + log_q_i(t, t_i, i));
+    }
+
+    private double p_i(double t, double t_i, int i) {
+        return lambda[i] + mu[i] + psi[i] - 0.5*(1/lambda[i])*A[i]*((1+B[i])*Math.exp(-A[i]*(t-t_i))-(1-B[i]))/((1+B[i])*Math.exp(-A[i]*(t-t_i))+(1-B[i]));
+    }
+
+    private double get_p_i(double lambda, double mu, double psi, double A, double B, double t, double t_i) {
+        return lambda + mu + psi - 0.5*(1/lambda)*A*((1+B)-(1-B)*Math.exp(-A*(t-t_i)))/((1+B)+(1-B)*Math.exp(-A*(t-t_i)));
+    }
+
+    private double log_p_i(double t, double t_i, int i) {
+        return Math.log(p_i(t, t_i, i));
     }
 
     private Node findAncestralRangeLastNode(Node node) {
@@ -83,35 +114,56 @@ public class SRangesBirthDeathModel extends SABirthDeathModel {
         }
     }
 
-    protected void updateParameters() {
-        if (parameterizationInput.get()==null){
-            super.updateParameters();
-        } else {
-            lambda = parameterizationInput.get().lambda();
-            mu = parameterizationInput.get().mu();
-            psi = parameterizationInput.get().psi();
+    protected boolean updateParameters() {
+            for (int i = dimension-1; i >= 0; i--){
+                double p_i_next;
+                if (i + 1 < dimension) {
+                    p_i_next = get_p_i(parameterizationInput.get().lambda(i+1),
+                            parameterizationInput.get().mu(i+1),
+                            parameterizationInput.get().psi(i+1),
+                            A[i+1], B[i+1], intervalEndTimes[i+1],intervalEndTimes[i]);
+                } else {
+                    p_i_next = 1.0;
+                }
+
+                lambda[i] = parameterizationInput.get().lambda(i);
+                mu[i] = parameterizationInput.get().mu(i);
+                psi[i] = parameterizationInput.get().psi(i);
+                r[i] = parameterizationInput.get().r(i);
+
+                if (lambdaExceedsMu && lambda[i] <= mu[i]) {
+                    return false;
+                }
+
+                if (lambda[i] < 0 || mu[i] < 0 || psi[i] < 0) {
+                    return false;
+                }
+
+                if (i==1 && rhoProbability.get() != null )
+                    rho[i] = rhoProbability.get().getValue();
+                A[i] = Math.sqrt((lambda[i] - mu[i] - psi[i]) * (lambda[i] - mu[i] - psi[i]) + 4 * lambda[i] * psi[i]);
+                B[i] = ((1-2*(1-rho[i])*p_i_next)*lambda[i] +mu[i] + psi[i])/A[i];
+            }
+
             if (!conditionOnRootInput.get()){
                 origin = parameterizationInput.get().origin();
             }  else {
                 origin = Double.POSITIVE_INFINITY;
             }
 
-            r = removalProbability.get().getValue();
-            if (rhoProbability.get() != null ) {
-                rho = rhoProbability.get().getValue();
-            } else {
-                rho = 0.;
-            }
-            c1 = Math.sqrt((lambda - mu - psi) * (lambda - mu - psi) + 4 * lambda * psi);
-            c2 = -(lambda - mu - 2*lambda*rho - psi) / c1;
+
+
+        if (parameterizationInput.get().samplingChangeTimeInput.get() !=null ){
+            intervalEndTimes[0] = parameterizationInput.get().samplingChangeTimeInput.get().getValue();
         }
-    }
+            return true;
+        }
 
-
+    int dimension = 1;
+    protected boolean lambdaExceedsMu = false;
     boolean integrateOverRanges;
     boolean useStartPeriod;
     boolean useEndPeriod;
-    boolean samplingStartsAtFirstSample;
     @Override
     public void initAndValidate() {
         if (!integrateOverRangesInput.get() && (startPeriodInput.get() || endPeriodInput.get())) {
@@ -122,8 +174,21 @@ public class SRangesBirthDeathModel extends SABirthDeathModel {
         integrateOverRanges = integrateOverRangesInput.get();
         useStartPeriod = startPeriodInput.get();
         useEndPeriod = endPeriodInput.get();
+        if (parameterizationInput.get().samplingChangeTimeInput.get() !=null ){
+            intervalEndTimes = new double[2];
+            intervalEndTimes[0] = parameterizationInput.get().samplingChangeTimeInput.get().getValue();
+            intervalEndTimes[1] = 0;
+            dimension = 2;
+        }
+    }
 
-
+    private int getIntervalNumber(double time){
+        for (int i=0; i<dimension; i++){
+            if (time >= intervalEndTimes[i]){
+                return i;
+            }
+        }
+        throw new RuntimeException("Time outside of interval");
     }
 
     @Override
@@ -131,14 +196,9 @@ public class SRangesBirthDeathModel extends SABirthDeathModel {
     {
         SRTree tree = (SRTree) treeInput.get();
         int nodeCount = tree.getNodeCount();
-        updateParameters();
-        if (lambdaExceedsMu && lambda <= mu) {
+        if (!updateParameters())
             return Double.NEGATIVE_INFINITY;
-        }
 
-        if (lambda < 0 || mu < 0 || psi < 0) {
-            return Double.NEGATIVE_INFINITY;
-        }
 
         double x0 = origin;
         double x1=tree.getRoot().getHeight();
@@ -148,64 +208,67 @@ public class SRangesBirthDeathModel extends SABirthDeathModel {
         }
 
         if (!conditionOnRootInput.get()){
-            logP = log_q(x0, c1, c2);
+            logP = log_q_i(x0, intervalEndTimes[0], 0);
         } else {
             if (tree.getRoot().isFake()){   //when conditioning on the root we assume the process
                 //starts at the time of the first branching event and
                 //that means that the root can not be a sampled ancestor
                 return Double.NEGATIVE_INFINITY;
             } else {
-                logP = log_q(x1, c1, c2);
+                int i = getIntervalNumber(x1);
+                logP = log_q_i(x1, intervalEndTimes[i], i);
             }
         }
 
         if (conditionOnSamplingInput.get()) {
-            logP -= log_oneMinusP0(x0, c1, c2);
+            int i = getIntervalNumber(x0);
+            logP -= 1-p_i(x0, intervalEndTimes[i], i);
         }
 
-        if (conditionOnRhoSamplingInput.get()) {
-            if (conditionOnRootInput.get()) {
-                logP -= Math.log(lambda) + log_oneMinusP0Hat(x1, c1, c2)+ log_oneMinusP0Hat(x1, c1, c2);
-            }  else {
-                logP -= log_oneMinusP0Hat(x0, c1, c2);
-            }
-        }
+//        if (conditionOnRhoSamplingInput.get()) {
+//            if (conditionOnRootInput.get()) {
+//                logP -= Math.log(lambda) + log_oneMinusP0Hat(x1, c1, c2)+ log_oneMinusP0Hat(x1, c1, c2);
+//            }  else {
+//                logP -= log_oneMinusP0Hat(x0, c1, c2);
+//            }
+//        }
 
         for (int i = 0; i < nodeCount; i++) {
             Node node = tree.getNode(i);
+            int j = getIntervalNumber(node.getHeight());
             if (node.isLeaf()) {
                 if  (!node.isDirectAncestor())  {
                     Node fossilParent = node.getParent();
-                    if (node.getHeight() > 0.000000000005 || rho == 0.) {
+                    if (node.getHeight() > intervalEndTimes[j] + 0.000000000005 || rho[j] == 0.) {
 
                         if (((SRTree)tree).belongToSameSRange(i, fossilParent.getNr())) {
-                            logP += Math.log(psi) - log_q_tilde(node.getHeight(), c1, c2) + log_p0s(node.getHeight(), c1, c2);
+                            logP += Math.log(psi[j]) - log_q_i_tilde(node.getHeight(), intervalEndTimes[j], j) + log_p_i(node.getHeight(), intervalEndTimes[j], j);
                         } else {
-                            logP += Math.log(psi) - log_q(node.getHeight(), c1, c2) + log_p0s(node.getHeight(), c1, c2);
+                            logP += Math.log(psi[j]) - log_q_i(node.getHeight(), intervalEndTimes[j], j) + log_p_i(node.getHeight(), intervalEndTimes[j], j);
                         }
                     } else {
-                        logP += Math.log(rho);
+                        logP += Math.log(rho[j]);
                     }
                 }
             } else {
                 if (node.isFake()) {
-                    if (r == 1) {
+                    if (r[j] == 1) {
                         System.out.println("r = 1 but there are sampled ancestors in the tree");
                         System.exit(0);
                     }
-                    logP += Math.log(psi) + Math.log(1 - r);
+                    logP += Math.log(psi[j]) + Math.log(1 - r[j]);
                     Node parent = node.getParent();
 
                     Node child = node.getNonDirectAncestorChild();
                     Node DAchild = node.getDirectAncestorChild();
                     if (parent != null && tree.belongToSameSRange(parent.getNr(),DAchild.getNr())) {
-                        logP += - log_q_tilde(node.getHeight(), c1, c2) + log_q(node.getHeight(), c1, c2);
+                        logP += - log_q_i_tilde(node.getHeight(), intervalEndTimes[j], j) + log_q_i(node.getHeight(), intervalEndTimes[j], j);
                     }
                     if (child != null && tree.belongToSameSRange(i,child.getNr())) {
-                        logP += - log_q(node.getHeight(), c1, c2) +  log_q_tilde(node.getHeight(), c1, c2);
+                        logP += - log_q_i(node.getHeight(), intervalEndTimes[j], j) +  log_q_i_tilde(node.getHeight(), intervalEndTimes[j], j);
                     }
                 } else {
-                    logP += Math.log(lambda) + log_q(node.getHeight(), c1, c2);
+                    logP += Math.log(lambda[j]) + log_q_i(node.getHeight(), intervalEndTimes[j], j);
                 }
             }
         }
@@ -215,15 +278,17 @@ public class SRangesBirthDeathModel extends SABirthDeathModel {
             Node first =  tree.getNode(range.getNodeNrs().get(0));
             if (!range.isSingleFossilRange()) {
                 double tFirst = first.getHeight();
+                int i = getIntervalNumber(tFirst); // this is enough since we assume that ranges only happen in the second period, looking
+                // from the origin. This is NOT a proper skyline.
                 int rangeSize =  range.getNodeNrs().size();
                 if (!integrateOverRanges && rangeSize > 2){
                     if (useStartPeriod)
-                        logP += (psi*(1-r))*(getStartSubrangeLength(range, tree));
+                        logP += (psi[i]*(1-r[i]))*(getStartSubrangeLength(range, tree));
                     if (useEndPeriod)
-                        logP += (psi*(1-r))*(getEndSubrangeLength(range, tree));
+                        logP += (psi[i]*(1-r[i]))*(getEndSubrangeLength(range, tree));
                 } else {
                     double tLast = tree.getNode(range.getNodeNrs().get(range.getNodeNrs().size()-1)).getHeight();
-                    logP += (psi*(1-r))*(tFirst - tLast);
+                    logP += (psi[i]*(1-r[i]))*(tFirst - tLast);
                 }
 
 //                if (useStartPeriod){
@@ -241,7 +306,9 @@ public class SRangesBirthDeathModel extends SABirthDeathModel {
             if (ancestralLast != null) {
                 double tOld = ancestralLast.getHeight();
                 double tYoung = first.getHeight();
-                logP += Math.log(1-q(tYoung, c1, c2)/q_tilde(tYoung, c1, c2)*q_tilde(tOld, c1, c2)/q(tOld, c1, c2));
+                int i = getIntervalNumber(tOld); // again, not proper skyline. Only works because we assume that ranges only happen in the second period, looking
+                // from the origin.
+                logP += Math.log(1-q_i(tYoung, intervalEndTimes[i], i)/q_i_tilde(tYoung, intervalEndTimes[i], i)*q_i_tilde(tOld, intervalEndTimes[i], i)/q_i(tOld, intervalEndTimes[i], i));
             }
         }
         return logP;
