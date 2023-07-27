@@ -68,7 +68,7 @@ public class SRangesBirthDeathModel extends TreeDistribution {
 
     public double q_i(double t,double t_i, int i) {
         double v = Math.exp(-A[i]*(t-t_i));
-        return 4 * v / Math.pow(v*(1-B[i]) + (1+B[i]), 2.0);
+        return 4 * v / Math.pow(v*(1+B[i]) + (1-B[i]), 2.0);
     }
 
     public double log_q_i(double t, double t_i, int i) {
@@ -88,7 +88,7 @@ public class SRangesBirthDeathModel extends TreeDistribution {
     }
 
     private double get_p_i(double lambda, double mu, double psi, double A, double B, double t, double t_i) {
-        return lambda + mu + psi - 0.5*(1/lambda)*A*((1+B)-(1-B)*Math.exp(-A*(t-t_i)))/((1+B)+(1-B)*Math.exp(-A*(t-t_i)));
+        return lambda + mu + psi - 0.5*(1/lambda)*A*((1+B)*Math.exp(-A*(t-t_i))-(1-B))/((1+B)*Math.exp(-A*(t-t_i))+(1-B));
     }
 
     private double log_p_i(double t, double t_i, int i) {
