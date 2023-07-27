@@ -21,7 +21,7 @@ public class TransmissionParameterization extends CalculationNode {
             "Sampling proportion skyline.", Input.Validate.REQUIRED);
 
     public Input<RealParameter> samplingChangeTimeInput = new Input<>("samplingChangeTime",
-            "Age (backwards in time) at which sampling started.", Input.Validate.REQUIRED);
+            "Age (backwards in time) at which sampling started.");
 
     public Input<RealParameter> removalProbInput = new Input<>("removalProb",
             "Removal prob skyline.", Input.Validate.REQUIRED);
