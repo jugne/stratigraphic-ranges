@@ -202,6 +202,7 @@ public class SRangesBirthDeathModel extends TreeDistribution {
 
         double x0 = origin;
         double x1=tree.getRoot().getHeight();
+        int originInt = getIntervalNumber(x0);
 
         if (x0 < x1 ) {
             return Double.NEGATIVE_INFINITY;
@@ -261,6 +262,8 @@ public class SRangesBirthDeathModel extends TreeDistribution {
 
                     Node child = node.getNonDirectAncestorChild();
                     Node DAchild = node.getDirectAncestorChild();
+                    if (parent==null && j!=originInt)
+                        logP+= log_q_i(intervalEndTimes[originInt], intervalEndTimes[j], j);
                     if (parent != null && tree.belongToSameSRange(parent.getNr(),DAchild.getNr())) {
                         logP += - log_q_i_tilde(node.getHeight(), intervalEndTimes[j], j) + log_q_i(node.getHeight(), intervalEndTimes[j], j);
                     }
@@ -268,6 +271,12 @@ public class SRangesBirthDeathModel extends TreeDistribution {
                         logP += - log_q_i(node.getHeight(), intervalEndTimes[j], j) +  log_q_i_tilde(node.getHeight(), intervalEndTimes[j], j);
                     }
                 } else {
+                    if (node.getParent()==null && j!=originInt)
+                        logP+= log_q_i(intervalEndTimes[originInt], intervalEndTimes[j], j);
+                    if (node.getParent() != null && getIntervalNumber(node.getParent().getHeight()) != j) {
+                        int k = getIntervalNumber(node.getParent().getHeight());
+                        logP += log_q_i(intervalEndTimes[k], intervalEndTimes[j], j);
+                    }
                     logP += Math.log(lambda[j]) + log_q_i(node.getHeight(), intervalEndTimes[j], j);
                 }
             }
