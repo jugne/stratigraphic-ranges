@@ -67,7 +67,7 @@ public class SRangesBirthDeathModel extends TreeDistribution {
 
 
     public double q_i(double t,double t_i, int i) {
-        double v = Math.exp(-A[i]*(t-t_i));
+        double v = Math.exp(A[i]*(t-t_i));
         return 4 * v / Math.pow(v*(1+B[i]) + (1-B[i]), 2.0);
     }
 
@@ -84,7 +84,7 @@ public class SRangesBirthDeathModel extends TreeDistribution {
     }
 
     private double p_i(double t, double t_i, int i) {
-        return lambda[i] + mu[i] + psi[i] - 0.5*(1/lambda[i])*A[i]*((1+B[i])*Math.exp(-A[i]*(t-t_i))-(1-B[i]))/((1+B[i])*Math.exp(-A[i]*(t-t_i))+(1-B[i]));
+        return lambda[i] + mu[i] + psi[i] - 0.5*(1/lambda[i])*A[i]*((1+B[i])*Math.exp(A[i]*(t-t_i))-(1-B[i]))/((1+B[i])*Math.exp(A[i]*(t-t_i))+(1-B[i]));
     }
 
     private double get_p_i(double lambda, double mu, double psi, double A, double B, double t, double t_i) {
@@ -121,7 +121,7 @@ public class SRangesBirthDeathModel extends TreeDistribution {
                     p_i_next = get_p_i(parameterizationInput.get().lambda(i+1),
                             parameterizationInput.get().mu(i+1),
                             parameterizationInput.get().psi(i+1),
-                            A[i+1], B[i+1], intervalEndTimes[i+1],intervalEndTimes[i]);
+                            A[i+1], B[i+1], intervalEndTimes[i],intervalEndTimes[i+1]);
                 } else {
                     p_i_next = 1.0;
                 }
