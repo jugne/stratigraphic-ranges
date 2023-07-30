@@ -11,6 +11,7 @@ import beast.base.inference.parameter.RealParameter;
 import sr.evolution.tree.SRTree;
 import sr.evolution.sranges.StratigraphicRange;
 
+import static beast.base.core.Log.warning;
 import static sr.util.Tools.getEndSubrangeLength;
 import static sr.util.Tools.getStartSubrangeLength;
 
@@ -227,23 +228,19 @@ public class SRangesBirthDeathModel extends TreeDistribution {
             logP -= Math.log(1-p_i(x0, intervalEndTimes[i], i));
         }
 
-//        if (conditionOnRhoSamplingInput.get()) {
-//            if (conditionOnRootInput.get()) {
-//                logP -= Math.log(lambda) + log_oneMinusP0Hat(x1, c1, c2)+ log_oneMinusP0Hat(x1, c1, c2);
-//            }  else {
-//                logP -= log_oneMinusP0Hat(x0, c1, c2);
-//            }
-//        }
-
         for (int i = 0; i < nodeCount; i++) {
             Node node = tree.getNode(i);
             int j = getIntervalNumber(node.getHeight());
             if (node.isLeaf()) {
+                if (dimension>1 && node.getHeight() >= intervalEndTimes[0]){
+                    warning.println("Warning: sampling times before the sampling change time (looking from the root) are not supported yet in this special case implementation.");
+                    return Double.NEGATIVE_INFINITY;
+                }
                 if  (!node.isDirectAncestor())  {
                     Node fossilParent = node.getParent();
                     if (node.getHeight() > intervalEndTimes[j] + 0.000000000005 || rho[j] == 0.) {
 
-                        if (((SRTree)tree).belongToSameSRange(i, fossilParent.getNr())) {
+                        if ((tree).belongToSameSRange(i, fossilParent.getNr())) {
                             logP += Math.log(psi[j]) - log_q_i_tilde(node.getHeight(), intervalEndTimes[j], j) + log_p_i(node.getHeight(), intervalEndTimes[j], j);
                         } else {
                             logP += Math.log(psi[j]) - log_q_i(node.getHeight(), intervalEndTimes[j], j) + log_p_i(node.getHeight(), intervalEndTimes[j], j);
@@ -300,16 +297,6 @@ public class SRangesBirthDeathModel extends TreeDistribution {
                     double tLast = tree.getNode(range.getNodeNrs().get(range.getNodeNrs().size()-1)).getHeight();
                     logP += (psi[i]*(1-r[i]))*(tFirst - tLast);
                 }
-
-//                if (useStartPeriod){
-//                    logP += psi*(getStartSubrangeLength(range, tree));
-//                } else if (useEndPeriod) {
-//                    logP += psi*(getEndSubrangeLength(range, tree));
-//                } else {
-//                    double tLast = tree.getNode(range.getNodeNrs().get(range.getNodeNrs().size()-1)).getHeight();
-//                    logP += psi*(tFirst - tLast);
-//                }
-//                double tLast = tree.getNode(range.getNodeNrs().get(range.getNodeNrs().size()-1)).getHeight();
 
             }
             Node ancestralLast = findAncestralRangeLastNode(first);
