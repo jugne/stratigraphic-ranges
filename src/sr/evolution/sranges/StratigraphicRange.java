@@ -51,13 +51,17 @@ public class StratigraphicRange extends BEASTObject {
     @Override
     public void initAndValidate() {
         if (taxonOcurenceInput.get()!=null){
-            taxonFirstOccurrenceInput.set(taxonOcurenceInput.get().getTaxonSet().stream().findFirst().get());
+            String firstId = taxonOcurenceInput.get().asStringList().get(0);
+            taxonFirstOccurrenceInput.set(taxonOcurenceInput.get().getTaxon(firstId));
 
             int sampleCount = taxonOcurenceInput.get().getTaxonCount();
             if (sampleCount>1){
-                taxonLastOccurrenceInput.set(taxonOcurenceInput.get().getTaxonSet().stream().reduce((first, second) -> second).get());
+                String lastId = taxonOcurenceInput.get().asStringList().get(sampleCount-1);
+                taxonLastOccurrenceInput.set(taxonOcurenceInput.get().getTaxon(lastId));
                 if (sampleCount>2){
-                    withinRangeOccurenceIDs = taxonOcurenceInput.get().getTaxonSet().stream().skip(1).limit(sampleCount-2).map(taxon -> taxon.getID()).collect(java.util.stream.Collectors.toList());
+
+                    withinRangeOccurenceIDs = taxonOcurenceInput.get().asStringList().stream().skip(1).limit(sampleCount-2).collect(java.util.stream.Collectors.toList());
+//                    withinRangeOccurenceIDs = taxonOcurenceInput.get().getTaxonSet().stream().skip(1).limit(sampleCount-2).map(taxon -> taxon.getID()).collect(java.util.stream.Collectors.toList());
                 }
             }
         }
@@ -153,9 +157,12 @@ public class StratigraphicRange extends BEASTObject {
             throw new RuntimeException("Attempt to add a node to a single fossil range");
         if (nodes.size()<2) {
             nodes.add(nodeNr);
+        } if (nodes.size()==2) {
+            nodes.add(1,nodeNr);
+        } else {
+            int oneBeforeLastNr = nodes.get(nodes.size() - 2);
+            addNodeNrAfter(tree, oneBeforeLastNr, nodeNr);
         }
-        int oneBeforeLastNr = nodes.get(nodes.size()-2);
-        addNodeNrAfter(tree, oneBeforeLastNr, nodeNr);
     }
 
     public void makeSingleFossilRange() {
@@ -209,6 +216,15 @@ public class StratigraphicRange extends BEASTObject {
                     taxonFirstOccurrenceInput.get().getID());
         }
         lastOccurrenceID = ID;
+    }
+
+    public void setWithinRangeOccurenceIDs(List<String> IDs){
+        if (taxonOcurenceInput.get() != null && ! taxonOcurenceInput.get().asStringList().equals(IDs)) {
+            throw new RuntimeException(IDs + " were attempted to be assigned as the names of the within range taxon " +
+                    "for a stratigraphic range for which the within range taxon input is specified and has name " +
+                    taxonOcurenceInput.get().asStringList());
+        }
+        withinRangeOccurenceIDs = IDs;
     }
 
     public String getFirstOccurrenceID() {

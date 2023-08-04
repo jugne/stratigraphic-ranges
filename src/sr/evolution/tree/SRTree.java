@@ -180,6 +180,7 @@ public class SRTree extends Tree implements TreeInterface {
                 range_sink.addNodeNr(this, nodeNrs_src.get(j));
             }
             range_sink.setFirstOccurrenceID(range_src.getFirstOccurrenceID());
+            range_sink.setWithinRangeOccurenceIDs(range_src.getWithinRangeOccurenceIDs());
             range_sink.setLastOccurrenceID(range_src.getLastOccurrenceID());
             storedSRanges.add(range_sink);
         }

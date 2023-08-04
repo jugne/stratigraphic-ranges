@@ -20,6 +20,7 @@
         <provider classname="sr.evolution.tree.SampledAncestorLogger"/>
         <provider classname="sr.speciation.TransmissionParameterization"/>
         <provider classname="sr.speciation.SRangesBirthDeathModel"/>
+        <provider classname="sr.evolution.tree.RandomTransmissionRangeTree"/>
         <provider classname="sr.util.Tools"/>
     </service>
 </package>

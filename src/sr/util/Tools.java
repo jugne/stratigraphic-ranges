@@ -107,11 +107,22 @@ public class Tools {
 	public static double getStartSubrangeLength(StratigraphicRange range, SRTree tree){
 		int size = range.getNodeNrs().size();
 		int startNr = range.getNodeNrs().get(0);
-		int afterStartNr = range.getNodeNrs().get(1);
+		int i = 1;
+		int afterStartNr = range.getNodeNrs().get(i);
+		if (range.getWithinRangeOccurenceIDs() != null)
+			for (int nr : range.getNodeNrs()){
+				if (tree.getNode(nr).getID()!=null && tree.getNode(nr).getID().equals(range.getWithinRangeOccurenceIDs().get(0)))
+					afterStartNr = nr;
+			}
+
+//			afterStartNr = range.getNodeNrs().indexOf(range.getWithinRangeOccurenceIDs().get(0));
 		SRNode start = (SRNode) tree.getNode(startNr);
 		SRNode afterStart = (SRNode) tree.getNode(afterStartNr);
-		while (!afterStart.isFake()) {
-			afterStartNr++;
+		while (!afterStart.isLeaf()) {
+			i++;
+			afterStartNr = range.getNodeNrs().get(i);
+			if (afterStartNr==81)
+				System.out.println("test");
 			afterStart = (SRNode) tree.getNode(afterStartNr);
 		}
 		return afterStart.getHeight() - start.getHeight();

@@ -65,14 +65,14 @@ public class SRangesBirthDeathModel extends TreeDistribution {
     protected double origin;
     protected double rho[] = new double[2];
     protected double intervalEndTimes[] = new double[2];
+    protected TransmissionParameterization parameterization;
 
 
-    public double q_i(double t,double t_i, int i) {
-        double v = Math.exp(A[i]*(t-t_i));
+    private double q_i(double t,double t_i, int i) {
         return 4 * Math.exp(-A[i]*(t-t_i)) / Math.pow((1+B[i]) + (1-B[i])*Math.exp(-A[i]*(t-t_i)), 2.0);
     }
 
-    public double log_q_i(double t, double t_i, int i) {
+    private double log_q_i(double t, double t_i, int i) {
         return Math.log(q_i(t, t_i, i));
     }
 
@@ -117,21 +117,25 @@ public class SRangesBirthDeathModel extends TreeDistribution {
     }
 
     protected boolean updateParameters() {
+        if (parameterization.samplingChangeTimeInput.get() !=null ){
+            intervalEndTimes[0] = parameterization.samplingChangeTimeInput.get().getValue();
+        }
+
             for (int i = dimension-1; i >= 0; i--){
                 double p_i_next;
                 if (i + 1 < dimension) {
-                    p_i_next = get_p_i(parameterizationInput.get().lambda(i+1),
-                            parameterizationInput.get().mu(i+1),
-                            parameterizationInput.get().psi(i+1),
+                    p_i_next = get_p_i(parameterization.lambda(i+1),
+                            parameterization.mu(i+1),
+                            parameterization.psi(i+1),
                             A[i+1], B[i+1], intervalEndTimes[i],intervalEndTimes[i+1]);
                 } else {
                     p_i_next = 1.0;
                 }
 
-                lambda[i] = parameterizationInput.get().lambda(i);
-                mu[i] = parameterizationInput.get().mu(i);
-                psi[i] = parameterizationInput.get().psi(i);
-                r[i] = parameterizationInput.get().r(i);
+                lambda[i] = parameterization.lambda(i);
+                mu[i] = parameterization.mu(i);
+                psi[i] = parameterization.psi(i);
+                r[i] = parameterization.r(i);
 
                 if (lambdaExceedsMu && lambda[i] <= mu[i]) {
                     return false;
@@ -148,16 +152,14 @@ public class SRangesBirthDeathModel extends TreeDistribution {
             }
 
             if (!conditionOnRootInput.get()){
-                origin = parameterizationInput.get().origin();
+                origin = parameterization.origin();
             }  else {
                 origin = Double.POSITIVE_INFINITY;
             }
 
 
 
-        if (parameterizationInput.get().samplingChangeTimeInput.get() !=null ){
-            intervalEndTimes[0] = parameterizationInput.get().samplingChangeTimeInput.get().getValue();
-        }
+
             return true;
         }
 
@@ -168,6 +170,7 @@ public class SRangesBirthDeathModel extends TreeDistribution {
     boolean useEndPeriod;
     @Override
     public void initAndValidate() {
+        parameterization = parameterizationInput.get();
         if (!integrateOverRangesInput.get() && (startPeriodInput.get() || endPeriodInput.get())) {
             throw new IllegalArgumentException("You can only use startPeriod and endPeriod when " +
                     "integrateOverRanges is true.");
@@ -176,9 +179,9 @@ public class SRangesBirthDeathModel extends TreeDistribution {
         integrateOverRanges = integrateOverRangesInput.get();
         useStartPeriod = startPeriodInput.get();
         useEndPeriod = endPeriodInput.get();
-        if (parameterizationInput.get().samplingChangeTimeInput.get() !=null ){
+        if (parameterization.samplingChangeTimeInput.get() !=null ){
             intervalEndTimes = new double[2];
-            intervalEndTimes[0] = parameterizationInput.get().samplingChangeTimeInput.get().getValue();
+            intervalEndTimes[0] = parameterization.samplingChangeTimeInput.get().getValue();
             intervalEndTimes[1] = 0;
             dimension = 2;
         }
@@ -211,7 +214,7 @@ public class SRangesBirthDeathModel extends TreeDistribution {
         }
 
         if (!conditionOnRootInput.get()){
-            logP = log_q_i(x0, intervalEndTimes[0], 0);
+            logP = log_q_i(x0, intervalEndTimes[0], 0); // -0.10423623551548937
         } else {
             if (tree.getRoot().isFake()){   //when conditioning on the root we assume the process
                 //starts at the time of the first branching event and
@@ -225,7 +228,10 @@ public class SRangesBirthDeathModel extends TreeDistribution {
 
         if (conditionOnSamplingInput.get()) {
             int i = getIntervalNumber(x0);
-            logP -= Math.log(1-p_i(x0, intervalEndTimes[i], i));
+            double p_i = p_i(x0, intervalEndTimes[i], i);
+            if (p_i == 1)
+                return Double.NEGATIVE_INFINITY; // Following BDSKY's behaviour
+            logP -= Math.log(1-p_i); // 0.2981273085767977
         }
 
         for (int i = 0; i < nodeCount; i++) {
@@ -233,7 +239,7 @@ public class SRangesBirthDeathModel extends TreeDistribution {
             int j = getIntervalNumber(node.getHeight());
             if (node.isLeaf()) {
                 if (dimension>1 && node.getHeight() >= intervalEndTimes[0]){
-                    warning.println("Warning: sampling times before the sampling change time (looking from the root) are not supported yet in this special case implementation.");
+//                    warning.println("Warning: sampling times before the sampling change time (looking from the root) are not supported yet in this special case implementation.");
                     return Double.NEGATIVE_INFINITY;
                 }
                 if  (!node.isDirectAncestor())  {
@@ -241,7 +247,7 @@ public class SRangesBirthDeathModel extends TreeDistribution {
                     if (node.getHeight() > intervalEndTimes[j] + 0.000000000005 || rho[j] == 0.) {
 
                         if ((tree).belongToSameSRange(i, fossilParent.getNr())) {
-                            logP += Math.log(psi[j]) - log_q_i_tilde(node.getHeight(), intervalEndTimes[j], j) + log_p_i(node.getHeight(), intervalEndTimes[j], j);
+                            logP += Math.log(psi[j]) - log_q_i_tilde(node.getHeight(), intervalEndTimes[j], j) + log_p_i(node.getHeight(), intervalEndTimes[j], j); // -3.3539504971651484 -7.0136348676169185 -10.67549143975073 -14.33843393100682 -18.023070003492332 -21.71312230023691 -25.411834805439813 -29.110547310642716 -32.82223722234542
                         } else {
                             logP += Math.log(psi[j]) - log_q_i(node.getHeight(), intervalEndTimes[j], j) + log_p_i(node.getHeight(), intervalEndTimes[j], j);
                         }
@@ -255,7 +261,7 @@ public class SRangesBirthDeathModel extends TreeDistribution {
                         System.out.println("r = 1 but there are sampled ancestors in the tree");
                         System.exit(0);
                     }
-                    logP += Math.log(psi[j]) + Math.log(1 - r[j]);
+                    logP += Math.log(psi[j]) + Math.log(1 - r[j]); //-64.06813215404485
                     Node parent = node.getParent();
 
                     Node child = node.getNonDirectAncestorChild();
@@ -263,10 +269,10 @@ public class SRangesBirthDeathModel extends TreeDistribution {
                     if (parent==null && j!=originInt)
                         logP+= log_q_i(intervalEndTimes[originInt], intervalEndTimes[j], j);
                     if (parent != null && tree.belongToSameSRange(parent.getNr(),DAchild.getNr())) {
-                        logP += - log_q_i_tilde(node.getHeight(), intervalEndTimes[j], j) + log_q_i(node.getHeight(), intervalEndTimes[j], j);
+                        logP += - log_q_i_tilde(node.getHeight(), intervalEndTimes[j], j) + log_q_i(node.getHeight(), intervalEndTimes[j], j); // -84.03106379870141
                     }
                     if (child != null && tree.belongToSameSRange(i,child.getNr())) {
-                        logP += - log_q_i(node.getHeight(), intervalEndTimes[j], j) +  log_q_i_tilde(node.getHeight(), intervalEndTimes[j], j);
+                        logP += - log_q_i(node.getHeight(), intervalEndTimes[j], j) +  log_q_i_tilde(node.getHeight(), intervalEndTimes[j], j); // -66.36368285840686
                     }
                 } else {
                     if (node.getParent()==null && j!=originInt)
@@ -275,7 +281,7 @@ public class SRangesBirthDeathModel extends TreeDistribution {
                         int k = getIntervalNumber(node.getParent().getHeight());
                         logP += log_q_i(intervalEndTimes[k], intervalEndTimes[j], j);
                     }
-                    logP += Math.log(lambda[j]) + log_q_i(node.getHeight(), intervalEndTimes[j], j);
+                    logP += Math.log(lambda[j]) + log_q_i(node.getHeight(), intervalEndTimes[j], j); // -208.80332901142688
                 }
             }
         }
@@ -283,19 +289,19 @@ public class SRangesBirthDeathModel extends TreeDistribution {
         // integrate over fossils in the range. This seems to suggest that we take out the psi in the previous equations
         for (StratigraphicRange range:(tree).getSRanges()) {
             Node first =  tree.getNode(range.getNodeNrs().get(0));
-            if (!range.isSingleFossilRange()) {
+            if (integrateOverRanges && !range.isSingleFossilRange()) {
                 double tFirst = first.getHeight();
                 int i = getIntervalNumber(tFirst); // this is enough since we assume that ranges only happen in the second period, looking
                 // from the origin. This is NOT a proper skyline.
                 int rangeSize =  range.getNodeNrs().size();
-                if (!integrateOverRanges && rangeSize > 2){
+                if (rangeSize > 1){
                     if (useStartPeriod)
                         logP += (psi[i]*(1-r[i]))*(getStartSubrangeLength(range, tree));
                     if (useEndPeriod)
                         logP += (psi[i]*(1-r[i]))*(getEndSubrangeLength(range, tree));
                 } else {
                     double tLast = tree.getNode(range.getNodeNrs().get(range.getNodeNrs().size()-1)).getHeight();
-                    logP += (psi[i]*(1-r[i]))*(tFirst - tLast);
+                    logP += (psi[i]*(1-r[i]))*(tFirst - tLast); // -199.3578764324858
                 }
 
             }
@@ -308,7 +314,13 @@ public class SRangesBirthDeathModel extends TreeDistribution {
                 logP += Math.log(1-q_i(tYoung, intervalEndTimes[i], i)/q_i_tilde(tYoung, intervalEndTimes[i], i)*q_i_tilde(tOld, intervalEndTimes[i], i)/q_i(tOld, intervalEndTimes[i], i));
             }
         }
+        if (logP==Double.POSITIVE_INFINITY)
+            System.out.println();
         return logP;
+    }
+    @Override
+    protected boolean requiresRecalculation() {
+        return true;
     }
 
 }
