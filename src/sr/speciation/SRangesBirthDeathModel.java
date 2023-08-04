@@ -294,15 +294,17 @@ public class SRangesBirthDeathModel extends TreeDistribution {
                 int i = getIntervalNumber(tFirst); // this is enough since we assume that ranges only happen in the second period, looking
                 // from the origin. This is NOT a proper skyline.
                 int rangeSize =  range.getNodeNrs().size();
-                if (rangeSize > 1){
+                if (useStartPeriod || useEndPeriod) {
                     if (useStartPeriod)
-                        logP += (psi[i]*(1-r[i]))*(getStartSubrangeLength(range, tree));
+                        logP += (psi[i] * (1 - r[i])) * (getStartSubrangeLength(range, tree));
                     if (useEndPeriod)
-                        logP += (psi[i]*(1-r[i]))*(getEndSubrangeLength(range, tree));
-                } else {
-                    double tLast = tree.getNode(range.getNodeNrs().get(range.getNodeNrs().size()-1)).getHeight();
-                    logP += (psi[i]*(1-r[i]))*(tFirst - tLast); // -199.3578764324858
+                        logP += (psi[i] * (1 - r[i])) * (getEndSubrangeLength(range, tree));
                 }
+                else {
+                    double tLast = tree.getNode(range.getNodeNrs().get(range.getNodeNrs().size() - 1)).getHeight();
+                    logP += (psi[i] * (1 - r[i])) * (tFirst - tLast); // -199.3578764324858
+                }
+
 
             }
             Node ancestralLast = findAncestralRangeLastNode(first);
