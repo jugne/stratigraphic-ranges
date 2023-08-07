@@ -72,8 +72,7 @@ public class SRangesAndSACladeSetComparator extends Runnable {
 
     final public Input<String> compareTaxonInput = new Input<>("compareTaxon",
             "comma separated taxa in sRanges tree that the figure and log file should be produced for " +
-                    "Use only if not all taxa in the sRanges tree should be compared.",
-            "");
+                    "Use only if not all taxa in the sRanges tree should be compared.");
 
     final public Input<Double> scalingInput = new Input<>("scaling",
             "scaling factor for clade ages " +
@@ -508,6 +507,8 @@ public class SRangesAndSACladeSetComparator extends Runnable {
         }
 
         if (g != null) {
+            Log.warning("Point plotting");
+            Log.warning("maxHeight: " + maxHeight);
             double x = (100 + 1000 * support1 + Randomizer.nextInt(10) - 5);
             double y = (     1100 - 1000 * support2 + Randomizer.nextInt(10) - 5);
             double r = 1+(support1 + support2) * 10;
