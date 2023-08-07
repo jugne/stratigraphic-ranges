@@ -247,12 +247,12 @@ public class SRangesBirthDeathModel extends TreeDistribution {
                     if (node.getHeight() > intervalEndTimes[j] + 0.000000000005 || rho[j] == 0.) {
 
                         if ((tree).belongToSameSRange(i, fossilParent.getNr())) {
-                            logP += Math.log(psi[j]) - log_q_i_tilde(node.getHeight(), intervalEndTimes[j], j) + log_p_i(node.getHeight(), intervalEndTimes[j], j); // -3.3539504971651484 -7.0136348676169185 -10.67549143975073 -14.33843393100682 -18.023070003492332 -21.71312230023691 -25.411834805439813 -29.110547310642716 -32.82223722234542
+                            logP += Math.log(psi[j]) + Math.log(r[j] + (1-r[j])*p_i(node.getHeight(), intervalEndTimes[j], j)) - log_q_i_tilde(node.getHeight(), intervalEndTimes[j], j); // -3.3539504971651484 -7.0136348676169185 -10.67549143975073 -14.33843393100682 -18.023070003492332 -21.71312230023691 -25.411834805439813 -29.110547310642716 -32.82223722234542
                         } else {
-                            logP += Math.log(psi[j]) - log_q_i(node.getHeight(), intervalEndTimes[j], j) + log_p_i(node.getHeight(), intervalEndTimes[j], j);
+                            logP += Math.log(psi[j]) + Math.log(r[j] + (1-r[j])*p_i(node.getHeight(), intervalEndTimes[j], j)) - log_q_i(node.getHeight(), intervalEndTimes[j], j);
                         }
                     } else {
-                        logP += Math.log(rho[j]);
+                        logP += Math.log(rho[j]); // only rho sampling at present
                     }
                 }
             } else {
