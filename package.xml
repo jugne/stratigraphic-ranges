@@ -1,5 +1,5 @@
 <packages>
-    <package name="sRanges" version="0.0.2" url="https://github.com/jugne/stratigraphic-ranges/releases/download/v0.0.2/SRange.v0.0.2.zip" projectURL="https://github.com/jugne/stratigraphic-ranges" description="Stratigraphic Ranges Birth-death Migration Model">
+    <package name="sRanges" version="0.0.2" url="https://github.com/jugne/stratigraphic-ranges/releases/download/v0.0.2/SRanges.v0.0.2.zip" projectURL="https://github.com/jugne/stratigraphic-ranges" description="Stratigraphic Ranges Birth-death Migration Model">
         <depends on="BEAST.base" atleast="2.7.0"/>
         <depends on="BEAST.app" atleast="2.7.0"/>
         <depends on="BEASTLabs" atleast="2.0.0"/>
