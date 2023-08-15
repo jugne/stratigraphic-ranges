@@ -125,7 +125,7 @@ public class Tools {
 				System.out.println("test");
 			afterStart = (SRNode) tree.getNode(afterStartNr);
 		}
-		return afterStart.getHeight() - start.getHeight();
+		return  start.getHeight() - afterStart.getHeight();
 	}
 
 	public static double getEndSubrangeLength(StratigraphicRange range, SRTree tree) {

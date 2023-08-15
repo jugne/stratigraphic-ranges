@@ -329,7 +329,8 @@ public class RandomTransmissionRangeTree extends SRTree implements StateNodeInit
 //        setNodesNrs(root, 0, new int[1], taxonToNR);
 
         initArrays();
-        samePatientSamplingInit();
+        if (!taxonsetsInput.get().isEmpty())
+            samePatientSamplingInit();
 
         if (m_initial.get() != null) {
             m_initial.get().assignFromWithoutID(this);

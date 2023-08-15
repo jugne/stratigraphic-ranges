@@ -8,6 +8,7 @@ import beast.base.core.Description;
 
 import beast.base.evolution.tree.TreeDistribution;
 import beast.base.inference.parameter.RealParameter;
+import org.apache.commons.math.special.Gamma;
 import sr.evolution.tree.SRTree;
 import sr.evolution.sranges.StratigraphicRange;
 
@@ -212,6 +213,9 @@ public class SRangesBirthDeathModel extends TreeDistribution {
         if (x0 < x1 ) {
             return Double.NEGATIVE_INFINITY;
         }
+        if(intervalEndTimes[0]>x0){
+            return Double.NEGATIVE_INFINITY;
+        }
 
         if (!conditionOnRootInput.get()){
             logP = log_q_i(x0, intervalEndTimes[0], 0); // -0.10423623551548937
@@ -250,6 +254,9 @@ public class SRangesBirthDeathModel extends TreeDistribution {
                             logP += Math.log(psi[j]) + Math.log(r[j] + (1-r[j])*p_i(node.getHeight(), intervalEndTimes[j], j)) - log_q_i_tilde(node.getHeight(), intervalEndTimes[j], j); // -3.3539504971651484 -7.0136348676169185 -10.67549143975073 -14.33843393100682 -18.023070003492332 -21.71312230023691 -25.411834805439813 -29.110547310642716 -32.82223722234542
                         } else {
                             logP += Math.log(psi[j]) + Math.log(r[j] + (1-r[j])*p_i(node.getHeight(), intervalEndTimes[j], j)) - log_q_i(node.getHeight(), intervalEndTimes[j], j);
+                            if (getIntervalNumber(fossilParent.getHeight()) == j-1){
+                                logP +=log_q_i(intervalEndTimes[j-1], intervalEndTimes[j], j);
+                            }
                         }
                     } else {
                         logP += Math.log(rho[j]); // only rho sampling at present
@@ -271,9 +278,17 @@ public class SRangesBirthDeathModel extends TreeDistribution {
                     if (parent != null && tree.belongToSameSRange(parent.getNr(),DAchild.getNr())) {
                         logP += - log_q_i_tilde(node.getHeight(), intervalEndTimes[j], j) + log_q_i(node.getHeight(), intervalEndTimes[j], j); // -84.03106379870141
                     }
+                    if (parent != null && !tree.belongToSameSRange(parent.getNr(),node.getNr())) {
+                        if (getIntervalNumber(parent.getHeight()) == j-1){
+                            logP +=log_q_i(intervalEndTimes[j-1], intervalEndTimes[j], j);
+                        }
+                    }
                     if (child != null && tree.belongToSameSRange(i,child.getNr())) {
                         logP += - log_q_i(node.getHeight(), intervalEndTimes[j], j) +  log_q_i_tilde(node.getHeight(), intervalEndTimes[j], j); // -66.36368285840686
                     }
+//                    if (child != null && !tree.belongToSameSRange(i,child.getNr())) {
+//                        logP += log_q_i(child.getHeight(), intervalEndTimes[j], j); // -66.36368285840686
+//                    }
                 } else {
                     if (node.getParent()==null && j!=originInt)
                         logP+= log_q_i(intervalEndTimes[originInt], intervalEndTimes[j], j);
@@ -318,7 +333,7 @@ public class SRangesBirthDeathModel extends TreeDistribution {
         }
         if (logP==Double.POSITIVE_INFINITY)
             System.out.println();
-        return logP;
+        return logP +=-Gamma.logGamma(tree.getLeafNodeCount() + 1);
     }
     @Override
     protected boolean requiresRecalculation() {
