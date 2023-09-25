@@ -7,9 +7,7 @@ import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintStream;
+import java.io.*;
 import java.text.DecimalFormat;
 import java.util.*;
 
@@ -35,6 +33,7 @@ import static sr.util.Tools.*;
         + "they can be plotted in an X-Y plot")
 public class SRangesAndSACladeSetComparator extends Runnable {
     final public Input<TreeFile> src1Input = new Input<>("SATree","source SA tree (set or MCC tree) file");
+    final public Input<TreeFile> SATreeOffsetInput = new Input<>("SALog","SA log file containing offset for each tree in SATree");
     final public Input<TreeFile> src2Input = new Input<>("sRangesTree","source sRanges tree (set or MCC tree) file");
 
     public Input<String> sepStringInput = new Input<>("sep",
@@ -127,8 +126,6 @@ public class SRangesAndSACladeSetComparator extends Runnable {
 
 
     double maxHeight = 0.0;
-
-    double maxHeight2 = 0.0;
     int problemCount = 0;
     int interestCount = 0;
     int inconsistentHeightIntervals = 0;
@@ -165,7 +162,6 @@ public class SRangesAndSACladeSetComparator extends Runnable {
         CladeSetWithHeights cladeSet2 = getCladeSet(src2Input.get().getPath(), true);
         double n2 = n;
         process(src1Input.get(), src2Input.get(), "", cladeSet1, n1, cladeSet2, n2);
-        System.out.println("maxHeight2 = " + maxHeight2);
     }
 
     void process(TreeFile tree1, TreeFile tree2, String suffix,
@@ -462,8 +458,6 @@ public class SRangesAndSACladeSetComparator extends Runnable {
             if (!compareOnly.containsAll(cladeList)){
                 return;
             }
-            maxHeight2 = Double.max(maxHeight2, max2);
-            maxHeight2 = Double.max(maxHeight2, max1);
         }
         if (verbose || System.out != out) {
             out.println(clade.replaceAll(" ", "") + " " + support1 + " " + support2 + " " + h1 +
@@ -543,6 +537,33 @@ public class SRangesAndSACladeSetComparator extends Runnable {
     private CladeSetWithHeights getCladeSet(String path, boolean rangesTree) throws IOException {
         Log.warning("Processing " + path);
         MemoryFriendlyTreeSet srcTreeSet = new MemoryFriendlyTreeSet(path, burnInPercentageInput.get());
+        BufferedReader offsetFile = null;
+        int offsetIndex = 0;
+        if (!rangesTree && SATreeOffsetInput.get()!=null){
+            offsetFile = new BufferedReader(new FileReader(SATreeOffsetInput.get()));
+            String line = offsetFile.readLine();
+            int n = -1;
+            while(line != null && !line.startsWith("#")){
+                n+=1;
+                line = offsetFile.readLine();
+            }
+            offsetFile = new BufferedReader(new FileReader(SATreeOffsetInput.get()));
+            line = offsetFile.readLine();
+            while(line.startsWith("#"))
+                line = offsetFile.readLine();
+            String[] params = line.split("\t");
+            offsetIndex = findIndexOf(params, "offset");
+            for (int i=0; i<Math.max(0, (burnInPercentageInput.get() * n)/100); i++){
+                line = offsetFile.readLine();
+            }
+            line = offsetFile.readLine();
+            params = line.split("\t");
+            offset = Double.parseDouble(params[offsetIndex]);
+        }
+        else {
+            offset =0.;
+        }
+
         srcTreeSet.reset();
         Tree tree = srcTreeSet.next();
         CladeSetWithHeights cladeSet1 = new CladeSetWithHeights(tree, rangesTree);
@@ -554,6 +575,13 @@ public class SRangesAndSACladeSetComparator extends Runnable {
 
         while (srcTreeSet.hasNext()) {
             // System.out.println(n);
+            if (!rangesTree && SATreeOffsetInput.get()!=null){
+                String line = offsetFile.readLine();
+                String[] params = line.split("\t");
+                offset = Double.parseDouble(params[offsetIndex]);
+            } else{
+                offset = 0.;
+            }
             tree = srcTreeSet.next();
             cladeSet1.add(tree, rangesTree);
             n++;
@@ -627,8 +655,8 @@ public class SRangesAndSACladeSetComparator extends Runnable {
         }
 
         void addNodeHeight(BitSet bits, double height, double lo, double hi) {
-            totalNodeHeight.put(bits, (getTotalNodeHeight(bits) + height));
-            nodeHeights.put(bits, new double[]{lo, height, hi});
+            totalNodeHeight.put(bits, (getTotalNodeHeight(bits) + (height+offset)));
+            nodeHeights.put(bits, new double[]{lo+offset, height+offset, hi+offset});
         }
 
         Map<BitSet, Double> posteriors = new HashMap<>();
@@ -790,12 +818,12 @@ public class SRangesAndSACladeSetComparator extends Runnable {
         private void addNodeHeight(BitSet bits, double height) {
             totalNodeHeight.put(bits, (getTotalNodeHeight(bits) + height));
             if (!nodeHeights.containsKey(bits)) {
-                nodeHeights.put(bits, new double[]{height});
+                nodeHeights.put(bits, new double[]{height+offset});
             } else {
                 double [] heights = nodeHeights.get(bits);
                 double [] newHeights = new double[heights.length + 1];
                 System.arraycopy(heights, 0, newHeights, 0, heights.length);
-                newHeights[heights.length] = height;
+                newHeights[heights.length] = height+offset;
                 nodeHeights.put(bits, newHeights);
             }
         }
@@ -900,14 +928,25 @@ public class SRangesAndSACladeSetComparator extends Runnable {
         Set<String> taxonNames = null;
         Map<BitSet, Double> totalNodeHeight = new HashMap<>();
         Map<BitSet, double[]> nodeHeights = new HashMap<>();
+
         Set<BitSet> addedForThisTree = new HashSet<>();
         int totalTrees = 0;
     }
 
-
+    double offset = 0.;
     public static void main(String[] args) throws Exception {
         new Application(new SRangesAndSACladeSetComparator(), "Clade Set Comparator", args);
 
+    }
+
+    // Helper method to find the index of a specific value in an array
+    public static int findIndexOf(String[] array, String value) {
+        for (int i = 0; i < array.length; i++) {
+            if (array[i].equals(value)) {
+                return i;
+            }
+        }
+        return -1;  // Value not found
     }
 
 
