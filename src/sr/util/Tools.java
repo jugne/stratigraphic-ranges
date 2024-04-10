@@ -38,7 +38,7 @@ public class Tools {
 		if (!subTreeRoot.isLeaf()) {
 			if(subTreeRoot.getChild(0).metaDataString == null)
 				return;
-			if ((!subTreeRoot.isFake() && !subTreeRoot.getChild(0).metaDataString.contains("orientation=ancestor"))
+			if ((!subTreeRoot.isFake() && !subTreeRoot.getChild(0).metaDataString.contains("orientation=donor"))
 					|| (subTreeRoot.isFake() && subTreeRoot.getChild(1).getHeight() != subTreeRoot.getHeight())) {
 				Node left = subTreeRoot.getChild(1);
 				Node right = subTreeRoot.getChild(0);
@@ -134,13 +134,15 @@ public class Tools {
 		int beforEndNr = range.getNodeNrs().get(size-2);
 		SRNode end = (SRNode) tree.getNode(endNr);
 		SRNode beforeEnd = (SRNode) tree.getNode(beforEndNr);
-		while (!beforeEnd.isFake() || beforEndNr == 0) {
-			beforEndNr--;
+		size=size-2;
+		while (!beforeEnd.isDirectAncestor() || beforEndNr == 0) {
+			size--;
+			beforEndNr = range.getNodeNrs().get(size);
 			beforeEnd = (SRNode) tree.getNode(beforEndNr);
 		}
 		if (beforEndNr == 0){
 			return 0;
-		} else if(beforeEnd.isFake()){
+		} else if(beforeEnd.isDirectAncestor()){
 			return end.getHeight() - beforeEnd.getHeight();
 		} else {
 			throw new RuntimeException("Something went wrong in getEndSubrangeLength. " +

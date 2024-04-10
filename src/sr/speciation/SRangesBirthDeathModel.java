@@ -317,7 +317,7 @@ public class SRangesBirthDeathModel extends TreeDistribution {
                 }
                 else {
                     double tLast = tree.getNode(range.getNodeNrs().get(range.getNodeNrs().size() - 1)).getHeight();
-                    logP += (psi[i] * (1 - r[i])) * (tFirst - tLast); // -199.3578764324858
+                    logP += (psi[i] * (1 - r[i])) * (tFirst - tLast);
                 }
 
 
@@ -332,7 +332,7 @@ public class SRangesBirthDeathModel extends TreeDistribution {
             }
         }
         if (logP==Double.POSITIVE_INFINITY)
-            System.out.println();
+            System.out.println("pos");
         return logP +=-Gamma.logGamma(tree.getLeafNodeCount() + 1);
     }
     @Override

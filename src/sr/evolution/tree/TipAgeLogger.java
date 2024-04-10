@@ -58,7 +58,7 @@ public class TipAgeLogger extends CalculationNode implements Loggable, Function 
     @Override
     public void log(long nSample, PrintStream out) {
         final SRTree tree = treeInput.get();
-        tree.orientateTree();
+//        tree.orientateTree();
         for (Node n : tree.getExternalNodes()){
             out.print(n.getHeight() + "\t");
         }

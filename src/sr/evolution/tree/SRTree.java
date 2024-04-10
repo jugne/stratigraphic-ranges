@@ -486,7 +486,7 @@ public class SRTree extends Tree implements TreeInterface {
     private void addOrientationMetadataNode(int subtreeRootNr) {
         Node subRoot = this.getNode(subtreeRootNr);
         if (subRoot.isRoot()) {
-            subRoot.metaDataString = "orientation=ancestor";
+            subRoot.metaDataString = "orientation=donor";
         }
 
         if (!subRoot.isLeaf()) {
@@ -496,8 +496,8 @@ public class SRTree extends Tree implements TreeInterface {
             } else if (subRoot.getChildCount()==1){
                 subRoot.getLeft().metaDataString = subRoot.metaDataString;
             } else {
-                subRoot.getLeft().metaDataString = "orientation=ancestor";
-                subRoot.getRight().metaDataString = "orientation=descendant";
+                subRoot.getLeft().metaDataString = "orientation=donor";
+                subRoot.getRight().metaDataString = "orientation=recipient";
             }
 
             addOrientationMetadataNode(subRoot.getLeft().getNr());
