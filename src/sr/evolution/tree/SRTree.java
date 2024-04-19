@@ -242,6 +242,7 @@ public class SRTree extends Tree implements TreeInterface {
         assignFrom(rootNr + 1, nodeCount, otherNodes);
         if(stratigraphicRangeInput.get()!= null) {
             initSRanges();
+            collectInternalRangeNodes();
         }
     }
 
@@ -354,6 +355,12 @@ public class SRTree extends Tree implements TreeInterface {
         orientateTree();
     }
 
+    private void collectInternalRangeNodes() {
+        for (StratigraphicRange range: sRanges) {
+            range.collectInternalRangeNodes(this);
+        }
+    }
+
     /**
      * Restores the tree and stratigraphic ranges from the stored state.
      */
@@ -433,6 +440,11 @@ public class SRTree extends Tree implements TreeInterface {
             }
         }
         return null;
+    }
+
+    public String toString() {
+        addOrientationMetadata();
+        return root.toString();
     }
 
     /**
@@ -520,6 +532,23 @@ public class SRTree extends Tree implements TreeInterface {
         final String newick = ((SRNode) tree.getRoot()).toShortNewickForLog(false);
         out.print(newick);
         out.print(";");
+    }
+
+    /**
+     * deep copy, returns a completely new tree
+     *
+     * @return a deep copy of this beast.tree.
+     */
+    @Override
+    public SRTree copy() {
+        SRTree tree = new SRTree();
+        tree.setID(getID());
+        tree.index = index;
+        tree.root = root.copy();
+        tree.nodeCount = nodeCount;
+        tree.internalNodeCount = internalNodeCount;
+        tree.leafNodeCount = leafNodeCount;
+        return tree;
     }
 
 }

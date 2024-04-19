@@ -11,6 +11,7 @@ import beast.base.inference.parameter.RealParameter;
 import org.apache.commons.math.special.Gamma;
 import sr.evolution.tree.SRTree;
 import sr.evolution.sranges.StratigraphicRange;
+import sr.util.Tools;
 
 import static beast.base.core.Log.warning;
 import static sr.util.Tools.getEndSubrangeLength;
@@ -201,6 +202,8 @@ public class SRangesBirthDeathModel extends TreeDistribution {
     public double calculateLogP()
     {
         SRTree tree = (SRTree) treeInput.get();
+        // Uncomment below for debugging ranges
+        // Tools.CheckRanges(tree);
         int nodeCount = tree.getNodeCount();
         if (!updateParameters())
             return Double.NEGATIVE_INFINITY;
@@ -331,8 +334,6 @@ public class SRangesBirthDeathModel extends TreeDistribution {
                 logP += Math.log(1-q_i(tYoung, intervalEndTimes[i], i)/q_i_tilde(tYoung, intervalEndTimes[i], i)*q_i_tilde(tOld, intervalEndTimes[i], i)/q_i(tOld, intervalEndTimes[i], i));
             }
         }
-        if (logP==Double.POSITIVE_INFINITY)
-            System.out.println("pos");
         return logP +=-Gamma.logGamma(tree.getLeafNodeCount() + 1);
     }
     @Override

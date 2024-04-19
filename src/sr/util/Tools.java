@@ -2,11 +2,14 @@ package sr.util;
 
 import beast.base.evolution.tree.Node;
 import beast.base.evolution.tree.Tree;
+import org.apache.commons.lang3.StringUtils;
 import sr.evolution.sranges.StratigraphicRange;
 import sr.evolution.tree.SRNode;
 import sr.evolution.tree.SRTree;
 
 import java.util.*;
+
+import static org.junit.platform.commons.util.StringUtils.*;
 
 public class Tools {
 
@@ -38,7 +41,10 @@ public class Tools {
 		if (!subTreeRoot.isLeaf()) {
 			if(subTreeRoot.getChild(0).metaDataString == null)
 				return;
-			if ((!subTreeRoot.isFake() && !subTreeRoot.getChild(0).metaDataString.contains("orientation=donor"))
+
+			if ((!subTreeRoot.isFake() && !(isAncestor(StringUtils.substringBetween(subTreeRoot.getChild(0).metaDataString,
+					"orientation=", ",")) || isAncestor(StringUtils.substringAfter(subTreeRoot.getChild(0).metaDataString,
+					"orientation="))))
 					|| (subTreeRoot.isFake() && subTreeRoot.getChild(1).getHeight() != subTreeRoot.getHeight())) {
 				Node left = subTreeRoot.getChild(1);
 				Node right = subTreeRoot.getChild(0);
@@ -149,5 +155,51 @@ public class Tools {
 					"It might have been called with a single node range. This should not happen.");
 		}
 	}
+
+	public enum Orientation{
+		Ancestor("ancestor", "anc", "donor", "don"),
+		Descendant("descendant", "desc", "recipient", "rec");
+
+		private final List<String> values;
+
+		Orientation(String ...values) {
+			this.values = Arrays.asList(values);
+		}
+		public List<String> getValues() {
+			return values;
+		}
+	}
+
+	public static Orientation find(String name) {
+		for (Orientation orientation : Orientation.values()) {
+			if (orientation.getValues().contains(name)) {
+				return orientation;
+			}
+		}
+		return null;
+	}
+
+	public static boolean isAncestor(String name) {
+		return find(name) == Orientation.Ancestor;
+	}
+
+	public static boolean isDescendant(String name) {
+		return find(name) == Orientation.Descendant;
+	}
+
+	public static void CheckRanges (SRTree tree){
+		for (Node n : tree.getExternalNodes()){
+			for (StratigraphicRange range : tree.getSRanges()){
+				if (!range.isSingleFossilRange() &&
+						range.getFirstOccurrenceID().equals(n.getID()))
+					if(!n.isDirectAncestor() ||(n.isDirectAncestor() && n.getParent().getChild(1).getNr() != n.getNr()))
+						throw new RuntimeException("The first occurrence always has to be a sampled ancestor but " +
+							range.getFirstOccurrenceID() + " is not a sampled ancestor. Something went wrong in " +
+									"initializing the stratigraphic range tree.");
+			}
+		}
+	}
+
+
 
 }

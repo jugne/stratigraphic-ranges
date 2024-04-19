@@ -5,10 +5,10 @@ import beast.base.core.Input;
 import beast.base.evolution.alignment.Taxon;
 import beast.base.evolution.alignment.TaxonSet;
 import beast.base.evolution.tree.Node;
-import beast.base.evolution.tree.Tree;
 import sr.evolution.tree.SRTree;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
@@ -253,5 +253,21 @@ public class StratigraphicRange extends BEASTObject {
         if (tree.getNode(nodeNr).isFake())
             nr = tree.getNode(nodeNr).getDirectAncestorChild().getNr();
         nodes.add(nr);
+    }
+
+    public void collectInternalRangeNodes(SRTree tree){
+        if (this.isSingleFossilRange()){
+            return;
+        }
+        int lastNr = nodes.get(nodes.size()-1);
+        Node lastNodeParent = tree.getNode(lastNr).getParent();
+        String parentId = lastNodeParent.isFake() ? lastNodeParent.getDirectAncestorChild().getID() : lastNodeParent.getID();
+        while(!lastNodeParent.isRoot() &&
+                !this.getFirstOccurrenceID().equals(parentId)){
+            addNodeNr(tree, lastNodeParent.getNr());
+            lastNodeParent = lastNodeParent.getParent();
+            parentId = lastNodeParent.isFake() ? lastNodeParent.getDirectAncestorChild().getID() : lastNodeParent.getID();
+        }
+        nodes.sort(Comparator.comparingDouble((Integer n) -> tree.getNode(n).getHeight()).reversed());
     }
 }
