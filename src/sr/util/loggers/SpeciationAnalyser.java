@@ -4,6 +4,7 @@ import beastfx.app.treeannotator.TreeAnnotator;
 import beast.base.core.Log;
 import beast.base.evolution.tree.Node;
 import beast.base.evolution.tree.Tree;
+import org.apache.commons.lang3.StringUtils;
 import sr.util.Tools;
 
 import javax.swing.*;
@@ -17,7 +18,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.*;
 
-import static sr.util.Tools.removeLastSubstring;
+import static sr.util.Tools.*;
 
 /**
  * Analyses transmission trees from TnT transmission tree log file and
@@ -163,7 +164,10 @@ public class SpeciationAnalyser extends TreeAnnotator {
         Node parent = leaf.getParent();
         int nTransmissions = 0;
 
-        if ( !parent.isFake() && child.metaDataString.contains("right")){
+        if ( !parent.isFake() && (isDescendant(StringUtils.substringBetween(child.metaDataString,
+                "orientation=", ",")) ||
+                isDescendant(StringUtils.substringAfter(child.metaDataString,
+                        "orientation=")))){
             nTransmissions +=1;
         }
 
@@ -171,7 +175,10 @@ public class SpeciationAnalyser extends TreeAnnotator {
                 (parent.getMetaData("host").toString().contains("unsampled") ||
                         Objects.equals(parent.getMetaData("host").toString().split("\\.")[0],
                                 leaf.getMetaData("host").toString().split("\\.")[0]))){
-            if(parent.getChildCount() == 1 || (!parent.isFake() && child.metaDataString.contains("right"))){
+            if(parent.getChildCount() == 1 || (!parent.isFake() && (isDescendant(StringUtils.substringBetween(child.metaDataString,
+                    "orientation=", ",")) ||
+                    isDescendant(StringUtils.substringAfter(child.metaDataString,
+                            "orientation="))))){
                 nTransmissions +=1; // add 1 for every unobserved transmission (obtained by stochastic mapping)
             }
             child = parent;
@@ -190,7 +197,11 @@ public class SpeciationAnalyser extends TreeAnnotator {
         Node child = leaf;
         Node parent = leaf.getParent();
         double infectionTime = Double.NaN;
-        while (parent.isFake() || (parent.getChildCount()>1 && child.metaDataString.contains("donor") )){
+        while (parent.isFake() || (parent.getChildCount()>1 &&
+                (isAncestor(StringUtils.substringBetween(child.metaDataString,
+                        "orientation=", ",")) ||
+                        isAncestor(StringUtils.substringAfter(child.metaDataString,
+                        "orientation="))))){
             child = parent;
             parent = parent.getParent();
 
@@ -547,7 +558,10 @@ public class SpeciationAnalyser extends TreeAnnotator {
             subTreeRoot.metaDataString = String.format("%s,%s=%s",
                     metaData, "host", firstLeafId(subTreeRoot.getDirectAncestorChild()));
         }else {
-            Node left = subTreeRoot.getLeft().getMetaData("orientation").equals("left") ?
+            Node left = (isAncestor(StringUtils.substringBetween( subTreeRoot.getLeft().metaDataString,
+                    "orientation=", ",")) ||
+                    isAncestor(StringUtils.substringAfter( subTreeRoot.getLeft().metaDataString,
+                            "orientation="))) ?
                     subTreeRoot.getLeft() : subTreeRoot.getRight();
             subTreeRoot.setMetaData("host", firstLeafId(left));
             subTreeRoot.metaDataString = String.format("%s,%s=%s",
@@ -572,7 +586,10 @@ public class SpeciationAnalyser extends TreeAnnotator {
             } else if (n.getChildCount() == 1) {
                 return "unsampled";
             } else {
-                Node left = n.getChild(0).metaDataString.contains("orientation=left") ? n.getChild(0)
+                Node left = (isAncestor(StringUtils.substringBetween(n.getChild(0).metaDataString,
+                        "orientation=", ",")) ||
+                        isAncestor(StringUtils.substringAfter(n.getChild(0).metaDataString,
+                                "orientation="))) ? n.getChild(0)
                         : n.getChild(1);
                 return firstLeafId(left);
             }
