@@ -28,6 +28,8 @@ public class SRTree extends Tree implements TreeInterface {
 
     public Input<Tree> treeInput = new Input<>("tree", "tree to start with");
 
+    public Input<Boolean> firstIsSAInput = new Input<>("firstIsSA", "is first occurence in non zero range an SA", true);
+
     protected ArrayList<StratigraphicRange> sRanges;
     protected ArrayList<StratigraphicRange> storedSRanges;
 
@@ -59,7 +61,7 @@ public class SRTree extends Tree implements TreeInterface {
                 List<String> withinIds = range.getWithinRangeOccurenceIDs();
                 for (Node node:externalNodes) {
                     if(node.getID().equals(range.getFirstOccurrenceID()) && !range.isSingleFossilRange()) {
-                        if (!node.isDirectAncestor()) {
+                        if (firstIsSAInput.get() && !node.isDirectAncestor()) {
                             throw new RuntimeException("The first occurrence always has to be a sampled ancestor but " +
                                     range.getFirstOccurrenceID() + " is not a sampled ancestor. Something went wrong in " +
                                     "initializing the stratigraphic range tree."  );
@@ -132,17 +134,21 @@ public class SRTree extends Tree implements TreeInterface {
                     boolean found = false;
                     for (StratigraphicRange candidateRange:firstRanges) {
                         if (candidateRange.getID().equals(IDwithoutPrefix)) {
+//                            if (!prefix.equals("last")) {
+//                                throw new RuntimeException("Taxa " + candidateRange.getFirstOccurrenceID() + " and " +
+//                                        ID  + " are found in the tree. If " + ID + " is the last occurrence then add " +
+//                                        "_last at the end.");
+//                            }
                             if (!prefix.equals("last")) {
-                                throw new RuntimeException("Taxa " + candidateRange.getFirstOccurrenceID() + " and " +
-                                        ID  + " are found in the tree. If " + ID + " is the last occurrence then add " +
-                                        "_last at the end.");
+                                candidateRange.addWithinRangeNodeNr(this, node.getNr());
+                            } else{
+                                candidateRange.setLastOccurrenceID(ID);
+                                candidateRange.setLastOccurrenceNodeNr(this, node.getNr());
+                                sRanges.add(candidateRange);
+                                firstRanges.remove(candidateRange);
+                                found=true;
+                                break;
                             }
-                            candidateRange.setLastOccurrenceID(ID);
-                            candidateRange.setLastOccurrenceNodeNr(this, node.getNr());
-                            sRanges.add(candidateRange);
-                            firstRanges.remove(candidateRange);
-                            found=true;
-                            break;
                         }
                     }
                     if (!found) {

@@ -4,6 +4,7 @@ import beast.base.core.Function;
 import beast.base.core.Input;
 import beast.base.core.Loggable;
 import beast.base.evolution.tree.Node;
+import beast.base.evolution.tree.Tree;
 import beast.base.inference.CalculationNode;
 import sr.evolution.sranges.StratigraphicRange;
 import sr.util.Tools;
@@ -21,9 +22,12 @@ import static sr.util.Tools.removeLastSubstring;
  * @author Ugne Stolz
  */
 public class TipAgeLogger extends CalculationNode implements Loggable, Function {
-    public Input<SRTree> treeInput = new Input<>("tree",
-            "sRange tree for range age logging.",
-            Input.Validate.REQUIRED);
+    public Input<SRTree> srTreeInput = new Input<>("tree",
+            "sRange tree for range age logging.");
+
+    public Input<Tree> treeInput = new Input<>("simpleTree",
+            "Non sRange tree for range age logging.",
+            Input.Validate.XOR, srTreeInput);
 
 //    public Input<Boolean> relogInput = new Input<>("relog",
 //            "If true, this logger is run after the analysis completes. " +
@@ -45,7 +49,9 @@ public class TipAgeLogger extends CalculationNode implements Loggable, Function 
 
     @Override
     public void init(PrintStream out) {
-        final SRTree tree = treeInput.get();
+        Tree tree = treeInput.get();
+        if (treeInput.get()==null)
+            tree = srTreeInput.get();
         for (Node n : tree.getExternalNodes()){
             out.print(n.getID() + "\t");
 //            keys.add(n.getID());
@@ -57,7 +63,9 @@ public class TipAgeLogger extends CalculationNode implements Loggable, Function 
 
     @Override
     public void log(long nSample, PrintStream out) {
-        final SRTree tree = treeInput.get();
+        Tree tree = treeInput.get();
+        if (treeInput.get()==null)
+            tree = srTreeInput.get();
 //        tree.orientateTree();
         for (Node n : tree.getExternalNodes()){
             out.print(n.getHeight() + "\t");
