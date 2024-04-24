@@ -419,6 +419,7 @@ public class SRangesAndSACladeSetComparator extends Runnable {
         g.drawLine(100, h-300,  900, h-1100);
         g.drawLine(300, h-100, 1100, h- 900);
 
+        g.setFont(new Font("Arial",Font.PLAIN, 25));
         g.drawString("0.0", 100, 1130);
         g.drawString("0.2", 300, 1130);
         g.drawString("0.4", 500, 1130);
@@ -435,11 +436,11 @@ public class SRangesAndSACladeSetComparator extends Runnable {
 
         g.setColor(Color.black);
         g.setFont(new Font("Arial",Font.PLAIN, 50));
-        g.drawString("sampled ancestor tree", 120, 1170);
+        g.drawString("FBD trees", 500, 1190);
 
         AffineTransform orig = g.getTransform();
         g.rotate(-Math.PI/2);
-        g.drawString("stratigraphic range tree", -880, 40);
+        g.drawString("SRFBD trees", -680, 40);
         g.setTransform(orig);
 
         g.setColor(Color.red);
