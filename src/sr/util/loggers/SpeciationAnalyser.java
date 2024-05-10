@@ -127,8 +127,6 @@ public class SpeciationAnalyser extends TreeAnnotator {
 
             for (Node leaf : tree.getExternalNodes()){
                 fillTransmissions(leaf, speciations, hostsList);
-                if(hostsListNoUnsampled.size()==0)
-                    System.out.print("");
                 fillInfectionTimes(leaf, speciationTimes, hostsListNoUnsampled);
             }
             for (int i = 0; i < hostsList.size() * hostsList.size(); i++) {
