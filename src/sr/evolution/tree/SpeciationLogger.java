@@ -105,8 +105,8 @@ public class SpeciationLogger extends CalculationNode implements Loggable, Funct
                         vals[1] = vals[1] - 1;
                     speciationsCounter.put(key, vals);
                 }
-                    for (Node l : right.getAllLeafNodes()){
-                        if (!l.getID().contains("last")){
+                for (Node l : right.getAllLeafNodes()){
+                        if (!l.getID().contains("last") && (right.getID()==null ||!l.getID().contains(right.getID()))){
                             String key = removeLastSubstring(sepStringInput.get(),range.getFirstOccurrenceID()) +
                                     directStringInput.get()  + removeLastSubstring(sepStringInput.get(),l.getID());
                             double[] vals = getSeparatingLengthAndNodeCount(tree.getNode(i), l);
@@ -115,6 +115,20 @@ public class SpeciationLogger extends CalculationNode implements Loggable, Funct
                             speciationsCounter.put(key, vals);
                         }
                     }
+                if (right.isDirectAncestor() && right.getID().contains("last")){
+                    for (Node l : right.getParent().getAllLeafNodes()){
+                        if (l.getID().contains("first")){
+                            String key = removeLastSubstring(sepStringInput.get(),range.getFirstOccurrenceID()) +
+                                    directStringInput.get()  + removeLastSubstring(sepStringInput.get(),l.getID());
+                            double[] vals = getSeparatingLengthAndNodeCount(right.getParent(), l);
+                            if (l.isDirectAncestor())
+                                vals[1] = vals[1] - 1;
+                            speciationsCounter.put(key, vals);
+
+                        }
+                    }
+                }
+
 //                }
             }
         }
