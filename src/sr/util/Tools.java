@@ -34,9 +34,9 @@ public class Tools {
 	public static void orientateNodeChildren(int subtreeRootNr, Tree tree) {
 		Node subTreeRoot = tree.getNode(subtreeRootNr);
 		if (!subTreeRoot.isLeaf()) {
-			if(subTreeRoot.getChild(0).metaDataString == null)
-				return;
-			if ((!subTreeRoot.isFake() && !subTreeRoot.getChild(0).metaDataString.contains("orientation=ancestor"))
+//			if(subTreeRoot.getChild(0).metaDataString == null){
+//				return;
+			if ((!subTreeRoot.isFake() && subTreeRoot.getChild(0).metaDataString != null && !subTreeRoot.getChild(0).metaDataString.contains("orientation=ancestor"))
 					|| (subTreeRoot.isFake() && subTreeRoot.getChild(1).getHeight() != subTreeRoot.getHeight())) {
 				Node left = subTreeRoot.getChild(1);
 				Node right = subTreeRoot.getChild(0);

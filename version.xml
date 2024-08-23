@@ -25,7 +25,6 @@
         <provider classname="sr.evolution.tree.SampledAncestorLogger"/>
         <provider classname="sr.speciation.SRangesBirthDeathModel"/>
         <provider classname="sr.util.Tools"/>
-        <provider classname="sr.util.loggers.BranchRateAnalyser"/>
     </service>
 </package>
 

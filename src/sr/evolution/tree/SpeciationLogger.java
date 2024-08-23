@@ -69,8 +69,9 @@ public class SpeciationLogger extends CalculationNode implements Loggable, Funct
 
     @Override
     public void log(long nSample, PrintStream out) {
-        final SRTree tree = treeInput.get();
+        SRTree tree = treeInput.get();
         if (relogInput.get()){
+//            return;
             tree.orientateTree();
             tree.initSRanges();
         }
@@ -91,13 +92,20 @@ public class SpeciationLogger extends CalculationNode implements Loggable, Funct
                         childNr=child.getDirectAncestorChild().getNr();
                 }
             }
-            if (range.getInternalNodeNrs(tree).size() == 1)
-                continue;
+//            if (range.getInternalNodeNrs(tree).size() == 1)
+//                continue;
             for (Integer i : range.getInternalNodeNrs(tree)) {
+//            for (Integer i : range.getNodeNrs()) {
                 Node right = tree.getNode(i);
+                if (right.isFake() && right.getDirectAncestorChild().getID().contains("first") && !range.isSingleFossilRange())
+                    continue;
                 if (!tree.getNode(i).isLeaf())
                     right = tree.getNode(i).getRight();
-                if (right.isLeaf() && !right.getID().contains("last")){
+
+                if (right.getID().equals("Megadyptes_antipodes_first")) {
+                    System.out.println();
+                }
+                if (right.isLeaf() && !right.getID().contains("last") && !range.isSingleFossilRange()){
                     String key = removeLastSubstring(sepStringInput.get(),range.getFirstOccurrenceID()) +
                             directStringInput.get()  + removeLastSubstring(sepStringInput.get(),right.getID());
                     double[] vals = getSeparatingLengthAndNodeCount(right.getParent(), right);
@@ -105,8 +113,8 @@ public class SpeciationLogger extends CalculationNode implements Loggable, Funct
                         vals[1] = vals[1] - 1;
                     speciationsCounter.put(key, vals);
                 }
-                    for (Node l : right.getAllLeafNodes()){
-                        if (!l.getID().contains("last")){
+                for (Node l : right.getAllLeafNodes()){
+                        if (!l.getID().contains("last") && (right.getID()==null ||!l.getID().contains(right.getID()))){
                             String key = removeLastSubstring(sepStringInput.get(),range.getFirstOccurrenceID()) +
                                     directStringInput.get()  + removeLastSubstring(sepStringInput.get(),l.getID());
                             double[] vals = getSeparatingLengthAndNodeCount(tree.getNode(i), l);
@@ -115,8 +123,42 @@ public class SpeciationLogger extends CalculationNode implements Loggable, Funct
                             speciationsCounter.put(key, vals);
                         }
                     }
+                if (right.getID().equals("Muriwaimanu_tuatahi_first")) {
+                    System.out.println();
+                }
+                if (right.isDirectAncestor() &&
+                        (right.getID().contains("last") || (right.getID().contains("first") && range.isSingleFossilRange()))){
+                    for (Node l : right.getParent().getAllLeafNodes()){
+                        if (l.getID().contains("first")){
+                            String key = removeLastSubstring(sepStringInput.get(),range.getFirstOccurrenceID()) +
+                                    directStringInput.get()  + removeLastSubstring(sepStringInput.get(),l.getID());
+                            double[] vals = getSeparatingLengthAndNodeCount(right.getParent(), l);
+                            if (l.isDirectAncestor())
+                                vals[1] = vals[1] - 1;
+                            speciationsCounter.put(key, vals);
+
+                        }
+                    }
+                }
+
 //                }
             }
+            SRNode right = (SRNode) tree.getNode(range.getNodeNrs().get(0));
+            if (right.isDirectAncestor() &&
+                    (right.getID().contains("last") || (right.getID().contains("first") && range.isSingleFossilRange()))){
+                for (Node l : right.getParent().getAllLeafNodes()){
+                    if (l.getID().contains("first")){
+                        String key = removeLastSubstring(sepStringInput.get(),range.getFirstOccurrenceID()) +
+                                directStringInput.get()  + removeLastSubstring(sepStringInput.get(),l.getID());
+                        double[] vals = getSeparatingLengthAndNodeCount(right.getParent(), l);
+                        if (l.isDirectAncestor())
+                            vals[1] = vals[1] - 1;
+                        speciationsCounter.put(key, vals);
+
+                    }
+                }
+            }
+
         }
         for (String s : keys) {
 //            out.print(speciationsCounter.get(s) + "\t");
@@ -125,7 +167,6 @@ public class SpeciationLogger extends CalculationNode implements Loggable, Funct
                     .toArray(String[]::new))+ "\t");
             speciationsCounter.put(s, new double[]{0,0});
         }
-
 
     }
 
