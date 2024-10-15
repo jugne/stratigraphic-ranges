@@ -4,7 +4,7 @@ package sr.evolution.operators;
 
 import beast.base.core.Description;
 import beast.base.core.Input;
-import beast.base.evolution.operator.TreeOperator;
+import beast.base.evolution.tree.Tree;
 import beast.base.inference.parameter.IntegerParameter;
 import beast.base.inference.parameter.RealParameter;
 import beast.base.util.Randomizer;
@@ -91,7 +91,7 @@ public class SRLeafToSampledAncestorJump extends SRTreeOperator {
                 if (sameRange!=null)
                     sameRange.removeNodeNr(tree, parent.getNr());
             }
-            parent.makeAllDirty(tree.IS_FILTHY);
+            parent.makeAllDirty(Tree.IS_FILTHY);
             if (sameRange==null)
                 orientationCoefficient*=2.;
         } else {
@@ -132,7 +132,7 @@ public class SRLeafToSampledAncestorJump extends SRTreeOperator {
                 System.exit(1);
             }
             leafRange.removeNodeNr(tree, parent.getNr());
-            parent.makeAllDirty(tree.IS_FILTHY);
+            parent.makeAllDirty(Tree.IS_FILTHY);
         }
         parent.setHeight(newHeight);
 

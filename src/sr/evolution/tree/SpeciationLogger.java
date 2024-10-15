@@ -6,8 +6,6 @@ import beast.base.core.Loggable;
 import beast.base.evolution.tree.Node;
 import beast.base.inference.CalculationNode;
 import sr.evolution.sranges.StratigraphicRange;
-import sr.util.Tools;
-
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;

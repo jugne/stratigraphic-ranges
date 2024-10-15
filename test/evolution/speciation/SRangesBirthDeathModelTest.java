@@ -11,7 +11,6 @@ import sr.speciation.SRangesBirthDeathModel;
 import sr.evolution.sranges.StratigraphicRange;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 /**
  * Created by gavryusa on 24/07/17.
@@ -21,7 +20,6 @@ public class SRangesBirthDeathModelTest extends TestCase {
     @Test
     public void testLikelihood() throws Exception {
 
-        ArrayList<String> taxa = new ArrayList<String>(Arrays.asList("1", "2", "3"));
         String newick = "(((((A:3.4,2_last:0.0):1.0,2_first:0.0):0.7,(B:3.5,(3_last:1.7,3_first:0.0):0.8):1.6):0.55,1_last:0.0):0.85,1_first:0.0):0.5";
         Tree tree_initial = new TreeParser(newick, false);
 
