@@ -153,6 +153,7 @@ public class StratigraphicRange extends BEASTObject {
         for (int i=1; i< nodes.size(); i++) {
             internalNodeNrs.add(nodes.get(i));
             if (tree.getNode(i).isDirectAncestor()){
+                System.out.println("Direct ancestor node: " + tree.getNode(i).getNr());
                 internalNodeNrs.add(tree.getNode(i).getParent().getNr());
             }
         }
