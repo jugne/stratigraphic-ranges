@@ -193,8 +193,8 @@ public class StratigraphicRange extends BEASTObject {
         List<Integer> internalNodeNrs = new ArrayList<>();
         for (int i=1; i< nodes.size(); i++) {
             internalNodeNrs.add(nodes.get(i));
-            if (tree.getNode(i).isDirectAncestor()){
-                internalNodeNrs.add(tree.getNode(i).getParent().getNr());
+            if (tree.getNode(nodes.get(i)).isDirectAncestor()){
+                internalNodeNrs.add(tree.getNode(nodes.get(i)).getParent().getNr());
             }
         }
         return internalNodeNrs;
