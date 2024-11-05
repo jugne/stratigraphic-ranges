@@ -65,7 +65,7 @@ public class SRangesBirthDeathModel extends SABirthDeathModel {
     @Override
     public double calculateLogP()
     {
-        SRTree tree = (SRTree) treeInput.get();
+        SRTree tree = (SRTree) combinedTree.getTree();
         int nodeCount = tree.getNodeCount();
         updateParameters();
         if (lambdaExceedsMu && lambda <= mu) {
@@ -77,7 +77,7 @@ public class SRangesBirthDeathModel extends SABirthDeathModel {
         }
 
         double x0 = origin;
-        double x1=tree.getRoot().getHeight();
+        double x1 = combinedTree.getHeightOfNode(tree.getRoot().getNr());
 
         if (x0 < x1 ) {
             return Double.NEGATIVE_INFINITY;
@@ -112,12 +112,12 @@ public class SRangesBirthDeathModel extends SABirthDeathModel {
             if (node.isLeaf()) {
                 if  (!node.isDirectAncestor())  {
                     Node fossilParent = node.getParent();
-                    if (node.getHeight() > 0.000000000005 || rho == 0.) {
+                    if (combinedTree.getHeightOfNode(i) > 0.000000000005 || rho == 0.) {
 
                         if (((SRTree)tree).belongToSameSRange(i, fossilParent.getNr())) {
-                            logP += Math.log(psi) - log_q_tilde(node.getHeight(), c1, c2) + log_p0s(node.getHeight(), c1, c2);
+                            logP += Math.log(psi) - log_q_tilde(combinedTree.getHeightOfNode(i), c1, c2) + log_p0s(combinedTree.getHeightOfNode(i), c1, c2);
                         } else {
-                            logP += Math.log(psi) - log_q(node.getHeight(), c1, c2) + log_p0s(node.getHeight(), c1, c2);
+                            logP += Math.log(psi) - log_q(combinedTree.getHeightOfNode(i), c1, c2) + log_p0s(combinedTree.getHeightOfNode(i), c1, c2);
                         }
                     } else {
                         logP += Math.log(rho);
@@ -130,13 +130,13 @@ public class SRangesBirthDeathModel extends SABirthDeathModel {
                     Node child = node.getNonDirectAncestorChild();
                     Node DAchild = node.getDirectAncestorChild();
                     if (parent != null && ((SRTree)tree).belongToSameSRange(parent.getNr(),DAchild.getNr())) {
-                        logP += - log_q_tilde(node.getHeight(), c1, c2) + log_q(node.getHeight(), c1, c2);
+                        logP += - log_q_tilde(combinedTree.getHeightOfNode(i), c1, c2) + log_q(combinedTree.getHeightOfNode(i), c1, c2);
                     }
                     if (child != null && ((SRTree)tree).belongToSameSRange(i,child.getNr())) {
-                        logP += - log_q(node.getHeight(), c1, c2) +  log_q_tilde(node.getHeight(), c1, c2);
+                        logP += - log_q(combinedTree.getHeightOfNode(i), c1, c2) +  log_q_tilde(combinedTree.getHeightOfNode(i), c1, c2);
                     }
                 } else {
-                    logP += Math.log(lambda) + log_q(node.getHeight(), c1, c2);
+                    logP += Math.log(lambda) + log_q(combinedTree.getHeightOfNode(i), c1, c2);
                 }
             }
         }
@@ -145,14 +145,14 @@ public class SRangesBirthDeathModel extends SABirthDeathModel {
         for (StratigraphicRange range:((SRTree)tree).getSRanges()) {
             Node first =  tree.getNode(range.getNodeNrs().get(0));
             if (!range.isSingleFossilRange()) {
-                double tFirst =first.getHeight();
-                double tLast = tree.getNode(range.getNodeNrs().get(range.getNodeNrs().size()-1)).getHeight();
+                double tFirst = combinedTree.getHeightOfNode(first.getNr());
+                double tLast = combinedTree.getHeightOfNode(range.getNodeNrs().get(range.getNodeNrs().size()-1));
                 logP += psi*(tFirst - tLast);
             }
             Node ancestralLast = findAncestralRangeLastNode(first);
             if (ancestralLast != null) {
-                double tOld = ancestralLast.getHeight();
-                double tYoung = first.getHeight();
+                double tOld = combinedTree.getHeightOfNode(ancestralLast.getNr());
+                double tYoung = combinedTree.getHeightOfNode(first.getNr());
                 logP += Math.log(1-q(tYoung, c1, c2)/q_tilde(tYoung, c1, c2)*q_tilde(tOld, c1, c2)/q(tOld, c1, c2));
             }
         }

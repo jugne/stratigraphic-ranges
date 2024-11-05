@@ -629,6 +629,8 @@ public class OrientationTest {
 //			}
 		}
 	}
+	
+	@SuppressWarnings("serial")
 	public static class OrientedThreeSampleTreeLogger extends Logger {
 		public Input<Integer> burninInput = new Input<>("burnin",
 				"Number of samples to skip (burn in)", Input.Validate.REQUIRED);
