@@ -2,8 +2,6 @@ package sr.util;
 
 import beast.base.evolution.tree.Node;
 import beast.base.evolution.tree.Tree;
-import sr.evolution.tree.SRTree;
-
 import java.util.*;
 
 public class Tools {
@@ -96,10 +94,6 @@ public class Tools {
 			tmpParent = tmpParent.getParent();
 		}
 		return new double[]{length, nodeCount};
-	}
-
-	private static void increaseLastDouble(List<Double> list, double value) {
-		list.set(list.size() - 1, list.get(list.size() - 1) + value);
 	}
 
 }
