@@ -24,14 +24,17 @@ public class LeftRightChildSwap extends SRTreeOperator {
 
         SRTree tree = (SRTree) InputUtil.get(treeInput, this);
 
-        // choose a random node avoiding root and leaves that are direct ancestors
+
         int nodeCount = tree.getNodeCount();
 
         Node node = null;
 
+        // choose a random node that is a bifurcation node and neither of
+        // the children are range branches
         for (int i=0; i<5; i++) {
             node = tree.getNode(Randomizer.nextInt(nodeCount));
-            if (!node.isLeaf() && !node.isFake() && !tree.belongToSameSRange(node.getNr(), node.getLeft().getNr())) {
+            if (!node.isLeaf() && !node.isFake() && !tree.belongToSameSRange(node.getNr(), node.getLeft().getNr()) &&
+            !(node.getHeight()==node.getRight().getHeight())) {
                 break;
             }
             node = null;
@@ -44,9 +47,10 @@ public class LeftRightChildSwap extends SRTreeOperator {
             for (int index=0; index<nodeCount; index++) {
                 Node candidateNode = tree.getNode(index);
                 //the node is not a leaf or sampled ancestor, the node is not fake, none of its children
-                // belongs to the same srange as node
+                // belongs to the same sRange as the node, node is not an observed transmission
                 if (!candidateNode.isLeaf() && !candidateNode.isFake() &&
-                        !tree.belongToSameSRange(index, candidateNode.getLeft().getNr()))
+                        !tree.belongToSameSRange(index, candidateNode.getLeft().getNr()) &&
+                        !(candidateNode.getHeight()==candidateNode.getRight().getHeight()))
                     allowableNodeIndices.add(index);
             }
 

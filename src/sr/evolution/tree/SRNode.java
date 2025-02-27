@@ -71,4 +71,12 @@ public class SRNode extends Node {
         buf.append(":").append(getNewickLengthMetaData()).append(getLength());
         return buf.toString();
     }
+
+    public Boolean isObservedTransmissionParent() {
+        return (!isLeaf() && getRight().isFake() && getHeight() == getRight().getHeight());
+    }
+
+    public Boolean isObservedTransmissionChild() {
+        return (isFake() && getParent() != null && getParent().getHeight() == getHeight());
+    }
 }

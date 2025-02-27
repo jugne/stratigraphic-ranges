@@ -183,10 +183,15 @@ public class RandomSRangeTree extends SRTree implements StateNodeInitialiser {
         List<Node> newNodes = new ArrayList<>();
         List<String> firstOccurrenceTaxonNames = new ArrayList<>();
         List<Node> lastOccurrenceNodes = new ArrayList<>();
+        Node originNode=null;
+        sRanges= (ArrayList) stratigraphicRangeInput.get();
 
         for(Node node:candidates) {
             String taxonName = node.getID();
-            sRanges= (ArrayList) stratigraphicRangeInput.get();
+            if (taxonName.equals("origin")) {
+                originNode = node;
+                continue;
+            }
             StratigraphicRange range = sRangesContainsID(taxonName);
             if (range != null && !range.isSingleFossilRange()) {
                 if (range.getFirstOccurrenceID().equals(taxonName)) {
@@ -225,7 +230,29 @@ public class RandomSRangeTree extends SRTree implements StateNodeInitialiser {
         }
 
         final List<Node> rootNode = simulateCoalescent(remainingCandidates, demoFunction, 0.0);
-        if (rootNode.size() == 1) {
+
+
+        if (rootNode.size() == 1 && infectionIntervalTreeInput.get()) {
+            if (originNode == null) {
+                throw new RuntimeException("Origin taxon has to be specified and named origin for a random II tree.");
+            }
+            Node currentRoot = rootNode.get(0);
+            double rootHeight=currentRoot.getHeight();
+            double originTime = originNode.getHeight();
+            if (originTime > rootHeight) {
+                final Node fakeOriginNode = newNode();
+                fakeOriginNode.setHeight(originTime);
+                currentRoot.setParent(fakeOriginNode);
+                fakeOriginNode.setLeft(currentRoot);
+                fakeOriginNode.setRight(originNode);
+                fakeOriginNode.setNr(nextNodeNr);
+                return fakeOriginNode;
+            }
+        }
+
+
+
+        if (rootNode.size() == 1 && !infectionIntervalTreeInput.get() ) {
             return rootNode.get(0);
         }
 

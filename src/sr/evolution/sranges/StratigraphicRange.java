@@ -20,6 +20,8 @@ public class StratigraphicRange extends BEASTObject {
             "occurrence of the taxon");
     public final Input<Taxon> taxonLastOccurrenceInput = new Input<Taxon>("lastOccurrence", "A BEAST taxon object that corresponds to the last " +
             "occurrence of the taxon");
+    public Input<Boolean> infectionIntervalInput = new Input<>("infectionInterval",
+            "A flag to treat it as infection interval.", false);
 
 
     String firstOccurrenceID=null;
@@ -46,6 +48,11 @@ public class StratigraphicRange extends BEASTObject {
         if (taxonFirstOccurrenceInput.get() != null || taxonLastOccurrenceInput.get() != null) {
             if (taxonFirstOccurrenceInput == null || taxonLastOccurrenceInput.get() == null) {
                 throw new RuntimeException("Either firstOccurrence or lastOccurence is not specified. Either specify both or none");
+            }
+            //todo: instead of this exception in the case when only the sampling time is specified, implement
+            // creating the firstOccurence (transmission) time and ID (by adding _first to the taxon id)
+            if (infectionIntervalInput.get() && (taxonFirstOccurrenceInput == null || taxonLastOccurrenceInput.get() == null)) {
+                throw new RuntimeException("Both: the transmission time and sampling time have to be specified for infection intervals");
             }
             firstOccurrenceID = taxonFirstOccurrenceInput.get().getID();
             lastOccurrenceID = taxonLastOccurrenceInput.get().getID();
@@ -84,7 +91,7 @@ public class StratigraphicRange extends BEASTObject {
     }
 
     /**
-     * sets the node that corresponds to the the first occurrence of the range in the tree at position 0
+     * sets the node that corresponds to the first occurrence of the range in the tree at position 0
      * the single fossil is treated as the first occurrence
      * @param nodeNr
      */
@@ -152,8 +159,8 @@ public class StratigraphicRange extends BEASTObject {
         List<Integer> internalNodeNrs = new ArrayList<>();
         for (int i=1; i< nodes.size(); i++) {
             internalNodeNrs.add(nodes.get(i));
-            if (tree.getNode(i).isDirectAncestor()){
-                internalNodeNrs.add(tree.getNode(i).getParent().getNr());
+            if (tree.getNode(nodes.get(i)).isDirectAncestor()){
+                internalNodeNrs.add(tree.getNode(nodes.get(i)).getParent().getNr());
             }
         }
         return internalNodeNrs;

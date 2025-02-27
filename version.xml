@@ -15,6 +15,8 @@
         <provider classname="sr.evolution.operators.SRTreeOperator"/>
         <provider classname="sr.evolution.operators.SRWilsonBalding"/>
         <provider classname="sr.evolution.operators.SRLeafToSampledAncestorJump"/>
+        <provider classname="sr.evolution.operators.ObservedNonObservedTransmissionJump"/>
+        <provider classname="sr.evolution.operators.IIUniform"/>
         <provider classname="sr.evolution.sranges.StratigraphicRange"/>
         <provider classname="sr.evolution.tree.RandomSRangeTree"/>
         <provider classname="sr.evolution.tree.SRNode"/>
@@ -24,6 +26,7 @@
         <provider classname="sr.evolution.tree.SpeciationLogger"/>
         <provider classname="sr.evolution.tree.SampledAncestorLogger"/>
         <provider classname="sr.speciation.SRangesBirthDeathModel"/>
+        <provider classname="sr.speciation.IIBirthDeathModel"/>
         <provider classname="sr.util.Tools"/>
         <provider classname="sr.util.loggers.BranchRateAnalyser"/>
     </service>

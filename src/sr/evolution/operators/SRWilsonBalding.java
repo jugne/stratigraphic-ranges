@@ -5,12 +5,15 @@ import beast.base.evolution.tree.Tree;
 import beast.base.inference.util.InputUtil;
 import beast.base.util.Randomizer;
 import sr.evolution.sranges.StratigraphicRange;
+import sr.evolution.tree.SRNode;
 import sr.evolution.tree.SRTree;
 
 import java.util.ArrayList;
 
 /**
  * Implements the Wilson-Balding proposal for the sRange tree.
+ * If the tree has a flag of being Infection Interval tree then additional moves are allowed which attach infection interval (sRange)
+ * as a right branch at the bifurcation time equal to the start of the interval (firstOccurrence time)
  * @author Alexandra Gavryushkina
  * @author Ugne Stolz
  */
@@ -18,6 +21,7 @@ public class SRWilsonBalding extends SRTreeOperator {
 
     @Override
     public void initAndValidate() {
+
     }
 
     /**
@@ -27,25 +31,25 @@ public class SRWilsonBalding extends SRTreeOperator {
     public double proposal() {
 
         SRTree tree = (SRTree) InputUtil.get(treeInput, this);
-        //double x0 = 10;
+        Boolean proposeIITrees = tree.isIITree();
 
         double oldMinAge, newMinAge, newRange, oldRange, newAge, fHastingsRatio, dimensionCoefficient, orientationCoefficient;
         int newDimension, oldDimension;
 
-        // choose a random node avoiding root and leaves that are direct ancestors
         int nodeCount = tree.getNodeCount();
 
         ArrayList<Integer> allowableNodeIndices = new ArrayList<>();
         ArrayList<Integer> sRangeInternalNodeNrs = tree.getSRangesInternalNodeNrs();
 
+        // choose a random node avoiding root and leaves that are direct ancestors
         for (int index=0; index<nodeCount; index++) {
             Node node = tree.getNode(index);
             //the node is not the root, it is not a sampled ancestor on a zero branch, it is not an internal node of a
-            // stratigraphic range
-
-            if (!node.isRoot() && !node.isDirectAncestor() && !sRangeInternalNodeNrs.contains(node.getNr())
-                && !(node.isFake()&&sRangeInternalNodeNrs.contains(node.getDirectAncestorChild().getNr())))
+            // stratigraphic range and is not the child of the root-origin node in case of IITrees
+            if (!node.isRoot() && !node.isDirectAncestor() && !sRangeInternalNodeNrs.contains(node.getNr()) &&
+                    (!proposeIITrees || !node.getParent().isRoot())) {
                 allowableNodeIndices.add(index);
+            }
         }
 
         Node i;
@@ -67,7 +71,7 @@ public class SRWilsonBalding extends SRTreeOperator {
         }
 
         // make sure that there is at least one candidate edge to attach node iP to
-        if (iP.getParent() == null && CiP.getHeight() <= i.getHeight()) {
+        if ((iP.getParent() == null || (proposeIITrees && iP.getParent().getParent()==null))  && CiP.getHeight() <= i.getHeight()) {
             return Double.NEGATIVE_INFINITY;
         }
 
@@ -87,6 +91,7 @@ public class SRWilsonBalding extends SRTreeOperator {
         double newParentHeight;
         boolean attachingToLeaf;
         boolean adjacentEdge;
+        boolean originRootBranch;
         //boolean adjacentLeaf;
         do {
             adjacentEdge = false;
@@ -100,15 +105,18 @@ public class SRWilsonBalding extends SRTreeOperator {
                 else newParentHeight = Double.POSITIVE_INFINITY;
                 if (!CiP.isDirectAncestor())
                     adjacentEdge = (CiP.getNr() == j.getNr() || iP.getNr() == j.getNr());
+                originRootBranch = proposeIITrees && (jP == null || (jP.isRoot() && jP.getHeight()==j.getHeight()));
                 attachingToLeaf = false;
             } else {
                 j = tree.getExternalNodes().get(nodeNumber - nodeCount);
                 jP = j.getParent();
                 newParentHeight = j.getHeight();
                 attachingToLeaf = true;
+                originRootBranch = false;
                 //adjacentLeaf = (iP.getNr() == j.getNr());
             }
-        } while (j.isDirectAncestor() || (newParentHeight <= i.getHeight()) || (i.getNr() == j.getNr()) || adjacentEdge /*|| adjacentLeaf */);
+        } while (j.isDirectAncestor() || (newParentHeight <= i.getHeight()) || (i.getNr() == j.getNr()) ||
+                adjacentEdge || originRootBranch /*|| adjacentLeaf */);
 
 
         if (attachingToLeaf && iP.getNr() == j.getNr()) {
@@ -138,46 +146,72 @@ public class SRWilsonBalding extends SRTreeOperator {
             pruningRange = tree.getSharedRange(iP.getNr(), CiP.getNr());
             pruningFromSRange = pruningRange != null;
         }
-        boolean randomPrune = !pruningFromSA && !pruningFromSRange;
+        boolean randomPrune = !pruningFromSA && !pruningFromSRange && !(tree.isIITree() && i.isFake() && i.getHeight() == iP.getHeight());
         boolean attachingToSRange = false;
         if (!attachingToLeaf && jP != null){
             attachingRange = tree.getSharedRange(jP.getNr(),j.getNr());
             attachingToSRange = attachingRange!=null;
         }
 
+        boolean observedTransmissionAttach = false;
 
+        newRange=1;
         //Hastings numerator calculation + newAge of iP
         if (attachingToLeaf) {
-            newRange = 1;
             newAge = j.getHeight();
         } else {
             if (jP != null) {
-                newMinAge = Math.max(i.getHeight(), j.getHeight());
-                newRange = jP.getHeight() - newMinAge;
-                newAge = newMinAge + (Randomizer.nextDouble() * newRange);
+                if (!tree.isIITree() || !i.isFake() || j.getHeight() >= i.getHeight() || Randomizer.nextBoolean()) {
+                    newMinAge = Math.max(i.getHeight(), j.getHeight());
+                    newRange = jP.getHeight() - newMinAge;
+                    newAge = newMinAge + (Randomizer.nextDouble() * newRange);
+                } else {
+                    newAge = i.getHeight();
+                    observedTransmissionAttach = true;
+                }
+
             } else {
-                double randomNumberFromExponential;
-                randomNumberFromExponential = Randomizer.nextExponential(1);
-                newRange = Math.exp(randomNumberFromExponential);
-                newAge = j.getHeight() + randomNumberFromExponential;
+                if (!tree.isIITree() || !i.isFake() || j.getHeight() >= i.getHeight() ||  Randomizer.nextBoolean()) {
+                    double randomNumberFromExponential;
+                    randomNumberFromExponential = Randomizer.nextExponential(1);
+                    newRange = Math.exp(randomNumberFromExponential);
+                    newAge = j.getHeight() + randomNumberFromExponential;
+                } else {
+                    newAge = i.getHeight();
+                    observedTransmissionAttach = true;
+                }
+            }
+            // if there were two choices whether to attach iP at a random height between the height of j and
+            // the height of jP (or infinity) or at the height of i (when creating observed transmission),
+            // then adjust the hastings by the probability of each choice of 1/2.
+            // As instead of the density, we have its reciprocal, we multiply by 2.
+            if (tree.isIITree() && i.isFake() && j.getHeight() < i.getHeight()) {
+                newRange=newRange*2;
             }
         }
 
         Node PiP = iP.getParent();
 
-
+        oldRange=1;
 
         //Hastings denominator calculation
-        if (CiP.isDirectAncestor()) {
-            oldRange = 1;
-        }
-        else {
-            oldMinAge = Math.max(i.getHeight(), CiP.getHeight());
-            if (PiP != null) {
-                oldRange = PiP.getHeight() - oldMinAge;
-            } else {
-                oldRange = Math.exp(iP.getHeight() - oldMinAge);
-                //oldRange = x0 - oldMinAge;
+        if (!CiP.isDirectAncestor()) {
+            if (!tree.isIITree() || !i.isFake() || i.getHeight() != iP.getHeight()) {
+                oldMinAge = Math.max(i.getHeight(), CiP.getHeight());
+                if (PiP != null) {
+                    oldRange = PiP.getHeight() - oldMinAge;
+                } else {
+                    oldRange = Math.exp(iP.getHeight() - oldMinAge);
+                    //oldRange = x0 - oldMinAge;
+                }
+            }
+            // if node i is the beginning of an infection interval, then the reverse move
+            // has two choices. In both cases (iP is a normal bifurcation node or
+            // it is a bifurcation node that is an observed transmission) we need to adjust the density of the reverse move
+            // by the probability of choosing one or the other which is 1/2.
+            // As instead of the density, we have its reciprocal, we multiply by 2.
+            if (tree.isIITree() && i.isFake() && CiP.getHeight() < i.getHeight()) {
+                oldRange = oldRange * 2;
             }
         }
 
@@ -203,7 +237,7 @@ public class SRWilsonBalding extends SRTreeOperator {
                 } else {
                     PiP.setLeft(anotherChild);
                     PiP.setRight(CiP);
-                }  // add <PiP, CiP> at random orientation
+                }  // add <PiP, CiP> at the same orientation as <PiP, iP>
                 PiP.makeDirty(Tree.IS_FILTHY);
                 CiP.makeDirty(Tree.IS_FILTHY);
             } else {
@@ -228,7 +262,7 @@ public class SRWilsonBalding extends SRTreeOperator {
                 } else {
                     jP.setLeft(CjP);
                     jP.setRight(iP);
-                } // add <jP, iP> choosing the random orientation
+                } // add <jP, iP> at the same orientation as <jP, j>
 
                 jP.makeDirty(Tree.IS_FILTHY);
             } else {
@@ -236,9 +270,10 @@ public class SRWilsonBalding extends SRTreeOperator {
                 tree.setRootOnly(iP);
             }
             j.setParent(iP);
-            if (!attachingToSRange && !attachingToLeaf)
+            if (!attachingToSRange && !attachingToLeaf && !observedTransmissionAttach)
                 randomAttach = true;
-            if (attachingToSRange || (!attachingToLeaf && Randomizer.nextBoolean())) {
+            if (attachingToSRange || observedTransmissionAttach ||
+                    (!attachingToLeaf && Randomizer.nextBoolean())) {
                 iP.setLeft(j);
                 iP.setRight(i);
             } else {
@@ -249,9 +284,9 @@ public class SRWilsonBalding extends SRTreeOperator {
             j.makeDirty(Tree.IS_FILTHY);
         } else {
             if (iP.getNr() == j.getNr()) {
-                if (!attachingToSRange)
+                if (!attachingToSRange && !observedTransmissionAttach)
                     randomAttach = true;
-                if (attachingToSRange || Randomizer.nextBoolean()) { //in special case 1: when attaching to the range
+                if (attachingToSRange || observedTransmissionAttach || Randomizer.nextBoolean()) { //in special case 1: when attaching to the range
                                                                      //make i right
                                                                      //otherwise choose randomly
                     iP.setLeft(CiP);
@@ -284,11 +319,14 @@ public class SRWilsonBalding extends SRTreeOperator {
 
         newDimension = 0;
         sRangeInternalNodeNrs = tree.getSRangesInternalNodeNrs();
+
         for (int index=0; index<nodeCount; index++) {
             Node node = tree.getNode(index);
-            //the node is not the root, it is not a sampled ancestor on a zero branch, it is not an internal node of a stratigraphic range
-            if (!node.isRoot() && !node.isDirectAncestor() && !sRangeInternalNodeNrs.contains(node.getNr())
-                    && !(node.isFake()&&sRangeInternalNodeNrs.contains(node.getDirectAncestorChild().getNr())))
+            //the node is not the root, it is not a sampled ancestor on a zero branch,
+            // it is not an internal node of a stratigraphic range
+            // it is not a child of the root in case of II trees
+            if (!node.isRoot() && !node.isDirectAncestor() && !sRangeInternalNodeNrs.contains(node.getNr()) &&
+                    (!proposeIITrees || !node.getParent().isRoot()))
                 newDimension++;
         }
         dimensionCoefficient = (double) oldDimension / newDimension;

@@ -25,6 +25,8 @@ public class SRTree extends Tree implements TreeInterface {
 
     public Input<List<StratigraphicRange>> stratigraphicRangeInput = new Input<>("stratigraphicRange", "all stratigraphic ranges", new ArrayList<>());
 
+    public Input<Boolean> infectionIntervalTreeInput = new Input<>("infectionIntervalTree",
+            "a flag to use infection interval version of the operator.", false);
     public Input<Tree> treeInput = new Input<>("tree", "tree to start with");
 
     protected ArrayList<StratigraphicRange> sRanges;
@@ -512,6 +514,10 @@ public class SRTree extends Tree implements TreeInterface {
         final String newick = ((SRNode) tree.getRoot()).toShortNewickForLog(false);
         out.print(newick);
         out.print(";");
+    }
+
+    public Boolean isIITree() {
+        return infectionIntervalTreeInput.get();
     }
 
 }
