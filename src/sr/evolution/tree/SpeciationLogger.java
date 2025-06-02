@@ -102,9 +102,6 @@ public class SpeciationLogger extends CalculationNode implements Loggable, Funct
                 if (!tree.getNode(i).isLeaf())
                     right = tree.getNode(i).getRight();
 
-                if (right.getID().equals("Megadyptes_antipodes_first")) {
-                    System.out.println();
-                }
                 if (right.isLeaf() && !right.getID().contains("last") && !range.isSingleFossilRange()){
                     String key = removeLastSubstring(sepStringInput.get(),range.getFirstOccurrenceID()) +
                             directStringInput.get()  + removeLastSubstring(sepStringInput.get(),right.getID());
@@ -123,9 +120,6 @@ public class SpeciationLogger extends CalculationNode implements Loggable, Funct
                             speciationsCounter.put(key, vals);
                         }
                     }
-                if (right.getID().equals("Muriwaimanu_tuatahi_first")) {
-                    System.out.println();
-                }
                 if (right.isDirectAncestor() &&
                         (right.getID().contains("last") || (right.getID().contains("first") && range.isSingleFossilRange()))){
                     for (Node l : right.getParent().getAllLeafNodes()){
