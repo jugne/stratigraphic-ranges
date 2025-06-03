@@ -514,4 +514,21 @@ public class SRTree extends Tree implements TreeInterface {
         out.print(";");
     }
 
+    /**
+     * deep copy, returns a completely new tree
+     *
+     * @return a deep copy of this beast.tree.
+     */
+    @Override
+    public Tree copy() {
+        SRTree tree = new SRTree();
+        tree.setID(getID());
+        tree.index = index;
+        tree.root = root.copy();
+        tree.nodeCount = nodeCount;
+        tree.internalNodeCount = internalNodeCount;
+        tree.leafNodeCount = leafNodeCount;
+        return tree;
+    }
+
 }
