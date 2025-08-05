@@ -3,8 +3,6 @@ package sr.evolution.sranges;
 import beast.base.core.BEASTObject;
 import beast.base.core.Input;
 import beast.base.evolution.alignment.Taxon;
-import beast.base.evolution.tree.Node;
-import beast.base.evolution.tree.Tree;
 import sr.evolution.tree.SRTree;
 
 import java.util.ArrayList;
@@ -38,8 +36,6 @@ public class StratigraphicRange extends BEASTObject {
      * node in the list.
      */
     private List<Integer> nodes = new ArrayList<>();  //
-
-    private List<Integer> directAncestorNodes = new ArrayList<>();  //
 
     @Override
     public void initAndValidate() {

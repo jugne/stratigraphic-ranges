@@ -5,17 +5,10 @@ import beast.base.core.Input;
 import beast.base.core.Loggable;
 import beast.base.evolution.tree.Node;
 import beast.base.inference.CalculationNode;
-import sr.evolution.sranges.StratigraphicRange;
-import sr.util.Tools;
-
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-
-import static sr.util.Tools.getSeparatingLengthAndNodeCount;
-import static sr.util.Tools.removeLastSubstring;
 
 /**
  * @author Ugne Stolz

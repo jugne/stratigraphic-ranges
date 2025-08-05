@@ -49,7 +49,7 @@ public class SRTree extends Tree implements TreeInterface {
      */
     protected void initSRanges() {
         if (stratigraphicRangeInput.get().size() != 0) {
-            sRanges = (ArrayList) stratigraphicRangeInput.get();
+            sRanges = (ArrayList<StratigraphicRange>) stratigraphicRangeInput.get();
             List<Node> externalNodes = getExternalNodes();
             List<Node> unusedNodes = getExternalNodes();
             for (StratigraphicRange range:sRanges) {
@@ -168,7 +168,7 @@ public class SRTree extends Tree implements TreeInterface {
         for (int i=0; i<sRanges.size(); i++) {
             StratigraphicRange range_src = sRanges.get(i);
             StratigraphicRange range_sink = new StratigraphicRange();
-            ArrayList<Integer> nodeNrs_src = (ArrayList) range_src.getNodeNrs();
+            ArrayList<Integer> nodeNrs_src = (ArrayList<Integer>) range_src.getNodeNrs();
             for (int j=0; j<nodeNrs_src.size(); j++) {
                 range_sink.addNodeNr(this, nodeNrs_src.get(j));
             }

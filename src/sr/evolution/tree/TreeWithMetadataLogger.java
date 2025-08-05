@@ -13,8 +13,6 @@ import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
-
 import static sr.util.Tools.removeLastSubstring;
 
 @Description("Based on the SpeciesTreeLogger class, but without node sorting")
