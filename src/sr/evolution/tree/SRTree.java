@@ -234,6 +234,22 @@ public class SRTree extends Tree implements TreeInterface {
         assignFrom(rootNr + 1, nodeCount, otherNodes);
         if(stratigraphicRangeInput.get()!= null) {
             initSRanges();
+            for (StratigraphicRange range : this.getSRanges()) {
+                int firstNr = range.getNodeNrs().get(0);
+                Node first = this.getNode(firstNr);
+                first = first.isDirectAncestor() ? first.getParent() : first;
+                Node last = this.getNode(range.getNodeNrs().get(range.getNodeNrs().size() - 1));
+                while (!range.isSingleFossilRange() && firstNr != last.getNr()) {
+                        if (first.isLeaf())
+                            System.out.println("noooooo");
+                        int nr = first.getLeft().isFake() ? first.getLeft().getDirectAncestorChild().getNr() : first.getLeft().getNr();
+                        if (nr == last.getNr())
+                            break;
+                        range.addNodeNrAfter(this, first.getNr(), nr);
+                        firstNr = nr;
+                        first = this.getNode(nr).isDirectAncestor() ? this.getNode(nr).getParent() : this.getNode(nr);
+                }
+            }
         }
     }
 
@@ -344,6 +360,29 @@ public class SRTree extends Tree implements TreeInterface {
         }
         initArrays();
         orientateTree();
+//        for (StratigraphicRange range : this.getSRanges()) {
+//            int firstNr = range.getNodeNrs().get(0);
+//            Node first = this.getNode(range.getNodeNrs().get(0));
+//            first = first.isDirectAncestor() ? first.getParent() : first;
+//            Node last = this.getNode(range.getNodeNrs().get(range.getNodeNrs().size() - 1));
+//            while (!range.isSingleFossilRange() && firstNr !=last.getNr()){
+//                if (first.isLeaf())
+//                    System.out.println();
+//                int nr = first.getLeft().isFake() ? first.getLeft().getDirectAncestorChild().getNr(): first.getLeft().getNr();
+//                range.addNodeNrAfter(this, first.getNr(), nr);
+//                firstNr = nr;
+//                first = this.getNode(nr).isDirectAncestor() ? this.getNode(nr).getParent(): this.getNode(nr);
+//            }
+//        }
+    }
+
+    @Override
+    public String toString() {
+        StackTraceElement[] ste = Thread.currentThread().getStackTrace();
+        if (ste[2].getMethodName().equals("toXML")) {
+            addOrientationMetadata();
+        }
+        return root.toString();
     }
 
     /**
@@ -355,7 +394,7 @@ public class SRTree extends Tree implements TreeInterface {
 
         ArrayList<StratigraphicRange> tmp_ranges = storedSRanges;
         storedSRanges = sRanges;
-        sRanges=tmp_ranges;
+        sRanges = tmp_ranges;
     }
 
     /**

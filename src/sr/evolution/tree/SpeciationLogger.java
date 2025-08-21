@@ -46,23 +46,39 @@ public class SpeciationLogger extends CalculationNode implements Loggable, Funct
     List<String> keys = new ArrayList<>();
     @Override
     public void initAndValidate() {
-        // nothing to do
+        final SRTree tree = treeInput.get();
+        ArrayList<StratigraphicRange> ranges = tree.getSRanges();
+        for (StratigraphicRange range1 : ranges) {
+            for (StratigraphicRange range2 : ranges) {
+                if (range1==range2)
+                    continue;
+                String key = removeLastSubstring(sepStringInput.get(), range1.getFirstOccurrenceID()) +
+                        directStringInput.get() + removeLastSubstring(sepStringInput.get(), range2.getFirstOccurrenceID());
+                if (speciationsCounter.get(key)==null){
+                    double[] vals = new double[2];
+                    speciationsCounter.put(key, vals);
+                    keys.add(key);
+                }
+            }
+        }
     }
 
     @Override
     public void init(PrintStream out) {
         final SRTree tree = treeInput.get();
         ArrayList<StratigraphicRange> ranges = tree.getSRanges();
-        for (StratigraphicRange range : ranges) {
-            for(Node leaf : tree.getExternalNodes()){
-                String key = removeLastSubstring(sepStringInput.get(), range.getFirstOccurrenceID()) +
-                        directStringInput.get() + removeLastSubstring(sepStringInput.get(), leaf.getID());
+        for (StratigraphicRange range1 : ranges) {
+            for (StratigraphicRange range2 : ranges) {
+                if (range1==range2)
+                    continue;
+                String key = removeLastSubstring(sepStringInput.get(), range1.getFirstOccurrenceID()) +
+                        directStringInput.get() + removeLastSubstring(sepStringInput.get(), range2.getFirstOccurrenceID());
                 if (speciationsCounter.get(key)==null){
                     double[] vals = new double[2];
                     speciationsCounter.put(key, vals);
                     keys.add(key);
-                    out.print(key + "\t");
                 }
+                out.print(key + "\t");
             }
         }
     }
@@ -156,6 +172,9 @@ public class SpeciationLogger extends CalculationNode implements Loggable, Funct
         }
         for (String s : keys) {
 //            out.print(speciationsCounter.get(s) + "\t");
+            if (speciationsCounter.get(s)[1]==-1)
+                System.out.print("SpeciationLogger: " + s + " has -1 node count, which is not allowed. " +
+                        "This may be due to a bug in the code or a problem with the tree.\n");
             out.print(String.join(",", Arrays.stream(speciationsCounter.get(s))
                     .mapToObj(Double::toString)
                     .toArray(String[]::new))+ "\t");
