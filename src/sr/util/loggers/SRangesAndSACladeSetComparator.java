@@ -13,7 +13,6 @@ import java.util.*;
 
 import javax.imageio.ImageIO;
 
-import beast.base.inference.parameter.RealParameter;
 import beastfx.app.tools.Application;
 import beastfx.app.util.OutFile;
 import beastfx.app.util.TreeFile;
