@@ -10,3 +10,6 @@
 # OS X ignores
 .DS_Store
 /build/
+
+# treeannotator definitions (not public yet)
+/src/sr/treeannotator/Summarizing_SR_trees.pdf

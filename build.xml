@@ -9,6 +9,10 @@
     <property name="beastDir" location="../beast2"/>
     <property name="BeastFXDir" location="../BeastFX"/>
 
+    <!-- JavaFX SDK location (set JAVA_FX_HOME environment variable) -->
+    <property environment="env"/>
+    <property name="javafxDir" value="${env.JAVA_FX_HOME}"/>
+
     <!-- Location to check for local copy of BEASTLabs repository -->
     <property name="beastLabsDir" location="../BEASTLabs"/>
     <!-- Location to check for local copy of BEASTLabs repository -->
@@ -122,6 +126,7 @@
                 <fileset dir="${beastDir}/lib" includes="*.jar"/>
                 <fileset dir="${beastDir}/lib/junit" includes="*.jar"/>
                 <fileset dir="${BeastFXDir}/locallib" includes="*.jar"/>
+                <fileset dir="${javafxDir}" includes="*.jar" erroronmissingdir="false"/>
             </classpath>
         </javac>
         <jar jarfile="${build-lib}/beast2.jar" basedir="${build-beast}" />
@@ -179,6 +184,7 @@
             <classpath>
                 <fileset dir="${beastLabsDir}/lib" includes="*.jar"/>
                 <fileset dir="${build-lib}" includes="*.jar"/>
+                <fileset dir="${javafxDir}" includes="*.jar" erroronmissingdir="false"/>
             </classpath>
         </javac>
         <jar jarfile="${build-lib}/beastlabs.jar" basedir="${build-beastlabs}" />
@@ -233,6 +239,7 @@
             <include name="sa/**/**" />
             <classpath>
                 <fileset dir="${build-lib}" includes="*.jar"/>
+                <fileset dir="${javafxDir}" includes="*.jar" erroronmissingdir="false"/>
             </classpath>
         </javac>
         <jar jarfile="${build-lib}/sa.jar" basedir="${build-sa}" />

@@ -241,7 +241,7 @@ public class SRTree extends Tree implements TreeInterface {
                 Node last = this.getNode(range.getNodeNrs().get(range.getNodeNrs().size() - 1));
                 while (!range.isSingleFossilRange() && firstNr != last.getNr()) {
                         if (first.isLeaf())
-                            System.out.println("noooooo");
+                            throw new RuntimeException("Error when restoring. Please contact the package developers if this occurs!");
                         int nr = first.getLeft().isFake() ? first.getLeft().getDirectAncestorChild().getNr() : first.getLeft().getNr();
                         if (nr == last.getNr())
                             break;
