@@ -63,7 +63,7 @@ java sr.treeannotator.SRTreeAnnotator -trees input.trees -out output.tree -burni
 | `-trees <file>` | Input tree file (Nexus or Newick format) |
 | `-out <file>` | Output file for the MCC tree |
 | `-burnin <n>` | Burnin percentage (default: 10) |
-| `-sum true` | Use sum instead of log product for scoring |
+| `-sumProbabilities true` | Use sum instead of log product for scoring |
 | `-summary <file>` | Write relationship summary to file |
 | `-detailed true` | Include detailed relationship annotations |
 

@@ -43,7 +43,7 @@ public class SRTreeAnnotator extends Runnable {
             "Percentage of trees to discard as burn-in",
             10);
 
-    final public Input<Boolean> useSumInput = new Input<>("sum",
+    final public Input<Boolean> useSumInput = new Input<>("sumProbabilities",
             "Use sum of probabilities instead of log product for scoring",
             false);
 
