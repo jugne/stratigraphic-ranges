@@ -10,6 +10,11 @@
                 args=""
     />
 
+    <packageapp description="SR Tree Annotator"
+                class="sr.treeannotator.SRTreeAnnotator"
+                args=""
+    />
+
     <service type="beast.base.core.BEASTInterface">
         <provider classname="sr.evolution.operators.LeftRightChildSwap"/>
         <provider classname="sr.evolution.operators.SRTreeOperator"/>

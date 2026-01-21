@@ -1,9 +1,16 @@
 package sr.treeannotator;
 
+import beast.base.core.Description;
+import beast.base.core.Input;
+import beast.base.core.Log;
 import beast.base.evolution.tree.Node;
 import beast.base.evolution.tree.Tree;
 import beast.base.evolution.tree.TreeParser;
+import beast.base.inference.Runnable;
 import beast.base.parser.NexusParser;
+import beastfx.app.tools.Application;
+import beastfx.app.util.OutFile;
+import beastfx.app.util.TreeFile;
 import sr.evolution.tree.SRTree;
 
 import java.io.*;
@@ -20,44 +27,79 @@ import java.util.List;
  *
  * @author Ugne Stolz
  */
-public class SRTreeAnnotator {
+@Description("Summarizes posterior tree samples for SR trees using relationship-based " +
+        "credibility instead of traditional clade-based methods. Preserves orientation information.")
+public class SRTreeAnnotator extends Runnable {
 
-    private int burninPercentage = 10;
+    final public Input<TreeFile> treesInput = new Input<>("trees",
+            "Input tree file (Nexus or Newick format)",
+            new TreeFile("[[none]]"));
+
+    final public Input<OutFile> outputInput = new Input<>("out",
+            "Output file for the MCC tree (Nexus format)",
+            new OutFile("[[none]]"));
+
+    final public Input<Integer> burnInPercentageInput = new Input<>("burnin",
+            "Percentage of trees to discard as burn-in",
+            10);
+
+    final public Input<Boolean> useSumInput = new Input<>("sum",
+            "Use sum of probabilities instead of log product for scoring",
+            false);
+
+    final public Input<OutFile> summaryInput = new Input<>("summary",
+            "Optional output file for relationship summary",
+            new OutFile("[[none]]"));
+
+    final public Input<Boolean> detailedInput = new Input<>("detailed",
+            "Include detailed relationship annotations (ancestral/descendant taxa)",
+            false);
+
     private String inputFileName;
     private String outputFileName;
-    private String summaryFileName = null;  // Optional summary output file
-    private PrintStream progressStream = System.out;
-    private boolean useSumCredibility = false;
-    private boolean annotateRelationshipDetails = false;  // Whether to add ancestral/descendant taxa annotations
+    private String summaryFileName;
+    private int burninPercentage;
+    private boolean useSumCredibility;
+    private boolean annotateRelationshipDetails;
 
-    public SRTreeAnnotator(String inputFileName, String outputFileName) {
-        this.inputFileName = inputFileName;
-        this.outputFileName = outputFileName;
+    @Override
+    public void initAndValidate() {
+        // Validation will happen in run()
     }
 
-    public void setBurninPercentage(int burninPercentage) {
-        this.burninPercentage = burninPercentage;
-    }
+    @Override
+    public void run() throws Exception {
+        // Get values from inputs
+        inputFileName = treesInput.get().getPath();
+        outputFileName = outputInput.get().getPath();
+        burninPercentage = burnInPercentageInput.get();
+        useSumCredibility = useSumInput.get();
+        annotateRelationshipDetails = detailedInput.get();
 
-    public void setUseSumCredibility(boolean useSumCredibility) {
-        this.useSumCredibility = useSumCredibility;
-    }
+        if (summaryInput.get() != null && !summaryInput.get().getName().equals("[[none]]")) {
+            summaryFileName = summaryInput.get().getPath();
+        } else {
+            summaryFileName = null;
+        }
 
-    public void setSummaryFileName(String summaryFileName) {
-        this.summaryFileName = summaryFileName;
-    }
+        // Validate inputs
+        if (inputFileName == null || inputFileName.equals("[[none]]")) {
+            throw new IllegalArgumentException("Input tree file must be specified");
+        }
+        if (outputFileName == null || outputFileName.equals("[[none]]")) {
+            throw new IllegalArgumentException("Output file must be specified");
+        }
 
-    public void setAnnotateRelationshipDetails(boolean annotateRelationshipDetails) {
-        this.annotateRelationshipDetails = annotateRelationshipDetails;
+        annotate();
     }
 
     /**
      * Main annotation process.
      */
     public void annotate() throws Exception {
-        progressStream.println("SR Tree Annotator");
-        progressStream.println("Using relationship-based credibility (section 1.1.3)");
-        progressStream.println();
+        Log.info("SR Tree Annotator");
+        Log.info("Using relationship-based credibility (section 1.1.3)");
+        Log.info("");
 
         // Read trees from file
         List<SRTree> trees = readTrees();
@@ -66,19 +108,19 @@ public class SRTreeAnnotator {
             throw new IllegalArgumentException("No trees found in input file");
         }
 
-        progressStream.println("Total trees in file: " + trees.size());
+        Log.info("Total trees in file: " + trees.size());
 
         // Apply burnin
         int burninCount = (burninPercentage * trees.size()) / 100;
         List<SRTree> analyzedTrees = trees.subList(burninCount, trees.size());
         int totalTreesUsed = analyzedTrees.size();
 
-        progressStream.println("Burnin: " + burninPercentage + "% (" + burninCount + " trees)");
-        progressStream.println("Trees to analyze: " + totalTreesUsed);
-        progressStream.println();
+        Log.info("Burnin: " + burninPercentage + "% (" + burninCount + " trees)");
+        Log.info("Trees to analyze: " + totalTreesUsed);
+        Log.info("");
 
         // Phase 1: Collect relationships and compute probabilities
-        progressStream.println("Step 1: Collecting relationships and attributes from trees...");
+        Log.info("Step 1: Collecting relationships and attributes from trees...");
         RelationshipSystem relationshipSystem = new RelationshipSystem();
 
         int counter = 0;
@@ -87,15 +129,14 @@ public class SRTreeAnnotator {
             relationshipSystem.add(tree, true);
             counter++;
             if (counter % 100 == 0) {
-                progressStream.print(".");
+                Log.info.print(".");
                 if (counter % 1000 == 0) {
-                    progressStream.print(" " + counter);
+                    Log.info.print(" " + counter);
                 }
-                progressStream.flush();
             }
         }
-        progressStream.println();
-        progressStream.println("Collected relationships from " + totalTreesUsed + " trees.");
+        Log.info("");
+        Log.info("Collected relationships from " + totalTreesUsed + " trees.");
 
         // Calculate posterior probabilities
         relationshipSystem.calculatePosteriorProbabilities(totalTreesUsed);
@@ -103,13 +144,13 @@ public class SRTreeAnnotator {
         // Write relationship summary to file if specified
         if (summaryFileName != null) {
             writeSummary(relationshipSystem, totalTreesUsed);
-            progressStream.println("Relationship summary written to: " + summaryFileName);
+            Log.info("Relationship summary written to: " + summaryFileName);
         }
 
         // Step 2: Find MCC tree
-        progressStream.println("Step 2: Finding maximum credibility tree...");
-        progressStream.println("0              25             50             75            100");
-        progressStream.println("|--------------|--------------|--------------|--------------|");
+        Log.info("Step 2: Finding maximum credibility tree...");
+        Log.info("0              25             50             75            100");
+        Log.info("|--------------|--------------|--------------|--------------|");
 
         SRTree bestTree = null;
         double bestScore = Double.NEGATIVE_INFINITY;
@@ -132,41 +173,40 @@ public class SRTreeAnnotator {
 
             // Progress bar
             while (reported < 61 && 1000.0 * reported < 61000.0 * (counter + 1) / totalTreesUsed) {
-                progressStream.print("*");
+                Log.info.print("*");
                 reported++;
-                progressStream.flush();
             }
             counter++;
         }
 
-        progressStream.println();
-        progressStream.println();
+        Log.info("");
+        Log.info("");
 
         if (useSumCredibility) {
-            progressStream.println("Highest Sum Relationship Credibility: " + bestScore);
+            Log.info("Highest Sum Relationship Credibility: " + bestScore);
         } else {
-            progressStream.println("Highest Log Relationship Credibility: " + bestScore);
+            Log.info("Highest Log Relationship Credibility: " + bestScore);
         }
 
         // Step 3: Annotate MCC tree
         if (bestTree != null) {
-            progressStream.println("\nStep 3: Annotating MCC tree with relationship probabilities and statistics...");
+            Log.info("\nStep 3: Annotating MCC tree with relationship probabilities and statistics...");
             relationshipSystem.annotateMCCTree(bestTree, annotateRelationshipDetails);
 
             writeTree(bestTree);
-            progressStream.println("MCC tree written to: " + outputFileName);
+            Log.info("MCC tree written to: " + outputFileName);
         } else {
-            progressStream.println("ERROR: No best tree found");
+            Log.err("ERROR: No best tree found");
         }
 
-        progressStream.println("\nDone!");
+        Log.info("\nDone!");
     }
 
     /**
      * Reads SR trees from input file.
      */
     private List<SRTree> readTrees() throws Exception {
-        progressStream.println("Reading trees from: " + inputFileName);
+        Log.info("Reading trees from: " + inputFileName);
 
         List<SRTree> trees = new ArrayList<>();
 
@@ -188,7 +228,7 @@ public class SRTreeAnnotator {
             }
         } catch (Exception e) {
             // If Nexus parsing fails, try reading as Newick
-            progressStream.println("Nexus parsing failed, trying Newick format...");
+            Log.info("Nexus parsing failed, trying Newick format...");
             trees = readNewickTrees();
         }
 
@@ -216,7 +256,7 @@ public class SRTreeAnnotator {
                 srTree.orientateTree();
                 trees.add(srTree);
             } catch (Exception e) {
-                progressStream.println("Warning: Failed to parse tree: " + e.getMessage());
+                Log.warning("Warning: Failed to parse tree: " + e.getMessage());
             }
         }
 
@@ -295,65 +335,9 @@ public class SRTreeAnnotator {
     }
 
     /**
-     * Command-line interface.
+     * Command-line interface via BEAST Application framework.
      */
-    public static void main(String[] args) {
-        try {
-            if (args.length < 2) {
-                printUsage();
-                return;
-            }
-
-            String inputFile = args[0];
-            String outputFile = args[1];
-            int burnin = 10;
-            boolean useSum = false;
-            String summaryFile = null;
-            boolean detailed = false;
-
-            // Parse optional arguments
-            for (int i = 2; i < args.length; i++) {
-                if (args[i].equals("-burnin") && i + 1 < args.length) {
-                    burnin = Integer.parseInt(args[i + 1]);
-                    i++;
-                } else if (args[i].equals("-sum")) {
-                    useSum = true;
-                } else if (args[i].equals("-summary") && i + 1 < args.length) {
-                    summaryFile = args[i + 1];
-                    i++;
-                } else if (args[i].equals("-detailed")) {
-                    detailed = true;
-                }
-            }
-
-            SRTreeAnnotator annotator = new SRTreeAnnotator(inputFile, outputFile);
-            annotator.setBurninPercentage(burnin);
-            annotator.setUseSumCredibility(useSum);
-            annotator.setAnnotateRelationshipDetails(detailed);
-            if (summaryFile != null) {
-                annotator.setSummaryFileName(summaryFile);
-            }
-            annotator.annotate();
-
-        } catch (Exception e) {
-            System.err.println("Error: " + e.getMessage());
-            e.printStackTrace();
-            printUsage();
-        }
-    }
-
-    private static void printUsage() {
-        System.out.println("SR Tree Annotator - Relationship-based tree summarization for SR trees");
-        System.out.println();
-        System.out.println("Usage: java sr.treeannotator.SRTreeAnnotator <input_file> <output_file> [options]");
-        System.out.println();
-        System.out.println("Options:");
-        System.out.println("  -burnin <percentage>    Percentage of trees to discard as burnin (default: 10)");
-        System.out.println("  -sum                    Use sum of probabilities instead of log (default: log)");
-        System.out.println("  -summary <file>         Write relationship summary to specified file");
-        System.out.println("  -detailed               Include detailed relationship annotations (ancestral/descendant taxa)");
-        System.out.println();
-        System.out.println("Example:");
-        System.out.println("  java sr.treeannotator.SRTreeAnnotator input.trees output.tree -burnin 20 -summary relationships.txt");
+    public static void main(String[] args) throws Exception {
+        new Application(new SRTreeAnnotator(), "SR Tree Annotator", args);
     }
 }
