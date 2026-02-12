@@ -1,4 +1,4 @@
-<package name="SRanges" version="0.0.4">
+<package name="SRanges" version="0.1.0">
     <depends on="BEAST.base" atleast="2.7.0"/>
     <depends on="BEAST.app" atleast="2.7.0"/>
     <depends on="BEASTLabs" atleast="2.0.0"/>
@@ -7,6 +7,11 @@
 
     <packageapp description="SRangesAndSACladeSetComparator"
                 class="sr.util.loggers.SRangesAndSACladeSetComparator"
+                args=""
+    />
+
+    <packageapp description="SR Tree Annotator"
+                class="sr.treeannotator.SRTreeAnnotator"
                 args=""
     />
 
@@ -24,6 +29,7 @@
         <provider classname="sr.evolution.tree.SpeciationLogger"/>
         <provider classname="sr.evolution.tree.SampledAncestorLogger"/>
         <provider classname="sr.speciation.SRangesBirthDeathModel"/>
+        <provider classname="sr.evolution.tree.BranchRateLogger"/>
         <provider classname="sr.util.Tools"/>
     </service>
 </package>

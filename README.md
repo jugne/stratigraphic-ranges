@@ -4,6 +4,7 @@
 - [Data](#data)
 - [Output](#output)
 - [Usage](#usage)
+- [Tree Summarization](#tree-summarization)
 - [Model Features](#model-features)
   - [Tree Encoding](#tree-encoding)
   - [Clock and Substitution Models](#clock-and-substitution-models)
@@ -38,6 +39,78 @@ sRanges produces a posterior distribution of model parameters and oriented trees
 You can install the latest release by adding the link https://raw.githubusercontent.com/jugne/stratigraphic-ranges/master/package.xml as a third party BEAST package repository in Beauti and installing the sRanges package that appears. 
 
 The Beauti template is currently not available. You can find examples of BEAST2 XML in the `examples` folder.
+
+## Tree Summarization
+
+The package includes **SR Tree Annotator**, a tool for summarizing posterior tree samples using relationship-based credibility instead of traditional clade-based methods. This preserves the orientation information unique to SR trees.
+
+### Launching from App Launcher (GUI)
+
+1. Open BEAST2 App Launcher
+2. Select **SR Tree Annotator** from the list
+3. Fill in the input/output files and options via the GUI
+
+### Command Line Usage
+
+```bash
+java sr.treeannotator.SRTreeAnnotator -trees input.trees -out output.tree -burnin 10
+```
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `-trees <file>` | Input tree file (Nexus or Newick format) |
+| `-out <file>` | Output file for the MCC tree |
+| `-burnin <n>` | Burnin percentage (default: 10) |
+| `-sumProbabilities true` | Use sum instead of log product for scoring |
+| `-summary <file>` | Write relationship summary to file |
+| `-detailed true` | Include detailed relationship annotations |
+
+### Example
+
+```bash
+java sr.treeannotator.SRTreeAnnotator \
+    -trees posterior.trees \
+    -out mcc.tree \
+    -burnin 20 \
+    -summary relationships.txt \
+    -detailed true
+```
+
+### Output Annotations
+
+The MCC tree is annotated with:
+- `posterior` - relationship probability at each node
+- `height_mean`, `height_median`, `height_95%_HPD` - height statistics
+
+With `-detailed true`, additional annotations are added:
+
+**For ancestry relationships (sampled ancestor nodes):**
+- `relationship_type` = "ancestry"
+- `ancestor_taxon` - the ancestor taxon name
+- `descendant_taxa` - set of descendant taxa, e.g., `{A,B,C}`
+
+**For orientation relationships (bifurcation nodes):**
+- `relationship_type` = "orientation"
+- `ancestral_taxa` - set of taxa in the ancestral lineage
+- `descendant_taxa` - set of taxa in the descendant lineage
+
+### Summary File Output
+
+With `-summary <file>`, a text file is written containing all relationships found:
+
+```
+Ancestry Relationships:
+  (A, {B,C,D}): count=850, prob=0.8500
+  (E, {F,G}): count=620, prob=0.6200
+
+Orientation Relationships:
+  ({A,B} => {C,D}): count=720, prob=0.7200
+  ({E} => {F,G}): count=550, prob=0.5500
+```
+
+Where `count` is the number of trees containing that relationship and `prob` is the posterior probability.
 
 ## Model Features
 

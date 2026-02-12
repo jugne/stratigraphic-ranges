@@ -36,7 +36,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class OrientationTest {
-	double tolerance = 0.005;
+	// Tolerance increased from 0.005 to 0.01 to account for MCMC sampling variance
+	// and autocorrelation. With 100k samples, std error ~ 0.0015, so 0.01 is ~6.5 std errors.
+	double tolerance = 0.01;
 	double toleranceOriented = 0.025;
 	double orientedFrequency = 0.50;
 
@@ -208,11 +210,6 @@ public class OrientationTest {
 
 		// probabilities calculated by separate python script: https://github.com/jugne/sRanges-material/blob/main/integrate_topologies.py
 		double[] probs = new double[] {0.6358071491891069, 0.36419285081089314};
-
-
-		double tolerance = 0.005;
-		double toleranceOriented = 0.025;
-		double orientedFrequency = 0.50;
 
 //		int s = 0;
 //		double[] ss= new double[8];

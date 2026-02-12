@@ -85,8 +85,6 @@ public class TreeWithMetadataLogger extends CalculationNode implements Loggable 
     public void log(long nSample, PrintStream out) {
         // make sure we get the current version of the inputs
         final SRTree srTree = (SRTree) srTeeInput.get().getCurrent();
-        if (nSample==80100000)
-            System.out.println("here");
         if (relog && logRanges){
             srTree.orientateTree();
             srTree.initSRanges();
@@ -96,8 +94,6 @@ public class TreeWithMetadataLogger extends CalculationNode implements Loggable 
                 first = first.isDirectAncestor() ? first.getParent() : first;
                 Node last = srTree.getNode(range.getNodeNrs().get(range.getNodeNrs().size() - 1));
                 while (!range.isSingleFossilRange() && firstNr !=last.getNr()){
-                    if (first.isLeaf())
-                        System.out.println();
                     int nr = first.getLeft().isFake() ? first.getLeft().getDirectAncestorChild().getNr(): first.getLeft().getNr();
                     range.addNodeNrAfter(srTree, first.getNr(), nr);
                     firstNr = nr;
