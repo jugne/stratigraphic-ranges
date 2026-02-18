@@ -6,6 +6,8 @@ import sr.evolution.tree.SRTree;
 import beast.base.evolution.tree.Tree;
 import beast.base.evolution.tree.TreeParser;
 import junit.framework.TestCase;
+import sa.evolution.tree.TreeWOffset;
+
 import org.junit.Test;
 import sr.speciation.SRangesBirthDeathModel;
 import sr.evolution.sranges.StratigraphicRange;
@@ -59,5 +61,20 @@ public class SRangesBirthDeathModelTest extends TestCase {
 
 //        assertEquals(-33.57179092868063, model.calculateLogP(), 1e-14);
         assertEquals(-33.74668640318646, model.calculateLogP(), 1e-14);
+        
+        // Sanity check on offset
+        TreeWOffset combTree = new TreeWOffset();
+        combTree.initByName("tree", tree, "offset", 0.0);
+        model.setInputValue("treeWOffset", combTree);
+        model.initAndValidate();
+        assertEquals(-33.74668640318646, model.calculateLogP(), 1e-14);
+        
+        // Offset check - regression test, value not calculated manually
+        combTree.setInputValue("offset", 25.0);
+        combTree.initAndValidate();
+        model.setInputValue("origin", new RealParameter("32.0"));
+        model.setInputValue("rho", new RealParameter("0.0"));
+        model.initAndValidate();
+        assertEquals(-40.85277951120076, model.calculateLogP(), 1e-14);
     }
 }
