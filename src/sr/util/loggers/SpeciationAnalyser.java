@@ -151,9 +151,10 @@ public class SpeciationAnalyser extends TreeAnnotator {
             ps.print("\n");
             psInfectionTimes.print("\n");
         }
+        
+        ps.close();
+        psInfectionTimes.close();
         System.out.println("\nDone!");
-
-
     }
 
     private void fillTransmissions(Node leaf, Integer[] transmissions,
@@ -297,7 +298,7 @@ public class SpeciationAnalyser extends TreeAnnotator {
         JFileChooser netFileChooser = new JFileChooser();
         netFileButton.addActionListener(e -> {
             netFileChooser.setDialogTitle("Select TnT transmission tree file to remap");
-            if (options == null)
+            if (options != null)
                 netFileChooser.setCurrentDirectory(options.inTransmissionTreeFile);
             else
                 netFileChooser.setCurrentDirectory(new File(System.getProperty("user.dir")));

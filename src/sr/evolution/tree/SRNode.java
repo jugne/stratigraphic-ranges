@@ -1,6 +1,5 @@
 package sr.evolution.tree;
 
-import beast.base.core.BEASTInterface;
 import beast.base.core.Log;
 import beast.base.evolution.tree.Node;
 

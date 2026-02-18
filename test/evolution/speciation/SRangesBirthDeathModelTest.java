@@ -6,12 +6,13 @@ import sr.evolution.tree.SRTree;
 import beast.base.evolution.tree.Tree;
 import beast.base.evolution.tree.TreeParser;
 import junit.framework.TestCase;
+import sa.evolution.tree.TreeWOffset;
+
 import org.junit.Test;
 import sr.speciation.SRangesBirthDeathModel;
 import sr.evolution.sranges.StratigraphicRange;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 /**
  * Created by gavryusa on 24/07/17.
@@ -21,7 +22,6 @@ public class SRangesBirthDeathModelTest extends TestCase {
     @Test
     public void testLikelihood() throws Exception {
 
-        ArrayList<String> taxa = new ArrayList<String>(Arrays.asList("1", "2", "3"));
         String newick = "(((((A:3.4,2_last:0.0):1.0,2_first:0.0):0.7,(B:3.5,(3_last:1.7,3_first:0.0):0.8):1.6):0.55,1_last:0.0):0.85,1_first:0.0):0.5";
         Tree tree_initial = new TreeParser(newick, false);
 
@@ -61,5 +61,20 @@ public class SRangesBirthDeathModelTest extends TestCase {
 
 //        assertEquals(-33.57179092868063, model.calculateLogP(), 1e-14);
         assertEquals(-33.74668640318646, model.calculateLogP(), 1e-14);
+        
+        // Sanity check on offset
+        TreeWOffset combTree = new TreeWOffset();
+        combTree.initByName("tree", tree, "offset", 0.0);
+        model.setInputValue("treeWOffset", combTree);
+        model.initAndValidate();
+        assertEquals(-33.74668640318646, model.calculateLogP(), 1e-14);
+        
+        // Offset check - regression test, value not calculated manually
+        combTree.setInputValue("offset", 25.0);
+        combTree.initAndValidate();
+        model.setInputValue("origin", new RealParameter("32.0"));
+        model.setInputValue("rho", new RealParameter("0.0"));
+        model.initAndValidate();
+        assertEquals(-40.85277951120076, model.calculateLogP(), 1e-14);
     }
 }
