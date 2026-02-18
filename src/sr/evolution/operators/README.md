@@ -30,6 +30,7 @@ The `SRWilsonBalding` class extends the `SRTreeOperator` class and implements th
 ### Methods
 
 - `proposal()`: Performs the Wilson-Balding proposal and returns the logarithm of the Hastings ratio.
+
 # SRLeafToSampledAncestorJump
 
 The `SRLeafToSampledAncestorJump` class implements a narrow move between trees of different dimensions in the sRange tree.
