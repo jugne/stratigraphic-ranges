@@ -53,8 +53,13 @@ The package includes **SR Tree Annotator**, a tool for summarizing posterior tre
 ### Command Line Usage
 
 ```bash
-java sr.treeannotator.SRTreeAnnotator -trees input.trees -out output.tree -burnin 10
+PATH_TO_APPLAUNCHER SRTreeAnnotator -trees input.trees -out output.tree -burnin 10
 ```
+
+where PATH_TO_APPLAUNCHER:
+- Mac: /Applications/BEAST\ 2.X.X/bin/applauncher
+- Linux (I believe so, not tested): ~/beast/bin/applauncher
+- Windows (I believe so, not tested): c:\Users\BEASTUser\Desktop\BEAST\bat\applauncher.bat
 
 ### Options
 
@@ -70,7 +75,7 @@ java sr.treeannotator.SRTreeAnnotator -trees input.trees -out output.tree -burni
 ### Example
 
 ```bash
-java sr.treeannotator.SRTreeAnnotator \
+/Applications/BEAST\ 2.7.8/bin/applauncher SRTreeAnnotator \
     -trees posterior.trees \
     -out mcc.tree \
     -burnin 20 \
