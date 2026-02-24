@@ -179,6 +179,11 @@ public class SRTree extends Tree implements TreeInterface {
 
     }
 
+    @Override
+    protected Node newNode() {
+        return new SRNode();
+    }
+
     /**
      * copy of all values from existing tree *
      */

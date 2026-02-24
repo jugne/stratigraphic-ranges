@@ -3,7 +3,6 @@ package sr.treeannotator;
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Log;
-import beast.base.evolution.tree.Node;
 import beast.base.evolution.tree.Tree;
 import beast.base.evolution.tree.TreeParser;
 import beast.base.inference.Runnable;
@@ -11,6 +10,7 @@ import beast.base.parser.NexusParser;
 import beastfx.app.tools.Application;
 import beastfx.app.util.OutFile;
 import beastfx.app.util.TreeFile;
+import sr.evolution.tree.SRNode;
 import sr.evolution.tree.SRTree;
 
 import java.io.*;
@@ -268,57 +268,20 @@ public class SRTreeAnnotator extends Runnable {
      * Writes the MCC tree to output file in proper Nexus format with taxa labels.
      */
     private void writeTree(SRTree tree) throws IOException {
-        PrintWriter writer = new PrintWriter(new FileWriter(outputFileName));
+        PrintStream stream = new PrintStream(outputFileName);
 
-        // Collect all leaf nodes (taxa)
-        List<String> taxaNames = new ArrayList<>();
-        collectTaxaNames(tree.getRoot(), taxaNames);
+        // Write Nexus header, taxa block, and translate block using Tree.init()
+        tree.init(stream);
 
-        // Write Nexus header
-        writer.println("#NEXUS");
-        writer.println();
+        // Write the tree using toShortNewickForLog which outputs 1-based node numbers
+        // matching the translate block, with metadata annotations preserved
+        stream.println();
+        stream.print("tree MCC_tree = ");
+        stream.print(((SRNode) tree.getRoot()).toShortNewickForLog(false));
+        stream.println(";");
+        stream.println("End;");
 
-        // Write Taxa block
-        writer.println("Begin taxa;");
-        writer.println("\tDimensions ntax=" + taxaNames.size() + ";");
-        writer.println("\t\tTaxlabels");
-        for (String taxon : taxaNames) {
-            writer.println("\t\t\t" + taxon);
-        }
-        writer.println("\t\t\t;");
-        writer.println("End;");
-        writer.println();
-
-        // Write Trees block with Translate
-        writer.println("Begin trees;");
-        writer.println("\tTranslate");
-        for (int i = 0; i < taxaNames.size(); i++) {
-            String comma = (i < taxaNames.size() - 1) ? "," : "";
-            writer.println("\t\t" + (i + 1) + " " + taxaNames.get(i) + comma);
-        }
-        writer.println(";");
-
-        // Write the tree using toNewick() which includes metadata
-        writer.println("tree MCC_tree = " + tree.getRoot().toNewick() + ";");
-        writer.println("End;");
-
-        writer.close();
-    }
-
-    /**
-     * Recursively collects all taxa names from the tree.
-     */
-    private void collectTaxaNames(Node node, List<String> taxaNames) {
-        if (node.isLeaf()) {
-            taxaNames.add(node.getID());
-        } else {
-            if (node.getLeft() != null) {
-                collectTaxaNames(node.getLeft(), taxaNames);
-            }
-            if (node.getRight() != null) {
-                collectTaxaNames(node.getRight(), taxaNames);
-            }
-        }
+        stream.close();
     }
 
     /**
