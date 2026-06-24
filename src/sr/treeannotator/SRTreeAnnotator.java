@@ -55,12 +55,18 @@ public class SRTreeAnnotator extends Runnable {
             "Include detailed relationship annotations (ancestral/descendant taxa)",
             false);
 
+    final public Input<Boolean> useCladesInput = new Input<>("clades",
+            "Use the SR clade definition (bifurcation, within-range bifurcation and sampled " +
+                    "ancestor clades) instead of relationship-based credibility",
+            true);
+
     private String inputFileName;
     private String outputFileName;
     private String summaryFileName;
     private int burninPercentage;
     private boolean useSumCredibility;
     private boolean annotateRelationshipDetails;
+    private boolean useClades;
 
     @Override
     public void initAndValidate() {
@@ -75,6 +81,7 @@ public class SRTreeAnnotator extends Runnable {
         burninPercentage = burnInPercentageInput.get();
         useSumCredibility = useSumInput.get();
         annotateRelationshipDetails = detailedInput.get();
+        useClades = useCladesInput.get();
 
         if (summaryInput.get() != null && !summaryInput.get().getName().equals("[[none]]")) {
             summaryFileName = summaryInput.get().getPath();
@@ -98,7 +105,11 @@ public class SRTreeAnnotator extends Runnable {
      */
     public void annotate() throws Exception {
         Log.info("SR Tree Annotator");
-        Log.info("Using relationship-based credibility (section 1.1.3)");
+        if (useClades) {
+            Log.info("Using SR clade-based credibility (section 1.1.1)");
+        } else {
+            Log.info("WARNING: Using relationship-based credibility (section 1.1.3) which needs to be fixed");
+        }
         Log.info("");
 
         // Read trees from file
@@ -119,14 +130,14 @@ public class SRTreeAnnotator extends Runnable {
         Log.info("Trees to analyze: " + totalTreesUsed);
         Log.info("");
 
-        // Phase 1: Collect relationships and compute probabilities
-        Log.info("Step 1: Collecting relationships and attributes from trees...");
-        RelationshipSystem relationshipSystem = new RelationshipSystem();
+        // Phase 1: Collect features (relationships or clades) and compute probabilities
+        Log.info("Step 1: Collecting " + (useClades ? "clades" : "relationships") + " and attributes from trees...");
+        TreeSummarizer summarizer = useClades ? new CladeSystem() : new RelationshipSystem();
 
         int counter = 0;
         for (SRTree tree : analyzedTrees) {
-            // Collect relationships WITH heights for annotation
-            relationshipSystem.add(tree, true);
+            // Collect features WITH heights for annotation
+            summarizer.add(tree, true);
             counter++;
             if (counter % 100 == 0) {
                 Log.info.print(".");
@@ -136,15 +147,15 @@ public class SRTreeAnnotator extends Runnable {
             }
         }
         Log.info("");
-        Log.info("Collected relationships from " + totalTreesUsed + " trees.");
+        Log.info("Collected " + (useClades ? "clades" : "relationships") + " from " + totalTreesUsed + " trees.");
 
         // Calculate posterior probabilities
-        relationshipSystem.calculatePosteriorProbabilities(totalTreesUsed);
+        summarizer.calculatePosteriorProbabilities(totalTreesUsed);
 
-        // Write relationship summary to file if specified
+        // Write summary to file if specified
         if (summaryFileName != null) {
-            writeSummary(relationshipSystem, totalTreesUsed);
-            Log.info("Relationship summary written to: " + summaryFileName);
+            writeSummary(summarizer, totalTreesUsed);
+            Log.info("Summary written to: " + summaryFileName);
         }
 
         // Step 2: Find MCC tree
@@ -161,9 +172,9 @@ public class SRTreeAnnotator extends Runnable {
         for (SRTree tree : analyzedTrees) {
             double score;
             if (useSumCredibility) {
-                score = relationshipSystem.getSumRelationshipCredibility(tree);
+                score = summarizer.getSumCredibility(tree);
             } else {
-                score = relationshipSystem.getLogRelationshipCredibility(tree);
+                score = summarizer.getLogCredibility(tree);
             }
 
             if (score > bestScore) {
@@ -182,16 +193,18 @@ public class SRTreeAnnotator extends Runnable {
         Log.info("");
         Log.info("");
 
+        String credibilityLabel = useClades ? "Clade" : "Relationship";
         if (useSumCredibility) {
-            Log.info("Highest Sum Relationship Credibility: " + bestScore);
+            Log.info("Highest Sum " + credibilityLabel + " Credibility: " + bestScore);
         } else {
-            Log.info("Highest Log Relationship Credibility: " + bestScore);
+            Log.info("Highest Log " + credibilityLabel + " Credibility: " + bestScore);
         }
 
         // Step 3: Annotate MCC tree
         if (bestTree != null) {
-            Log.info("\nStep 3: Annotating MCC tree with relationship probabilities and statistics...");
-            relationshipSystem.annotateMCCTree(bestTree, annotateRelationshipDetails);
+            Log.info("\nStep 3: Annotating MCC tree with " +
+                    (useClades ? "clade" : "relationship") + " probabilities and statistics...");
+            summarizer.annotateMCCTree(bestTree, annotateRelationshipDetails);
 
             writeTree(bestTree);
             Log.info("MCC tree written to: " + outputFileName);
@@ -287,13 +300,13 @@ public class SRTreeAnnotator extends Runnable {
     /**
      * Writes the relationship summary to a file.
      */
-    private void writeSummary(RelationshipSystem relationshipSystem, int totalTreesUsed) throws IOException {
+    private void writeSummary(TreeSummarizer summarizer, int totalTreesUsed) throws IOException {
         PrintWriter writer = new PrintWriter(new FileWriter(summaryFileName));
-        writer.println("SR Tree Annotator - Relationship Summary");
+        writer.println("SR Tree Annotator - " + (useClades ? "Clade" : "Relationship") + " Summary");
         writer.println("=========================================");
         writer.println("Total trees analyzed: " + totalTreesUsed);
         writer.println();
-        writer.println(relationshipSystem.getSummary());
+        writer.println(summarizer.getSummary());
         writer.close();
     }
 

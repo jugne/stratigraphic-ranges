@@ -15,7 +15,7 @@ import java.util.*;
  *
  * @author Ugne Stolz
  */
-public class RelationshipSystem {
+public class RelationshipSystem implements TreeSummarizer {
 
     // Maps to store relationships and their counts
     private Map<AncestryRelationship, AncestryRelationship> ancestryMap;
@@ -289,6 +289,22 @@ public class RelationshipSystem {
         }
 
         return sumScore;
+    }
+
+    /**
+     * {@link TreeSummarizer} alias for {@link #getLogRelationshipCredibility(SRTree)}.
+     */
+    @Override
+    public double getLogCredibility(SRTree tree) {
+        return getLogRelationshipCredibility(tree);
+    }
+
+    /**
+     * {@link TreeSummarizer} alias for {@link #getSumRelationshipCredibility(SRTree)}.
+     */
+    @Override
+    public double getSumCredibility(SRTree tree) {
+        return getSumRelationshipCredibility(tree);
     }
 
     public Map<AncestryRelationship, AncestryRelationship> getAncestryMap() {
