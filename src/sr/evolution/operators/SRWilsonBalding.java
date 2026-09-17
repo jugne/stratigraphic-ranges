@@ -8,6 +8,7 @@ import sr.evolution.sranges.StratigraphicRange;
 import sr.evolution.tree.SRTree;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Implements the Wilson-Balding proposal for the sRange tree.
@@ -36,15 +37,15 @@ public class SRWilsonBalding extends SRTreeOperator {
         int nodeCount = tree.getNodeCount();
 
         ArrayList<Integer> allowableNodeIndices = new ArrayList<>();
-        ArrayList<Integer> sRangeInternalNodeNrs = tree.getSRangesInternalNodeNrs();
+        boolean[] isRangeInternal = getRangeInternalNodeFlags(tree, nodeCount);
 
         for (int index=0; index<nodeCount; index++) {
             Node node = tree.getNode(index);
             //the node is not the root, it is not a sampled ancestor on a zero branch, it is not an internal node of a
             // stratigraphic range
 
-            if (!node.isRoot() && !node.isDirectAncestor() && !sRangeInternalNodeNrs.contains(node.getNr())
-                && !(node.isFake()&&sRangeInternalNodeNrs.contains(node.getDirectAncestorChild().getNr())))
+            if (!node.isRoot() && !node.isDirectAncestor() && !isRangeInternal[node.getNr()]
+                && !(node.isFake()&&isRangeInternal[node.getDirectAncestorChild().getNr()]))
                 allowableNodeIndices.add(index);
         }
 
@@ -76,10 +77,7 @@ public class SRWilsonBalding extends SRTreeOperator {
         Node jP;
 
         final int leafNodeCount = tree.getLeafNodeCount();
-
-        if (leafNodeCount != tree.getExternalNodes().size()) {
-            System.out.println("node counts are incorrect. NodeCount = " + nodeCount + " leafNodeCount = " + leafNodeCount + " external node count = " + tree.getExternalNodes().size());
-        }
+        final List<Node> externalNodes = tree.getExternalNodes();
 
         // make sure that the target branch <jP, j> or target leaf j is above the subtree being moved
 
@@ -102,7 +100,7 @@ public class SRWilsonBalding extends SRTreeOperator {
                     adjacentEdge = (CiP.getNr() == j.getNr() || iP.getNr() == j.getNr());
                 attachingToLeaf = false;
             } else {
-                j = tree.getExternalNodes().get(nodeNumber - nodeCount);
+                j = externalNodes.get(nodeNumber - nodeCount);
                 jP = j.getParent();
                 newParentHeight = j.getHeight();
                 attachingToLeaf = true;
@@ -283,12 +281,12 @@ public class SRWilsonBalding extends SRTreeOperator {
         }
 
         newDimension = 0;
-        sRangeInternalNodeNrs = tree.getSRangesInternalNodeNrs();
+        isRangeInternal = getRangeInternalNodeFlags(tree, nodeCount); // rebuild: the move may have changed range membership
         for (int index=0; index<nodeCount; index++) {
             Node node = tree.getNode(index);
             //the node is not the root, it is not a sampled ancestor on a zero branch, it is not an internal node of a stratigraphic range
-            if (!node.isRoot() && !node.isDirectAncestor() && !sRangeInternalNodeNrs.contains(node.getNr())
-                    && !(node.isFake()&&sRangeInternalNodeNrs.contains(node.getDirectAncestorChild().getNr())))
+            if (!node.isRoot() && !node.isDirectAncestor() && !isRangeInternal[node.getNr()]
+                    && !(node.isFake()&&isRangeInternal[node.getDirectAncestorChild().getNr()]))
                 newDimension++;
         }
         dimensionCoefficient = (double) oldDimension / newDimension;
@@ -297,6 +295,18 @@ public class SRWilsonBalding extends SRTreeOperator {
 
         return Math.log(fHastingsRatio);
 
+    }
+
+    /**
+     * @return flags indexed by node number, true for internal nodes of stratigraphic ranges,
+     * allowing O(1) membership tests instead of ArrayList.contains scans
+     */
+    private static boolean[] getRangeInternalNodeFlags(SRTree tree, int nodeCount) {
+        boolean[] isRangeInternal = new boolean[nodeCount];
+        for (int nodeNr : tree.getSRangesInternalNodeNrs()) {
+            isRangeInternal[nodeNr] = true;
+        }
+        return isRangeInternal;
     }
 
 }
