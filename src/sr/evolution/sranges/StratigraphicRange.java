@@ -65,10 +65,13 @@ public class StratigraphicRange extends BEASTObject {
             nr = tree.getNode(nodeNr).getDirectAncestorChild().getNr();
         int i= nodes.indexOf(afterNr)+1;
         nodes.add(i,nr);
+        tree.rangeNodeAdded(this, nr);
     }
 
     public void removeNodeNr(SRTree tree, int nodeNr) {
-        nodes.remove((Integer)nodeNr);
+        if (nodes.remove((Integer)nodeNr)) {
+            tree.rangeNodeRemoved(this, nodeNr);
+        }
     }
 
     public void removeAllNodeNrs() {

@@ -10,6 +10,7 @@ import sr.evolution.sranges.StratigraphicRange;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -29,6 +30,16 @@ public class SRTree extends Tree implements TreeInterface {
 
     protected ArrayList<StratigraphicRange> sRanges;
     protected ArrayList<StratigraphicRange> storedSRanges;
+
+    /**
+     * rangeOfNode[nodeNr] is the index in sRanges of the range containing the node
+     * (canonical numbers, i.e. fake nodes are represented by their direct ancestor child),
+     * or -1 if the node belongs to no range. Kept in sync by
+     * {@link StratigraphicRange#addNodeNrAfter} / {@link StratigraphicRange#removeNodeNr}
+     * and swapped with the stored copy on store/restore.
+     */
+    protected int[] rangeOfNode;
+    protected int[] storedRangeOfNode;
 
     /**
      * Initializes and validates the object, assigns the tree if provided,
@@ -156,7 +167,60 @@ public class SRTree extends Tree implements TreeInterface {
             sRanges.addAll(firstRanges);
         }
 
+        rebuildRangeOfNodeMap();
         initStoredRanges();
+    }
+
+    /**
+     * Rebuilds the node number to range index map from scratch.
+     */
+    protected void rebuildRangeOfNodeMap() {
+        rangeOfNode = new int[nodeCount];
+        Arrays.fill(rangeOfNode, -1);
+        for (int i = 0; i < sRanges.size(); i++) {
+            for (Integer nodeNr : sRanges.get(i).getNodeNrs()) {
+                if (nodeNr != null) {
+                    rangeOfNode[nodeNr] = i;
+                }
+            }
+        }
+    }
+
+    /**
+     * @return the node number to range index map, rebuilding it if it is missing or stale.
+     */
+    private int[] rangeOfNodeMap() {
+        if (rangeOfNode == null || rangeOfNode.length != nodeCount) {
+            rebuildRangeOfNodeMap();
+        }
+        return rangeOfNode;
+    }
+
+    /**
+     * Callback from {@link StratigraphicRange#addNodeNrAfter} keeping the range lookup map in sync.
+     * Calls on stored range copies (not contained in sRanges) are ignored.
+     */
+    public void rangeNodeAdded(StratigraphicRange range, int canonicalNodeNr) {
+        if (rangeOfNode == null || canonicalNodeNr >= rangeOfNode.length) {
+            return;
+        }
+        int index = sRanges.indexOf(range);
+        if (index >= 0) {
+            rangeOfNode[canonicalNodeNr] = index;
+        }
+    }
+
+    /**
+     * Callback from {@link StratigraphicRange#removeNodeNr} keeping the range lookup map in sync.
+     * Calls on stored range copies (not contained in sRanges) are ignored.
+     */
+    public void rangeNodeRemoved(StratigraphicRange range, int canonicalNodeNr) {
+        if (rangeOfNode == null || canonicalNodeNr >= rangeOfNode.length) {
+            return;
+        }
+        if (sRanges.indexOf(range) >= 0) {
+            rangeOfNode[canonicalNodeNr] = -1;
+        }
     }
 
     /**
@@ -176,7 +240,7 @@ public class SRTree extends Tree implements TreeInterface {
             range_sink.setLastOccurrenceID(range_src.getLastOccurrenceID());
             storedSRanges.add(range_sink);
         }
-
+        storedRangeOfNode = rangeOfNodeMap().clone();
     }
 
     @Override
@@ -285,15 +349,18 @@ public class SRTree extends Tree implements TreeInterface {
     protected void store() {
         storeNodes(0, nodeCount);
         storedRoot = m_storedNodes[root.getNr()];
-        for (StratigraphicRange range_src:sRanges) {
-            int index = sRanges.indexOf(range_src);
+        for (int index = 0; index < sRanges.size(); index++) {
             StratigraphicRange range_sink = storedSRanges.get(index);
             range_sink.removeAllNodeNrs();
-            for (int i=0; i< range_src.getNodeNrs().size(); i++) {
-                int nodeNr = range_src.getNodeNrs().get(i);
-                range_sink.addNodeNr(this, nodeNr);
-            }
+            // source node numbers are already canonical, so copy them directly
+            // instead of re-canonicalizing each through addNodeNr
+            range_sink.getNodeNrs().addAll(sRanges.get(index).getNodeNrs());
         }
+        int[] map = rangeOfNodeMap();
+        if (storedRangeOfNode == null || storedRangeOfNode.length != map.length) {
+            storedRangeOfNode = new int[map.length];
+        }
+        System.arraycopy(map, 0, storedRangeOfNode, 0, map.length);
     }
 
     /**
@@ -400,6 +467,10 @@ public class SRTree extends Tree implements TreeInterface {
         ArrayList<StratigraphicRange> tmp_ranges = storedSRanges;
         storedSRanges = sRanges;
         sRanges = tmp_ranges;
+
+        int[] tmp_map = storedRangeOfNode;
+        storedRangeOfNode = rangeOfNode;
+        rangeOfNode = tmp_map;
     }
 
     /**
@@ -463,12 +534,8 @@ public class SRTree extends Tree implements TreeInterface {
         int nodeNr = node.getNr();
         if (node.isFake())
             nodeNr = node.getDirectAncestorChild().getNr();
-        for (StratigraphicRange candidate_range:sRanges) {
-            if (candidate_range.containsNodeNr(this, nodeNr)) {
-                return candidate_range;
-            }
-        }
-        return null;
+        int index = rangeOfNodeMap()[nodeNr];
+        return index < 0 ? null : sRanges.get(index);
     }
 
     /**
@@ -482,12 +549,9 @@ public class SRTree extends Tree implements TreeInterface {
             node1Nr = m_nodes[node1Nr].getDirectAncestorChild().getNr();
         if (m_nodes[node2Nr].isFake())
             node2Nr = m_nodes[node2Nr].getDirectAncestorChild().getNr();
-        for (StratigraphicRange range:sRanges) {
-            if (range.containsNodeNr(this, node1Nr) && range.containsNodeNr(this, node2Nr)) {
-                return range;
-            }
-        }
-        return null;
+        int[] map = rangeOfNodeMap();
+        int index = map[node1Nr];
+        return (index >= 0 && index == map[node2Nr]) ? sRanges.get(index) : null;
     }
 
 
