@@ -106,22 +106,15 @@ public class SRTree extends Tree implements TreeInterface {
                     prefix = ID.substring(i+1);
                 }
                 if (prefix.equals("first")) {
-//                    if (!node.isDirectAncestor()) {
-//                        throw new RuntimeException("The first occurrence always has to be a sampled ancestor but " +
-//                                node.getID() + " is not a sampled ancestor.");
-//                    }
-                    boolean found = false;
-                    for (StratigraphicRange candidateRange:lastRanges) {
-                        if (candidateRange.getID().equals(IDwithoutPrefix)) {
-                            candidateRange.setFirstOccurrenceID(ID);
-                            candidateRange.setFirstOccurrenceNodeNr(this, node.getNr());
-                            sRanges.add(candidateRange);
-                            lastRanges.remove(candidateRange);
-                            found=true;
-                            break;
-                        }
-                    }
-                    if (!found) {
+                    StratigraphicRange candidateRange = findRangeByID(lastRanges, IDwithoutPrefix);
+                    if (candidateRange != null) {
+                        // _first and _last both present: a multi-fossil range
+                        checkFirstOccurrenceIsSampledAncestor(node);
+                        candidateRange.setFirstOccurrenceID(ID);
+                        candidateRange.setFirstOccurrenceNodeNr(this, node.getNr());
+                        sRanges.add(candidateRange);
+                        lastRanges.remove(candidateRange);
+                    } else {
                         StratigraphicRange range = new StratigraphicRange();
                         range.setID(IDwithoutPrefix);
                         range.setFirstOccurrenceID(ID);
@@ -129,43 +122,83 @@ public class SRTree extends Tree implements TreeInterface {
                         range.setFirstOccurrenceNodeNr(this, node.getNr());
                         firstRanges.add(range);
                     }
-                } else {
-                    boolean found = false;
-                    for (StratigraphicRange candidateRange:firstRanges) {
-                        if (candidateRange.getID().equals(IDwithoutPrefix)) {
-                            if (!prefix.equals("last")) {
-                                throw new RuntimeException("Taxa " + candidateRange.getFirstOccurrenceID() + " and " +
-                                        ID  + " are found in the tree. If " + ID + " is the last occurrence then add " +
-                                        "_last at the end.");
-                            }
-                            candidateRange.setLastOccurrenceID(ID);
-                            candidateRange.setLastOccurrenceNodeNr(this, node.getNr());
-                            sRanges.add(candidateRange);
-                            firstRanges.remove(candidateRange);
-                            found=true;
-                            break;
-                        }
-                    }
-                    if (!found) {
+                } else if (prefix.equals("last")) {
+                    StratigraphicRange candidateRange = findRangeByID(firstRanges, IDwithoutPrefix);
+                    if (candidateRange != null) {
+                        // _first and _last both present: a multi-fossil range
+                        checkFirstOccurrenceIsSampledAncestor(getNode(candidateRange.getNodeNrs().get(0)));
+                        candidateRange.setLastOccurrenceID(ID);
+                        candidateRange.setLastOccurrenceNodeNr(this, node.getNr());
+                        sRanges.add(candidateRange);
+                        firstRanges.remove(candidateRange);
+                    } else {
                         StratigraphicRange range = new StratigraphicRange();
                         range.setID(IDwithoutPrefix);
                         range.setLastOccurrenceID(ID);
                         range.setLastOccurrenceNodeNr(this, node.getNr());
                         lastRanges.add(range);
                     }
+                } else {
+                    // neither _first nor _last: a single-occurrence taxon (the full ID may contain underscores)
+                    StratigraphicRange range = new StratigraphicRange();
+                    range.setID(ID);
+                    range.setFirstOccurrenceID(ID);
+                    range.setLastOccurrenceID(ID);
+                    range.setFirstOccurrenceNodeNr(this, node.getNr());
+                    range.makeSingleFossilRange();
+                    sRanges.add(range);
                 }
             }
             if (!lastRanges.isEmpty()) {
-                throw new RuntimeException("There are taxa with last occurrence only " + lastRanges.toString() );
+                throw new RuntimeException("There are taxa with last occurrence only: " + rangeIDs(lastRanges) +
+                        ". Every X_last needs a matching X_first.");
             }
+            // a _first without a _last is a single-occurrence taxon
             for (StratigraphicRange range:firstRanges) {
                 range.makeSingleFossilRange();
             }
             sRanges.addAll(firstRanges);
+
+            // taxa X and X_first (or X_last) in the same tree are ambiguous
+            List<String> ids = new ArrayList<>();
+            for (StratigraphicRange range:sRanges) {
+                if (ids.contains(range.getID())) {
+                    throw new RuntimeException("Two stratigraphic ranges share the name " + range.getID() +
+                            ". Use X_first/X_last for a multi-fossil range and a distinct name for every other taxon.");
+                }
+                ids.add(range.getID());
+            }
         }
 
         rebuildRangeOfNodeMap();
         initStoredRanges();
+    }
+
+    private static StratigraphicRange findRangeByID(List<StratigraphicRange> ranges, String id) {
+        for (StratigraphicRange range : ranges) {
+            if (range.getID().equals(id)) {
+                return range;
+            }
+        }
+        return null;
+    }
+
+    private static List<String> rangeIDs(List<StratigraphicRange> ranges) {
+        List<String> ids = new ArrayList<>();
+        for (StratigraphicRange range : ranges) {
+            ids.add(range.getID());
+        }
+        return ids;
+    }
+
+    /**
+     * The first occurrence of a multi-fossil range is always a sampled ancestor of the rest of the range.
+     */
+    private static void checkFirstOccurrenceIsSampledAncestor(Node firstOccurrence) {
+        if (!firstOccurrence.isDirectAncestor()) {
+            throw new RuntimeException("The first occurrence always has to be a sampled ancestor but " +
+                    firstOccurrence.getID() + " is not a sampled ancestor.");
+        }
     }
 
     /**
