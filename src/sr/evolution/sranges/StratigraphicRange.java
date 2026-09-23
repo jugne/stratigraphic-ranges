@@ -40,7 +40,7 @@ public class StratigraphicRange extends BEASTObject {
     @Override
     public void initAndValidate() {
         if (taxonFirstOccurrenceInput.get() != null || taxonLastOccurrenceInput.get() != null) {
-            if (taxonFirstOccurrenceInput == null || taxonLastOccurrenceInput.get() == null) {
+            if (taxonFirstOccurrenceInput.get() == null || taxonLastOccurrenceInput.get() == null) {
                 throw new RuntimeException("Either firstOccurrence or lastOccurence is not specified. Either specify both or none");
             }
             firstOccurrenceID = taxonFirstOccurrenceInput.get().getID();
