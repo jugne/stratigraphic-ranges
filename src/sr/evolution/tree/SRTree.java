@@ -125,11 +125,8 @@ public class SRTree extends Tree implements TreeInterface {
                         StratigraphicRange range = new StratigraphicRange();
                         range.setID(IDwithoutPrefix);
                         range.setFirstOccurrenceID(ID);
-                        if (node.isDirectAncestor()) {
-                            range.setFirstOccurrenceNodeNr(this, node.getNr());
-                        } else {
-                            range.setFirstOccurrenceNodeNr(this, node.getNr());
-                        }
+                        // setFirstOccurrenceNodeNr canonicalises fake nodes to the direct ancestor child itself
+                        range.setFirstOccurrenceNodeNr(this, node.getNr());
                         firstRanges.add(range);
                     }
                 } else {
