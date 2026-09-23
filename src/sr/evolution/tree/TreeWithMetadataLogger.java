@@ -42,13 +42,14 @@ public class TreeWithMetadataLogger extends CalculationNode implements Loggable 
     boolean someMetaDataNeedsLogging;
     boolean substitutions = false;
     boolean relog;
-    boolean logRanges = logRangesInput.get();
+    boolean logRanges;
 
     private DecimalFormat df;
 
     @Override
     public void initAndValidate() {
         relog = relogInput.get();
+        logRanges = logRangesInput.get();
 		if (parameterInput.get().size() == 0 && clockModelInput.get() == null
                 && !logOrientationInput.get() && !logRangesInput.get()) {
             someMetaDataNeedsLogging = false;
