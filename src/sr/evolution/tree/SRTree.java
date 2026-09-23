@@ -82,12 +82,16 @@ public class SRTree extends Tree implements TreeInterface {
                 }
                 range.initAndValidate();
             }
+            // taxa not listed in any stratigraphicRange input are single-occurrence taxa.
+            // IDs must be set before the node number: setLastOccurrenceNodeNr would otherwise
+            // treat the range as multi-fossil and store the node twice.
             for (Node n : unusedNodes){
                 StratigraphicRange tmpRange = new StratigraphicRange();
-                tmpRange.setFirstOccurrenceNodeNr(this, n.getNr());
+                tmpRange.setID(n.getID());
                 tmpRange.setFirstOccurrenceID(n.getID());
-                tmpRange.setLastOccurrenceNodeNr(this, n.getNr());
                 tmpRange.setLastOccurrenceID(n.getID());
+                tmpRange.setFirstOccurrenceNodeNr(this, n.getNr());
+                tmpRange.makeSingleFossilRange();
                 tmpRange.initAndValidate();
                 sRanges.add(tmpRange);
             }
@@ -478,13 +482,14 @@ public class SRTree extends Tree implements TreeInterface {
 //        }
     }
 
+    /**
+     * The state file must carry the orientation metadata so that {@link #fromXML} and
+     * {@link #orientateTree()} can restore the left/right child order on resume.
+     */
     @Override
-    public String toString() {
-        StackTraceElement[] ste = Thread.currentThread().getStackTrace();
-        if (ste[2].getMethodName().equals("toXML")) {
-            addOrientationMetadata();
-        }
-        return root.toString();
+    public String toXML() {
+        addOrientationMetadata();
+        return super.toXML();
     }
 
     /**
