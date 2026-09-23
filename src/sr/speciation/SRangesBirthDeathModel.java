@@ -22,6 +22,11 @@ import sr.evolution.sranges.StratigraphicRange;
         "Bayesian total-evidence dating under the fossilized birth-death model with stratigraphic ranges.")
 public class SRangesBirthDeathModel extends SABirthDeathModel {
 
+    /**
+     * Tips with height at or below this value are treated as sampled at present (rho sampling).
+     */
+    private static final double EXTANT_TIP_HEIGHT_THRESHOLD = 5e-12;
+
     @Override
     public double q(double t, double c1, double c2) {
         double v = Math.exp(-c1 * t);
@@ -112,7 +117,7 @@ public class SRangesBirthDeathModel extends SABirthDeathModel {
             if (node.isLeaf()) {
                 if  (!node.isDirectAncestor())  {
                     Node fossilParent = node.getParent();
-                    if (combinedTree.getHeightOfNode(i) > 0.000000000005 || rho == 0.) {
+                    if (combinedTree.getHeightOfNode(i) > EXTANT_TIP_HEIGHT_THRESHOLD || rho == 0.) {
 
                         if (((SRTree)tree).belongToSameSRange(i, fossilParent.getNr())) {
                             logP += Math.log(psi) - log_q_tilde(combinedTree.getHeightOfNode(i), c1, c2) + log_p0s(combinedTree.getHeightOfNode(i), c1, c2);
