@@ -15,7 +15,7 @@
 
 sRanges is a BEAST2.7 package for performing phylodynamic inference under the birth-death stratigraphic ranges model. Depending on data interpretation it can be used for both macroevolution and epidemiology.
 
-THe dependencies on other BEAST2.7 packages can be found in `version.xml` file.
+The dependencies on other BEAST2.7 packages can be found in `version.xml` file.
 
 ## Data
 
@@ -34,7 +34,7 @@ sRanges produces a posterior distribution of model parameters and oriented trees
 - In the macroevolution case, they are interpreted as a budding speciation model, where each child of a node is either an ancestor or descendant species.
 - In epidemiology, they are transmission trees where each child of a node is either a donor or recipient.
 
-## Usage
+## Installation and Usage
 
 You can install the latest release by adding the link https://raw.githubusercontent.com/jugne/stratigraphic-ranges/master/package.xml as a third party BEAST package repository in Beauti and installing the sRanges package that appears. 
 
