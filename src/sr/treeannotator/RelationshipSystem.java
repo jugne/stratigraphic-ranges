@@ -120,6 +120,11 @@ public class RelationshipSystem implements TreeSummarizer {
                 if (!isLastOccurrence) {
                     Set<String> descendantTaxa = leftIsDirectAncestor ? rightTaxa : leftTaxa;
                     String ancestorTaxon = getTaxonBaseName(nodeId);
+                    // We need this because if we do not remove it then in the case of singleton
+                    // descendantTaxa does not contain ancestorTaxon baseName but in case of first occurrence the
+                    // baseName of ancestorTaxon will go to the descendantTaxa producing a distinct
+                    // ancestral relationship which we do not want to separate
+                    descendantTaxa.remove(ancestorTaxon);
 
                     if (!descendantTaxa.isEmpty()) {
                         AncestryRelationship ancRel = new AncestryRelationship(ancestorTaxon, descendantTaxa);
@@ -135,13 +140,29 @@ public class RelationshipSystem implements TreeSummarizer {
                 }
             } else {
                 // Normal bifurcation - orientation relationship (left=ancestral, right=descendant)
-                OrientationRelationship orientRel = new OrientationRelationship(leftTaxa, rightTaxa);
-                addOrientationRelationship(orientRel);
 
-                if (collectHeights) {
-                    OrientationRelationship existing = orientationMap.get(orientRel);
-                    if (existing != null) {
-                        orientationHeights.computeIfAbsent(existing, k -> new ArrayList<>()).add(node.getHeight());
+                // We do not include the taxon of the range in the orientation relationship because we
+                // do not want to distinguish between the same splits happening within different ranges,
+                // moreover, the orientation of the range will be accounted for in the ancestry relationship
+                // in which ancestral taxon is always on the left.
+                StratigraphicRange range = getRangeOfBifurcation(node, tree);
+                if (range != null) {
+                    leftTaxa.remove(getTaxonBaseName(range.getLastOccurrenceID()));
+                }
+
+                // If the split is within a range and the only taxa on the left side of the split
+                // is the last occurrence of the range, this should not contribute to the orientation
+                // relationship. This orientation has already been accounted for within
+                // the ancestral relationship corresponding to the first occurrence of the range
+                // since the ancestral taxon always on the left branch.
+                if (!leftTaxa.isEmpty()) {
+                    OrientationRelationship orientRel = new OrientationRelationship(leftTaxa, rightTaxa);
+                    addOrientationRelationship(orientRel);
+                    if (collectHeights) {
+                        OrientationRelationship existing = orientationMap.get(orientRel);
+                        if (existing != null) {
+                            orientationHeights.computeIfAbsent(existing, k -> new ArrayList<>()).add(node.getHeight());
+                        }
                     }
                 }
             }
@@ -154,6 +175,31 @@ public class RelationshipSystem implements TreeSummarizer {
         }
 
         return taxa;
+    }
+
+    /**
+     * Finds the stratigraphic range that a bifurcation lies within. Bifurcations are not stored
+     * as range members, so {@link SRTree#getRangeOfNode} returns null for them. Instead, follow the
+     * ancestral (left) lineage down from the node to the first sampled node on it: if that sample
+     * belongs to a multi-fossil range and is not its first occurrence, the range spans the node.
+     *
+     * @param node A bifurcation node
+     * @param tree The SR tree
+     * @return The range containing the bifurcation, or null if it is not within a range
+     */
+    private StratigraphicRange getRangeOfBifurcation(Node node, SRTree tree) {
+        Node current = node.getLeft();
+        while (!current.isLeaf() && !current.isFake()) {
+            current = current.getLeft();
+        }
+        Node sample = current.isFake() ? current.getDirectAncestorChild() : current;
+
+        StratigraphicRange range = tree.getRangeOfNode(sample);
+        if (range == null || range.isSingleFossilRange()
+                || Objects.equals(range.getFirstOccurrenceID(), sample.getID())) {
+            return null;
+        }
+        return range;
     }
 
     /**
