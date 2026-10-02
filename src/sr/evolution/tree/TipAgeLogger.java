@@ -4,6 +4,7 @@ import beast.base.core.Function;
 import beast.base.core.Input;
 import beast.base.core.Loggable;
 import beast.base.evolution.tree.Node;
+import beast.base.evolution.tree.Tree;
 import beast.base.inference.CalculationNode;
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -13,9 +14,13 @@ import java.util.List;
 /**
  * @author Ugne Stolz
  */
-public class TipAgeLogger extends CalculationNode implements Loggable, Function {
+public class TipAgeLogger extends CalculationNode implements Loggable {
     public Input<SRTree> treeInput = new Input<>("tree",
             "sRange tree for range age logging.",
+            Input.Validate.REQUIRED);
+
+    public Input<Tree> simpleTreeInput = new Input<>("simpleTree",
+            "tree for range age logging.",
             Input.Validate.REQUIRED);
 
 //    public Input<Boolean> relogInput = new Input<>("relog",
@@ -39,43 +44,44 @@ public class TipAgeLogger extends CalculationNode implements Loggable, Function 
     @Override
     public void init(PrintStream out) {
         final SRTree tree = treeInput.get();
-        for (Node n : tree.getExternalNodes()){
-            out.print(n.getID() + "\t");
-//            keys.add(n.getID());
+        if (tree != null) {
+            printToLog(tree, out);
+        } else {
+            Tree simpleTree = simpleTreeInput.get();
+            if (simpleTree != null) {
+                printToLog(simpleTree, out);
+            }
         }
-//        for (String key :keys) {
-//            out.print(key + "\t");
-//        }
+    }
+
+    private void printToLog(Tree t, PrintStream out){
+        for (Node n : t.getExternalNodes()){
+            out.print(n.getID() + "\t");
+        }
     }
 
     @Override
     public void log(long nSample, PrintStream out) {
         final SRTree tree = treeInput.get();
-        tree.orientateTree();
-        for (Node n : tree.getExternalNodes()){
-            out.print(n.getHeight() + "\t");
+        if (tree != null) {
+            tree.orientateTree();
+            for (Node n : tree.getExternalNodes()){
+                out.print(n.getHeight() + "\t");
+            }
+        } else if (simpleTreeInput.get() != null) {
+            Tree simpleTree = simpleTreeInput.get();
+            if (simpleTree != null) {
+                for (Node n : tree.getExternalNodes()){
+                    out.print(n.getHeight() + "\t");
+                }
+            }
         }
+
     }
 
     @Override
     public void close(PrintStream out) {
         // nothing to do
     }
-
-    @Override
-    public int getDimension() {
-        return 1;
-    }
-
-    @Override
-    public double getArrayValue() {
-        return treeInput.get().getDirectAncestorNodeCount();
-    }
-
-    @Override
-    public double getArrayValue(int iDim) {
-        return treeInput.get().getDirectAncestorNodeCount();
-    }
-
 }
 
