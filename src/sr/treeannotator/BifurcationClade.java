@@ -7,7 +7,7 @@ import java.util.TreeSet;
 /**
  * Clade type 1: a bifurcation event that is not within a range.
  *
- * Denoted (T1, T2), where T = T1 ∪ T2 is monophyletic and the MRCA of T is a bifurcation
+ * Denoted (T1, T2), where T = T1 U T2 is monophyletic and the MRCA of T is a bifurcation
  * event at which the taxa T1 are descendants of the ancestral (left) lineage and the taxa T2
  * are descendants of the descendant (right) lineage.
  *

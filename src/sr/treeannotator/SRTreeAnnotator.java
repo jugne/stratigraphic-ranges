@@ -58,7 +58,7 @@ public class SRTreeAnnotator extends Runnable {
     final public Input<Boolean> useCladesInput = new Input<>("clades",
             "Use the SR clade definition (bifurcation, within-range bifurcation and sampled " +
                     "ancestor clades) instead of relationship-based credibility",
-            true);
+            false);
 
     private String inputFileName;
     private String outputFileName;
@@ -108,7 +108,7 @@ public class SRTreeAnnotator extends Runnable {
         if (useClades) {
             Log.info("Using SR clade-based credibility (section 1.1.1)");
         } else {
-            Log.info("WARNING: Using relationship-based credibility (section 1.1.3) which needs to be fixed");
+            Log.info("Using relationship-based credibility (section 1.1.3)");
         }
         Log.info("");
 
