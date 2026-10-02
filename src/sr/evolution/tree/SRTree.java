@@ -49,9 +49,23 @@ public class SRTree extends Tree implements TreeInterface {
     public void initAndValidate() {
         if (treeInput.get() != null) {
             assignFromWithoutID(treeInput.get());
+            validateSRanges();
         }
 
         super.initAndValidate();
+    }
+
+    /**
+     * Checks that the first occurrence of every multi-fossil range is a sampled ancestor.
+     * Only the user-supplied starting tree is validated: later assignments (state restore,
+     * log file iteration) may temporarily hold placeholder trees that violate the constraint.
+     */
+    protected void validateSRanges() {
+        for (StratigraphicRange range : sRanges) {
+            if (!range.isSingleFossilRange()) {
+                checkFirstOccurrenceIsSampledAncestor(getNode(range.getNodeNrs().get(0)));
+            }
+        }
     }
 
     /**
@@ -67,11 +81,6 @@ public class SRTree extends Tree implements TreeInterface {
                 range.removeAllNodeNrs();
                 for (Node node:externalNodes) {
                     if(node.getID().equals(range.getFirstOccurrenceID()) && !range.isSingleFossilRange()) {
-                        if (!node.isDirectAncestor()) {
-                            throw new RuntimeException("The first occurrence always has to be a sampled ancestor but " +
-                                    range.getFirstOccurrenceID() + " is not a sampled ancestor. Something went wrong in " +
-                                    "initializing the stratigraphic range tree."  );
-                        }
                         range.setFirstOccurrenceNodeNr(this, node.getNr());
                         unusedNodes.remove(node);
                     }
@@ -113,7 +122,6 @@ public class SRTree extends Tree implements TreeInterface {
                     StratigraphicRange candidateRange = findRangeByID(lastRanges, IDwithoutPrefix);
                     if (candidateRange != null) {
                         // _first and _last both present: a multi-fossil range
-                        checkFirstOccurrenceIsSampledAncestor(node);
                         candidateRange.setFirstOccurrenceID(ID);
                         candidateRange.setFirstOccurrenceNodeNr(this, node.getNr());
                         sRanges.add(candidateRange);
@@ -130,7 +138,6 @@ public class SRTree extends Tree implements TreeInterface {
                     StratigraphicRange candidateRange = findRangeByID(firstRanges, IDwithoutPrefix);
                     if (candidateRange != null) {
                         // _first and _last both present: a multi-fossil range
-                        checkFirstOccurrenceIsSampledAncestor(getNode(candidateRange.getNodeNrs().get(0)));
                         candidateRange.setLastOccurrenceID(ID);
                         candidateRange.setLastOccurrenceNodeNr(this, node.getNr());
                         sRanges.add(candidateRange);

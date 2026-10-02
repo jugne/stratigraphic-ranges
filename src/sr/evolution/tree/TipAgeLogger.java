@@ -16,12 +16,11 @@ import java.util.List;
  */
 public class TipAgeLogger extends CalculationNode implements Loggable {
     public Input<SRTree> treeInput = new Input<>("tree",
-            "sRange tree for range age logging.",
-            Input.Validate.REQUIRED);
+            "sRange tree for range age logging.");
 
     public Input<Tree> simpleTreeInput = new Input<>("simpleTree",
             "tree for range age logging.",
-            Input.Validate.REQUIRED);
+            Input.Validate.XOR, treeInput);
 
 //    public Input<Boolean> relogInput = new Input<>("relog",
 //            "If true, this logger is run after the analysis completes. " +
