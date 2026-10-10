@@ -48,8 +48,7 @@ public class OrientationTest {
 
 	@Test
 	public void topologyDistribution_1() throws Exception {
-		
-//		Randomizer.setSeed(Randomizer.nextInt());
+
 		Randomizer.setSeed(42);
 
 		// state

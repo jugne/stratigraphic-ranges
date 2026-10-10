@@ -44,7 +44,7 @@ import static org.junit.Assert.assertTrue;
  * Store/restore of the SRTree state through the state file, i.e. the resume path:
  * {@code State.toXML} -> {@code SRTree.toXML}, then {@code StateNode.copy}, {@code fromXML}
  * and {@code assignFromFragile} as done by {@code State.fromXML}.
- * <p>
+ *
  * The states come from a real MCMC run with all sRanges operators, so sampled ancestors,
  * multi-fossil ranges and both child orientations are all exercised. Three scenarios:
  * (1) restore into a fresh tree, (2) restore repeatedly into the same tree, (3) restore
