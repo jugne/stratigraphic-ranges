@@ -1,6 +1,5 @@
 package evolution.tree;
 
-import beast.base.core.Input;
 import beast.base.evolution.alignment.Taxon;
 import beast.base.evolution.alignment.TaxonSet;
 import beast.base.evolution.operator.ScaleOperator;
