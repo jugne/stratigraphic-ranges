@@ -19,3 +19,7 @@
 *.log
 *.trees
 *.state
+
+# ignore hidden, except gitignote
+/.*
+!/.gitignore

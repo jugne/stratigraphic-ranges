@@ -18,7 +18,7 @@ public class MixedSRangesBirthDeathModel extends SRangesBirthDeathModel {
 	public void initAndValidate() {
 		super.initAndValidate();
 		
-		if(!((SRTree) SRcombinedTree.getTree()).useMixedSpeciationInput.get()) 
+		if(!((SRTree) combinedTree.getTree()).useMixedSpeciationInput.get()) 
 			throw new IllegalArgumentException("Trying to use mixed speciation likelihood with non-mixed tree, please set mixed=true in the tree");
 
 		anagenesisRate = anagenesisRateInput.get();

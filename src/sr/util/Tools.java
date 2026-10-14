@@ -75,7 +75,7 @@ public class Tools {
 		Iterator<String> it = speciesNames.iterator();
 		int i = 0;
 		while (it.hasNext()){
-			if(it.next().contains(id))
+			if(it.next().equals(id))
 				return i;
 			i++;
 		}

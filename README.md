@@ -15,7 +15,7 @@
 
 sRanges is a BEAST2.7 package for performing phylodynamic inference under the birth-death stratigraphic ranges model. Depending on data interpretation it can be used for both macroevolution and epidemiology.
 
-THe dependencies on other BEAST2.7 packages can be found in `version.xml` file.
+The dependencies on other BEAST2.7 packages can be found in `version.xml` file.
 
 ## Data
 
@@ -34,7 +34,7 @@ sRanges produces a posterior distribution of model parameters and oriented trees
 - In the macroevolution case, they are interpreted as a budding speciation model, where each child of a node is either an ancestor or descendant species.
 - In epidemiology, they are transmission trees where each child of a node is either a donor or recipient.
 
-## Usage
+## Installation and Usage
 
 You can install the latest release by adding the link https://raw.githubusercontent.com/jugne/stratigraphic-ranges/master/package.xml as a third party BEAST package repository in Beauti and installing the sRanges package that appears. 
 
@@ -53,8 +53,13 @@ The package includes **SR Tree Annotator**, a tool for summarizing posterior tre
 ### Command Line Usage
 
 ```bash
-java sr.treeannotator.SRTreeAnnotator -trees input.trees -out output.tree -burnin 10
+PATH_TO_APPLAUNCHER SRTreeAnnotator -trees input.trees -out output.tree -burnin 10
 ```
+
+where PATH_TO_APPLAUNCHER:
+- Mac: /Applications/BEAST\ 2.X.X/bin/applauncher
+- Linux (I believe so, not tested): ~/beast/bin/applauncher
+- Windows (I believe so, not tested): c:\Users\BEASTUser\Desktop\BEAST\bat\applauncher.bat
 
 ### Options
 
@@ -70,7 +75,7 @@ java sr.treeannotator.SRTreeAnnotator -trees input.trees -out output.tree -burni
 ### Example
 
 ```bash
-java sr.treeannotator.SRTreeAnnotator \
+/Applications/BEAST\ 2.7.8/bin/applauncher SRTreeAnnotator \
     -trees posterior.trees \
     -out mcc.tree \
     -burnin 20 \

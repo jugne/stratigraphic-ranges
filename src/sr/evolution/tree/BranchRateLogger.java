@@ -12,6 +12,7 @@ import sr.evolution.sranges.StratigraphicRange;
 
 import java.io.PrintStream;
 import java.util.Locale;
+import java.util.Objects;
 
 import static sr.util.Tools.removeLastSubstring;
 
@@ -68,21 +69,15 @@ public class BranchRateLogger extends BEASTObject implements Loggable {
                 double length = Math.max(0.0, parent.getHeight() - child.getHeight());
 
 
-                String rangeId = null; // no range for this node
-                StratigraphicRange range = tree.getRangeOfNode(child);
-                if (range != null) {
-                    rangeId = removeLastSubstring("_", range.getLastOccurrenceID());
-                }
-
                 String childLabel = child.isLeaf()
                         ? child.getID()
                         : Integer.toString(child.getNr());
-                if (range != null) {
-                    if (childLabel == range.getFirstOccurrenceID()) {
-                        rangeId = null;
-                    } else {
-                        rangeId = removeLastSubstring("_", range.getLastOccurrenceID());
-                    }
+
+                // the branch above the first occurrence is not part of the range
+                String rangeId = null; // no range for this node
+                StratigraphicRange range = tree.getRangeOfNode(child);
+                if (range != null && !Objects.equals(childLabel, range.getFirstOccurrenceID())) {
+                    rangeId = removeLastSubstring("_", range.getLastOccurrenceID());
                 }
 
                 boolean isRange = rangeId != null && !rangeId.isEmpty();

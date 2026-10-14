@@ -1,0 +1,72 @@
+This is the output of the test and it was manually checked on 22/06/2026
+
+=== MCC clade system (10 trees, 10% burn-in, heights kept) ===
+Highest log clade credibility: -13.345506928718535
+Bifurcation clades:        43
+Within-range clades:       7
+Sampled-ancestor clades:   9
+
+Bifurcation clades (T1, T2):
+  ([Spheniscus_urbinai], [Spheniscus_megaramphus]): count=1, prob=0.1000
+  ([Eudyptes_filholi], [Marplesornis_novaezealandiae]): count=1, prob=0.1000
+  ([Aptenodytes_forsteri], [Eudyptes_filholi, Spheniscus_demersus]): count=1, prob=0.1000
+ ([Marplesornis_novaezealandiae, Pygoscelis_grandis], [Aptenodytes_forsteri]): count=1, prob=0.1000
+  ([Eudyptes_filholi], [Spheniscus_muizoni]): count=1, prob=0.1000
+  ([Spheniscus_demersus, Spheniscus_megaramphus, Spheniscus_muizoni], [Spheniscus_urbinai]): count=1, prob=0.1000
+  ([Spheniscus_demersus, Spheniscus_megaramphus, Spheniscus_muizoni, Spheniscus_urbinai], [Aptenodytes_forsteri, Eudyptes_filholi, Marplesornis_novaezealandiae, Pygoscelis_grandis]): count=1, prob=0.1000
+  ([Eudyptes_filholi, Pygoscelis_grandis, Spheniscus_demersus, Spheniscus_megaramphus, Spheniscus_muizoni, Spheniscus_urbinai], [Aptenodytes_forsteri]): count=1, prob=0.1000
+  ([Eudyptes_filholi, Pygoscelis_grandis], [Spheniscus_demersus, Spheniscus_megaramphus, Spheniscus_muizoni, Spheniscus_urbinai]): count=1, prob=0.1000
+  ([Aptenodytes_forsteri, Pygoscelis_grandis], [Eudyptes_filholi, Marplesornis_novaezealandiae, Spheniscus_demersus, Spheniscus_megaramphus, Spheniscus_muizoni, Spheniscus_urbinai]): count=1, prob=0.1000
+  ([Pygoscelis_grandis], [Aptenodytes_forsteri]): count=1, prob=0.1000  
+([Spheniscus_urbinai], [Spheniscus_demersus, Spheniscus_megaramphus]): count=1, prob=0.1000
+  ([Aptenodytes_forsteri, Spheniscus_megaramphus, Spheniscus_urbinai], [Spheniscus_demersus, Spheniscus_muizoni]): count=1, prob=0.1000
+  ([Pygoscelis_grandis], [Marplesornis_novaezealandiae]): count=1, prob=0.1000
+([Pygoscelis_grandis], [Aptenodytes_forsteri, Eudyptes_filholi, Spheniscus_demersus]): count=1, prob=0.1000
+  ([Marplesornis_novaezealandiae], [Aptenodytes_forsteri, Pygoscelis_grandis]): count=1, prob=0.1000
+([Eudyptes_filholi], [Aptenodytes_forsteri, Marplesornis_novaezealandiae, Pygoscelis_grandis]): count=1, prob=0.1000
+  ([Eudyptes_filholi], [Spheniscus_demersus, Spheniscus_megaramphus, Spheniscus_muizoni, Spheniscus_urbinai]): count=1, prob=0.1000 
+([Spheniscus_muizoni], [Aptenodytes_forsteri, Eudyptes_filholi, Marplesornis_novaezealandiae, Pygoscelis_grandis, Spheniscus_demersus, Spheniscus_megaramphus, Spheniscus_urbinai]): count=1, prob=0.1000
+  ([Aptenodytes_forsteri, Eudyptes_filholi, Pygoscelis_grandis, Spheniscus_demersus, Spheniscus_megaramphus, Spheniscus_muizoni, Spheniscus_urbinai], [Marplesornis_novaezealandiae]): count=4, prob=0.4000
+  ([Eudyptes_filholi], [Spheniscus_demersus]): count=2, prob=0.2000
+([Spheniscus_demersus, Spheniscus_megaramphus], [Spheniscus_muizoni]): count=1, prob=0.1000  
+([Spheniscus_demersus], [Eudyptes_filholi]): count=1, prob=0.1000
+  ([Aptenodytes_forsteri, Eudyptes_filholi], [Spheniscus_demersus]): count=1, prob=0.1000
+([Spheniscus_demersus, Spheniscus_megaramphus, Spheniscus_muizoni, Spheniscus_urbinai], [Eudyptes_filholi, Marplesornis_novaezealandiae]): count=1, prob=0.1000
+([Aptenodytes_forsteri, Marplesornis_novaezealandiae, Pygoscelis_grandis], [Eudyptes_filholi, Spheniscus_demersus, Spheniscus_megaramphus, Spheniscus_muizoni, Spheniscus_urbinai]): count=1, prob=0.1000
+  ([Spheniscus_megaramphus], [Spheniscus_demersus, Spheniscus_muizoni, Spheniscus_urbinai]): count=1, prob=0.1000
+([Eudyptes_filholi, Spheniscus_muizoni], [Spheniscus_demersus, Spheniscus_megaramphus, Spheniscus_urbinai]): count=1, prob=0.1000
+  ([Eudyptes_filholi, Spheniscus_demersus], [Aptenodytes_forsteri, Pygoscelis_grandis]): count=1, prob=0.1000
+  ([Aptenodytes_forsteri, Eudyptes_filholi, Pygoscelis_grandis, Spheniscus_demersus, Spheniscus_muizoni], [Spheniscus_megaramphus, Spheniscus_urbinai]): count=1, prob=0.1000
+  ([Marplesornis_novaezealandiae], [Aptenodytes_forsteri, Eudyptes_filholi, Pygoscelis_grandis, Spheniscus_demersus, Spheniscus_megaramphus, Spheniscus_muizoni, Spheniscus_urbinai]): count=1, prob=0.1000
+  ([Eudyptes_filholi, Pygoscelis_grandis], [Aptenodytes_forsteri, Spheniscus_demersus, Spheniscus_megaramphus, Spheniscus_muizoni, Spheniscus_urbinai]): count=1, prob=0.1000
+  ([Pygoscelis_grandis, Spheniscus_muizoni], [Aptenodytes_forsteri, Eudyptes_filholi, Marplesornis_novaezealandiae, Spheniscus_demersus, Spheniscus_megaramphus, Spheniscus_urbinai]): count=1, prob=0.1000
+  ([Spheniscus_muizoni], [Spheniscus_demersus, Spheniscus_megaramphus, Spheniscus_urbinai]): count=1, prob=0.1000
+  ([Aptenodytes_forsteri], [Eudyptes_filholi]): count=1, prob=0.1000
+ ([Spheniscus_megaramphus], [Aptenodytes_forsteri, Eudyptes_filholi, Pygoscelis_grandis, Spheniscus_demersus, Spheniscus_muizoni, Spheniscus_urbinai]): count=1, prob=0.1000
+([Pygoscelis_grandis], [Eudyptes_filholi]): count=1, prob=0.1000
+([Spheniscus_urbinai], [Aptenodytes_forsteri, Eudyptes_filholi, Pygoscelis_grandis, Spheniscus_demersus, Spheniscus_muizoni]): count=1, prob=0.1000
+([Spheniscus_urbinai], [Aptenodytes_forsteri, Spheniscus_megaramphus]): count=1, prob=0.1000
+ ([Marplesornis_novaezealandiae, Pygoscelis_grandis, Spheniscus_megaramphus], [Aptenodytes_forsteri, Eudyptes_filholi, Spheniscus_demersus, Spheniscus_urbinai]): count=1, prob=0.1000
+([Spheniscus_urbinai], [Spheniscus_demersus, Spheniscus_muizoni]): count=1, prob=0.1000
+([Spheniscus_demersus, Spheniscus_megaramphus, Spheniscus_urbinai], [Spheniscus_muizoni]): count=1, prob=0.1000
+([Eudyptes_filholi, Spheniscus_demersus, Spheniscus_megaramphus, Spheniscus_muizoni, Spheniscus_urbinai], [Aptenodytes_forsteri, Pygoscelis_grandis]): count=1, prob=0.1000
+
+Within-range bifurcation clades (A, T1, T2):
+  (Spheniscus_megaramphus, [Aptenodytes_forsteri, Eudyptes_filholi, Spheniscus_demersus, Spheniscus_urbinai], [Marplesornis_novaezealandiae]): count=1, prob=0.1000
+  (Spheniscus_urbinai, [], [Aptenodytes_forsteri, Eudyptes_filholi, Spheniscus_demersus]): count=1, prob=0.1000
+  (Spheniscus_urbinai, [Eudyptes_filholi, Spheniscus_demersus], [Aptenodytes_forsteri]): count=1, prob=0.1000
+  (Pygoscelis_grandis, [], [Aptenodytes_forsteri]): count=2, prob=0.2000
+  (Spheniscus_megaramphus, [], [Aptenodytes_forsteri, Eudyptes_filholi, Spheniscus_demersus, Spheniscus_urbinai]): count=1, prob=0.1000
+  (Spheniscus_megaramphus, [Spheniscus_demersus], [Spheniscus_urbinai]): count=2, prob=0.2000
+  (Spheniscus_megaramphus, [], [Aptenodytes_forsteri]): count=1, prob=0.1000
+
+Sampled ancestor clades (A, T):
+  (Spheniscus_urbinai, [Eudyptes_filholi, Spheniscus_demersus]): count=1, prob=0.1000
+  (Spheniscus_megaramphus, [Spheniscus_demersus]): count=4, prob=0.4000
+  (Pygoscelis_grandis, [Eudyptes_filholi]): count=1, prob=0.1000
+  (Spheniscus_muizoni, [Aptenodytes_forsteri, Eudyptes_filholi, Pygoscelis_grandis, Spheniscus_demersus]): count=2, prob=0.2000
+  (Spheniscus_megaramphus, [Marplesornis_novaezealandiae, Pygoscelis_grandis]): count=1, prob=0.1000
+  (Spheniscus_muizoni, [Spheniscus_demersus]): count=2, prob=0.2000
+  (Spheniscus_muizoni, [Pygoscelis_grandis]): count=1, prob=0.1000
+  (Marplesornis_novaezealandiae, [Pygoscelis_grandis]): count=1, prob=0.1000
+  (Pygoscelis_grandis, [Aptenodytes_forsteri]): count=1, prob=0.1000

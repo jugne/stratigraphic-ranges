@@ -38,8 +38,8 @@ import static sr.util.Tools.removeLastSubstring;
  * direct transmission tree.
  * sampleName can be any letter or number (and can also include further uses of character "_").
  *
- *  * @author ugne.stolz@protonmail.com
- *  * @date 04.08.22
+ *  @author ugne.stolz@protonmail.com
+ *  @date 04.08.22
  *
  */
 
@@ -126,8 +126,6 @@ public class SpeciationAnalyser extends TreeAnnotator {
 
             for (Node leaf : tree.getExternalNodes()){
                 fillTransmissions(leaf, speciations, hostsList);
-                if(hostsListNoUnsampled.size()==0)
-                    System.out.print("");
                 fillInfectionTimes(leaf, speciationTimes, hostsListNoUnsampled);
             }
             for (int i = 0; i < hostsList.size() * hostsList.size(); i++) {
@@ -305,6 +303,7 @@ public class SpeciationAnalyser extends TreeAnnotator {
             int returnVal = netFileChooser.showOpenDialog(dialog);
 
             if (returnVal == JFileChooser.APPROVE_OPTION) {
+                assert options != null;
                 options.inTransmissionTreeFile = netFileChooser.getSelectedFile();
                 netFilename.setText(netFileChooser.getSelectedFile().getName());
                 runButton.setEnabled(true);

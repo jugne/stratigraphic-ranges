@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--
+  Workaround for GitHub issue #1: AlmostMRCAPrior (AlmostDistributions
+  package, R. Bouckaert) returns a penalty of -10000 instead of -Infinity for a violated clade, so the
+  chain can start from an unconstrained RandomSRangeTree and drift into the constrained region.
+  The isMono.* columns of the trace log record (1/0) whether each clade is monophyletic in the sample.
+
+  Taxa (present is 0, time increases backwards towards the root):
+    A_first 6.0 / A_last 3.0   stratigraphic range A
+    B_first 5.0 / B_last 2.0   stratigraphic range B
+    C 4.0, F 2.5, D 1.0, E 0.0 single-fossil / extant taxa
+
+  Constraints:
+    cladeAB  = {A_first, A_last, B_first, B_last, F}        (whole ranges + F)
+    cladeABC = cladeAB + {C}                                (nested)
+    cladeBF  = {B_last, F}   (F buds off B *inside* B's range: last occurrence only)
+    cladeDE  = {D, E}
+
+    NOTE: this version would allow wrong constraints when constraining beginning of a range with another taxa,
+     but not the end of a range. It would just always carry the penalty.
+-->
+<beast beautitemplate='Standard' beautistatus='' namespace=":beast.base.core
+:beast.base.inference
+:beast.base.evolution.alignment
+:beast.base.evolution.tree.coalescent
+:beast.base.evolution.tree
+:beast.base.inference.util
+:beast.base.evolution.operator
+:beast.base.inference.operator
+:beast.base.inference.distribution
+:sr.evolution.operators
+:sr.evolution.sranges
+:sr.evolution.tree
+:sr.speciation
+:sa.evolution.operators
+:almostbeast.math.distributions" version="2.7">
+
+    <map name="Uniform">beast.base.inference.distribution.Uniform</map>
+    <map name="prior">beast.base.inference.distribution.Prior</map>
+
+    <run spec="MCMC" chainLength="200000">
+        <state id="state" storeEvery="10000">
+            <tree id="Tree.t:tree" spec="sr.evolution.tree.SRTree" nodetype="sr.evolution.tree.SRNode" name="stateNode">
+                <trait id="dateTrait.t:tree" spec="beast.base.evolution.tree.TraitSet" traitname="date-backward">
+                    <taxa spec="TaxonSet" id="taxonSet">
+                        <taxon spec="Taxon" id="A_first"/>
+                        <taxon spec="Taxon" id="A_last"/>
+                        <taxon spec="Taxon" id="B_first"/>
+                        <taxon spec="Taxon" id="B_last"/>
+                        <taxon spec="Taxon" id="C"/>
+                        <taxon spec="Taxon" id="D"/>
+                        <taxon spec="Taxon" id="E"/>
+                        <taxon spec="Taxon" id="F"/>
+                    </taxa>
+                    A_first=6.0, A_last=3.0, B_first=5.0, B_last=2.0, C=4.0, D=1.0, E=0.0, F=2.5
+                </trait>
+                <taxonset idref="taxonSet"/>
+                <stratigraphicRange id="rA" spec="StratigraphicRange" firstOccurrence="@A_first" lastOccurrence="@A_last"/>
+                <stratigraphicRange id="rB" spec="StratigraphicRange" firstOccurrence="@B_first" lastOccurrence="@B_last"/>
+                <stratigraphicRange id="rC" spec="StratigraphicRange" firstOccurrence="@C" lastOccurrence="@C"/>
+                <stratigraphicRange id="rD" spec="StratigraphicRange" firstOccurrence="@D" lastOccurrence="@D"/>
+                <stratigraphicRange id="rE" spec="StratigraphicRange" firstOccurrence="@E" lastOccurrence="@E"/>
+                <stratigraphicRange id="rF" spec="StratigraphicRange" firstOccurrence="@F" lastOccurrence="@F"/>
+            </tree>
+            <parameter id="origin" lower="0.0" name="stateNode">20.0</parameter>
+            <parameter id="rFBD" lower="0.0" name="stateNode" upper="1.0">0.9</parameter>
+        </state>
+
+        <init estimate="false" id="Randomtree" initial="@Tree.t:tree" spec="RandomSRangeTree" nodetype="sr.evolution.tree.SRNode" taxonset="@taxonSet">
+            <populationModel id="ConstantPopulation0.t" spec="ConstantPopulation">
+                <parameter id="randomPopSize.t" name="popSize">1.0</parameter>
+            </populationModel>
+            <stratigraphicRange idref="rA"/>
+            <stratigraphicRange idref="rB"/>
+            <stratigraphicRange idref="rC"/>
+            <stratigraphicRange idref="rD"/>
+            <stratigraphicRange idref="rE"/>
+            <stratigraphicRange idref="rF"/>
+        </init>
+
+        <distribution id="posterior" spec="CompoundDistribution">
+            <distribution id="prior" spec="CompoundDistribution">
+                <distribution spec="SRangesBirthDeathModel" id="birthDeath" tree="@Tree.t:tree" origin="@origin" conditionOnSampling="true">
+                    <parameter estimate="false" id="birthRate" lower="0.0" name="birthRate">1.0</parameter>
+                    <parameter estimate="false" id="deathRate" lower="0.0" name="deathRate">0.5</parameter>
+                    <parameter estimate="false" id="samplingRate" lower="0.0" name="samplingRate">0.5</parameter>
+                    <removalProbability idref="rFBD"/>
+                    <parameter id="rhoFBD" lower="0.0" name="rho" upper="1.0">0.5</parameter>
+                </distribution>
+                <prior id="originPrior" name="distribution" x="@origin">
+                    <Uniform id="Uniform.origin" name="distr" upper="30.0"/>
+                </prior>
+
+                <distribution id="cladeAB.prior" spec="AlmostMRCAPrior" tree="@Tree.t:tree" monophyletic="true">
+                    <taxonset id="cladeAB" spec="TaxonSet">
+                        <taxon idref="A_first"/>
+                        <taxon idref="A_last"/>
+                        <taxon idref="B_first"/>
+                        <taxon idref="B_last"/>
+                        <taxon idref="F"/>
+                    </taxonset>
+                </distribution>
+                <distribution id="cladeABC.prior" spec="AlmostMRCAPrior" tree="@Tree.t:tree" monophyletic="true">
+                    <taxonset id="cladeABC" spec="TaxonSet">
+                        <taxon idref="A_first"/>
+                        <taxon idref="A_last"/>
+                        <taxon idref="B_first"/>
+                        <taxon idref="B_last"/>
+                        <taxon idref="F"/>
+                        <taxon idref="C"/>
+                    </taxonset>
+                </distribution>
+                <distribution id="cladeBF.prior" spec="AlmostMRCAPrior" tree="@Tree.t:tree" monophyletic="true">
+                    <taxonset id="cladeBF" spec="TaxonSet">
+                        <taxon idref="B_last"/>
+                        <taxon idref="F"/>
+                    </taxonset>
+                </distribution>
+                <distribution id="cladeDE.prior" spec="AlmostMRCAPrior" tree="@Tree.t:tree" monophyletic="true">
+                    <taxonset id="cladeDE" spec="TaxonSet">
+                        <taxon idref="D"/>
+                        <taxon idref="E"/>
+                    </taxonset>
+                </distribution>
+            </distribution>
+        </distribution>
+
+        <operator id="originScaler" parameter="@origin" scaleFactor="0.75" spec="ScaleOperator" weight="3.0"/>
+        <operator id="SRWilsonBalding" spec="SRWilsonBalding" weight="20" tree="@Tree.t:tree"/>
+        <operator id="LeftRightChildSwap" spec="LeftRightChildSwap" weight="5" tree="@Tree.t:tree"/>
+        <operator id="LeafToSAJump" spec="SRLeafToSampledAncestorJump" weight="10" tree="@Tree.t:tree" removalProbability="@rFBD"/>
+        <operator id="SAUniform" spec="SAUniform" weight="10" tree="@Tree.t:tree"/>
+        <operator id="treeScaler" spec="SAScaleOperator" scaleFactor="0.95" weight="5.0" tree="@Tree.t:tree"/>
+        <operator id="rootScaler" spec="SAScaleOperator" scaleFactor="0.95" weight="2.0" tree="@Tree.t:tree" rootOnly="true"/>
+
+        <logger id="tracelog" fileName="monophyly_constraints_almost.log" logEvery="1000" model="@posterior" sanitiseHeaders="true" sort="smart">
+            <log idref="posterior"/>
+            <log idref="birthDeath"/>
+            <log idref="origin"/>
+            <log id="treeHeight" spec="beast.base.evolution.tree.TreeHeightLogger" tree="@Tree.t:tree"/>
+            <log id="isMono.cladeAB" spec="MRCAPrior" tree="@Tree.t:tree" taxonset="@cladeAB" monophyletic="false"/>
+            <log id="isMono.cladeABC" spec="MRCAPrior" tree="@Tree.t:tree" taxonset="@cladeABC" monophyletic="false"/>
+            <log id="isMono.cladeBF" spec="MRCAPrior" tree="@Tree.t:tree" taxonset="@cladeBF" monophyletic="false"/>
+            <log id="isMono.cladeDE" spec="MRCAPrior" tree="@Tree.t:tree" taxonset="@cladeDE" monophyletic="false"/>
+        </logger>
+        <logger id="screenlog" logEvery="20000">
+            <log idref="posterior"/>
+            <log idref="treeHeight"/>
+        </logger>
+        <logger id="treelog" fileName="monophyly_constraints_almost.trees" logEvery="1000" mode="tree">
+            <log id="TreeWithMetadataLogger" spec="TreeWithMetadataLogger" tree="@Tree.t:tree"/>
+        </logger>
+    </run>
+</beast>

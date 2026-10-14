@@ -69,7 +69,7 @@ public class SRNode extends Node {
             buf.append(getNr()+1);
         }
 
-        buf.append(getNewickMetaData());
+        buf.append(getNewickMetaData(addBuddingInfo));
         buf.append(":").append(getNewickLengthMetaData()).append(getLength());
         return buf.toString();
     }

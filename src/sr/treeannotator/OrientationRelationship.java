@@ -10,8 +10,8 @@ import java.util.TreeSet;
  * - T2 are taxa descending from the descendant (right) lineage
  *
  * This can occur in two cases:
- * - Case 2a: Standard bifurcation where T = T1 ∪ T2 is monophyletic and the MRCA is a bifurcation event
- * - Case 2b: Bifurcation within a range where there exists taxon A such that {A} ∪ T is monophyletic
+ * - Case 2a: Standard bifurcation where T = T1 U T2 is monophyletic and the MRCA is a bifurcation event
+ * - Case 2b: Bifurcation within a range where there exists taxon A such that {A} U T is monophyletic
  *
  * This relationship captures the orientation of speciation events.
  * Note: Order matters - T1 is ancestral, T2 is descendant.

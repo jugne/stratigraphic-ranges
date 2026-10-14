@@ -40,7 +40,7 @@ public class StratigraphicRange extends BEASTObject {
     @Override
     public void initAndValidate() {
         if (taxonFirstOccurrenceInput.get() != null || taxonLastOccurrenceInput.get() != null) {
-            if (taxonFirstOccurrenceInput == null || taxonLastOccurrenceInput.get() == null) {
+            if (taxonFirstOccurrenceInput.get() == null || taxonLastOccurrenceInput.get() == null) {
                 throw new RuntimeException("Either firstOccurrence or lastOccurence is not specified. Either specify both or none");
             }
             firstOccurrenceID = taxonFirstOccurrenceInput.get().getID();
@@ -65,10 +65,13 @@ public class StratigraphicRange extends BEASTObject {
             nr = tree.getNode(nodeNr).getDirectAncestorChild().getNr();
         int i= nodes.indexOf(afterNr)+1;
         nodes.add(i,nr);
+        tree.rangeNodeAdded(this, nr);
     }
 
     public void removeNodeNr(SRTree tree, int nodeNr) {
-        nodes.remove((Integer)nodeNr);
+        if (nodes.remove((Integer)nodeNr)) {
+            tree.rangeNodeRemoved(this, nodeNr);
+        }
     }
 
     public void removeAllNodeNrs() {

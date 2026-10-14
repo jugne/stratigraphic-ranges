@@ -10,6 +10,11 @@
                 args=""
     />
 
+    <packageapp description="SRangesAndSACladeSetComparator"
+                class="sr.util.loggers.SRangesCladeSetComparator"
+                args=""
+    />
+
     <packageapp description="SR Tree Annotator"
                 class="sr.treeannotator.SRTreeAnnotator"
                 args=""

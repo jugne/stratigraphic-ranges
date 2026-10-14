@@ -115,7 +115,12 @@ public class RandomSRangeTree extends SRTree implements StateNodeInitialiser {
 
 	@Override
 	public void getInitialisedStateNodes(List<StateNode> stateNodes) {
-
+		// same as beast.base RandomTree: report the tree this initialiser fills in
+		if (m_initial.get() != null) {
+			stateNodes.add(m_initial.get());
+		} else {
+			stateNodes.add(this);
+		}
 	}
 
 	/**

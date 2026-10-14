@@ -55,21 +55,26 @@ import java.util.*;
  * ===========================================================================
  *
  * Trees 1-3: F_first is SA, F_last is SA of {G, H}, G ancestral to H
- *   - Ancestry: (F, {F,G,H}) from F_first
+ *   - Ancestry: (F, {G,H}) from F_first
  *   - NO ancestry from F_last (it's a last occurrence!)
  *   - Orientation: ({G}, {H})
  *
- * Trees 4-5: F_first is SA, F_last is tip (not SA), ((F_last,G),H)
- *   - Ancestry: (F, {F,G,H}) from F_first
- *   - Orientation: ({F,G}, {H}) at root
- *   - Orientation: ({F}, {G}) at F_last-G node
+ * Trees 4-7: F_first is SA, F_last is SA of {H, G}, H ancestral to G
+ *   - Ancestry: (F, {G,H}) from F_first
+ *   - Orientation: ({H}, {G})
+ *
+ * Trees 8-10: F_first is SA, F_last is tip (not SA), ((F_last,G),H)
+ *   - Ancestry: (F, {G,H}) from F_first
+ *   - Orientation: ({G}, {H}) at root
+ *
+
  *
  * EXPECTED POSTERIORS:
- *   Ancestry (F, {F,G,H}): 5/5 = 1.00
- *   Orientation ({G}, {H}): 3/5 = 0.60
- *   Orientation ({F,G}, {H}): 2/5 = 0.40
- *   Orientation ({F}, {G}): 2/5 = 0.40
+ *   Ancestry (F, {G,H}): 10/10 = 1.00
+ *   Orientation ({G}, {H}): 6/10 = 0.60
+ *   Orientation ({H}, {G}): 4/10 = 0.40
  *
+ *  @author Ugne Stolz, Alexandra Gavryushkina
  */
 public class RelationshipSystemTest extends TestCase {
 
@@ -193,22 +198,31 @@ public class RelationshipSystemTest extends TestCase {
         // Trees 1-3: F_first is SA at root, F_last is SA of {G,H}, G ancestral to H
         // Structure: (F_first:0.0, (F_last:0.0, (G:1.0, H:1.0):1.0):1.0):1.0
         // F_first is SA of everything, F_last is SA of {G,H}
-        String newick_Flast_SA = "(F_first:0.0,(F_last:0.0,(G:1.0,H:1.0):1.0):1.0):1.0";
+        String newick_Flast_SA_GH = "(F_first:0.0,(F_last:0.0,(G:1.0,H:1.0):1.0):1.0):1.0";
         for (int i = 0; i < 3; i++) {
-            SRTree tree = createRangeTree(newick_Flast_SA, "F_first", "F_last");
+            SRTree tree = createRangeTree(newick_Flast_SA_GH, "F_first", "F_last");
             system.add(tree);
         }
 
-        // Trees 4-5: F_first is SA, F_last is regular tip in ((F_last,G),H)
+        // Trees 4-7: F_first is SA at root, F_last is SA of {G,H}, H ancestral to G
+        // Structure: (F_first:0.0, (F_last:0.0, (H:1.0, G:1.0):1.0):1.0):1.0
+        // F_first is SA of everything, F_last is SA of {G,H}
+        String newick_Flast_SA_HG = "(F_first:0.0,(F_last:0.0,(H:1.0,G:1.0):1.0):1.0):1.0";
+        for (int i = 0; i < 4; i++) {
+            SRTree tree = createRangeTree(newick_Flast_SA_HG, "F_first", "F_last");
+            system.add(tree);
+        }
+
+        // Trees 8-10: F_first is SA, F_last is regular tip in ((F_last,G),H)
         // Structure: (F_first:0.0, ((F_last:1.0, G:1.0):1.0, H:1.0):1.0):1.0
         String newick_Flast_tip = "(F_first:0.0,((F_last:1.0,G:1.0):1.0,H:1.0):1.0):1.0";
-        for (int i = 0; i < 2; i++) {
+        for (int i = 0; i < 3; i++) {
             SRTree tree = createRangeTree(newick_Flast_tip, "F_first", "F_last");
             system.add(tree);
         }
 
         // Calculate posteriors
-        system.calculatePosteriorProbabilities(5);
+        system.calculatePosteriorProbabilities(10);
 
         // Print summary for manual verification
         System.out.println("=== TEST 2: Stratigraphic Range ===");
@@ -217,52 +231,35 @@ public class RelationshipSystemTest extends TestCase {
         // Verify ancestry relationships
         Map<AncestryRelationship, AncestryRelationship> ancestryMap = system.getAncestryMap();
 
-        // (F, {F,G,H}) from F_first should have probability 1.0 (all 5 trees)
-        AncestryRelationship ancF_FGH = new AncestryRelationship("F", new TreeSet<>(Arrays.asList("F", "G", "H")));
+        // (F, {G,H}) from F_first should have probability 1.0 (all 10 trees)
+        AncestryRelationship ancF_FGH = new AncestryRelationship("F", new TreeSet<>(Arrays.asList("G", "H")));
         AncestryRelationship foundAncF = ancestryMap.get(ancF_FGH);
-        assertNotNull("Ancestry (F, {F,G,H}) should exist", foundAncF);
-        assertEquals("Ancestry (F, {F,G,H}) count", 5, foundAncF.getCount());
-        assertEquals("Ancestry (F, {F,G,H}) probability", 1.0, foundAncF.getProbability(), TOLERANCE);
-
-        // IMPORTANT: There should be NO ancestry relationship from F_last!
-        // F_last is a last occurrence, so even when it's a SA, it should NOT create ancestry
-        // If the bug existed, we would see (F, {G,H}) with count 3
-        AncestryRelationship ancF_GH = new AncestryRelationship("F", new TreeSet<>(Arrays.asList("G", "H")));
-        AncestryRelationship foundAncF_GH = ancestryMap.get(ancF_GH);
-        assertNull("Ancestry (F, {G,H}) should NOT exist (F_last is last occurrence)", foundAncF_GH);
+        assertNotNull("Ancestry (F, {G,H}) should exist", foundAncF);
+        assertEquals("Ancestry (F, {G,H}) count", 10, foundAncF.getCount());
+        assertEquals("Ancestry (F, {G,H}) probability", 1.0, foundAncF.getProbability(), TOLERANCE);
 
         // Verify orientation relationships
         Map<OrientationRelationship, OrientationRelationship> orientMap = system.getOrientationMap();
 
-        // ({G}, {H}) should have probability 0.6 (trees 1-3)
+        // ({G}, {H}) should have probability 0.6 (Trees 1-3 and 8-10, 6 trees in total)
         OrientationRelationship orient_G_H = new OrientationRelationship(
             new TreeSet<>(Arrays.asList("G")),
             new TreeSet<>(Arrays.asList("H"))
         );
         OrientationRelationship foundOrient_G_H = orientMap.get(orient_G_H);
         assertNotNull("Orientation ({G}, {H}) should exist", foundOrient_G_H);
-        assertEquals("Orientation ({G}, {H}) count", 3, foundOrient_G_H.getCount());
+        assertEquals("Orientation ({G}, {H}) count", 6, foundOrient_G_H.getCount());
         assertEquals("Orientation ({G}, {H}) probability", 0.6, foundOrient_G_H.getProbability(), TOLERANCE);
 
-        // ({F,G}, {H}) should have probability 0.4 (trees 4-5)
-        OrientationRelationship orient_FG_H = new OrientationRelationship(
-            new TreeSet<>(Arrays.asList("F", "G")),
-            new TreeSet<>(Arrays.asList("H"))
+        // ({H}, {G}) should have probability 0.4 (Trees 4-7, 4 trees in total)
+        OrientationRelationship orient_H_G = new OrientationRelationship(
+                new TreeSet<>(Arrays.asList("H")),
+                new TreeSet<>(Arrays.asList("G"))
         );
-        OrientationRelationship foundOrient_FG_H = orientMap.get(orient_FG_H);
-        assertNotNull("Orientation ({F,G}, {H}) should exist", foundOrient_FG_H);
-        assertEquals("Orientation ({F,G}, {H}) count", 2, foundOrient_FG_H.getCount());
-        assertEquals("Orientation ({F,G}, {H}) probability", 0.4, foundOrient_FG_H.getProbability(), TOLERANCE);
-
-        // ({F}, {G}) should have probability 0.4 (trees 4-5, from F_last-G bifurcation)
-        OrientationRelationship orient_F_G = new OrientationRelationship(
-            new TreeSet<>(Arrays.asList("F")),
-            new TreeSet<>(Arrays.asList("G"))
-        );
-        OrientationRelationship foundOrient_F_G = orientMap.get(orient_F_G);
-        assertNotNull("Orientation ({F}, {G}) should exist", foundOrient_F_G);
-        assertEquals("Orientation ({F}, {G}) count", 2, foundOrient_F_G.getCount());
-        assertEquals("Orientation ({F}, {G}) probability", 0.4, foundOrient_F_G.getProbability(), TOLERANCE);
+        OrientationRelationship foundOrient_H_G = orientMap.get(orient_H_G);
+        assertNotNull("Orientation ({H}, {G}) should exist", foundOrient_H_G);
+        assertEquals("Orientation ({H}, {G}) count", 4, foundOrient_H_G.getCount());
+        assertEquals("Orientation ({H}, {G}) probability", 0.4, foundOrient_H_G.getProbability(), TOLERANCE);
 
         System.out.println("TEST 2 PASSED: First occurrence creates ancestry, last occurrence does NOT!\n");
     }

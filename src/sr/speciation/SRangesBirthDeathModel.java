@@ -24,17 +24,27 @@ import sr.evolution.sranges.StratigraphicRange;
 		"Bayesian total-evidence dating under the fossilized birth-death model with stratigraphic ranges.")
 public class SRangesBirthDeathModel extends SABirthDeathModel {
 
-	protected TreeWOffset SRcombinedTree;
+    /**
+     * Tips with height at or below this value are treated as sampled at present (rho sampling).
+     */
+    private static final double EXTANT_TIP_HEIGHT_THRESHOLD = 5e-12;
 
+    /**
+    * Tree with offset used for all node heights. SABirthDeathModel keeps its own copy in a
+    * package-private field (up to SA 2.1.1), which cannot be accessed from this package at run
+    * time (IllegalAccessError), so we keep our own handle and build it the same way SA does.
+    */
+    protected TreeWOffset combinedTree;
+
+    @Override
 	public void initAndValidate() {
-		SRcombinedTree = treeWOffsetInput.get();
-		if(SRcombinedTree == null) {
-			SRcombinedTree = new TreeWOffset();
-			SRcombinedTree.setInputValue("tree", treeInput.get());
-			SRcombinedTree.initAndValidate();
+        super.initAndValidate();
+        combinedTree = treeWOffsetInput.get();
+        if (combinedTree == null) {
+            combinedTree = new TreeWOffset();
+            combinedTree.setInputValue("tree", treeInput.get());
+            combinedTree.initAndValidate();
 		}
-		
-		super.initAndValidate();
 	}
 
 	@Override
@@ -80,7 +90,7 @@ public class SRangesBirthDeathModel extends SABirthDeathModel {
 	@Override
 	public double calculateLogP()
 	{
-		SRTree tree = (SRTree) SRcombinedTree.getTree();
+        SRTree tree = (SRTree) combinedTree.getTree();
 		int nodeCount = tree.getNodeCount();
 		updateParameters();
 		if (lambdaExceedsMu && lambda <= mu) {
@@ -92,7 +102,7 @@ public class SRangesBirthDeathModel extends SABirthDeathModel {
 		}
 
 		double x0 = origin;
-		double x1 = SRcombinedTree.getHeightOfNode(tree.getRoot().getNr());
+        double x1 = combinedTree.getHeightOfNode(tree.getRoot().getNr());
 
 		if (x0 < x1 ) {
 			return Double.NEGATIVE_INFINITY;
@@ -127,13 +137,13 @@ public class SRangesBirthDeathModel extends SABirthDeathModel {
 			if (node.isLeaf()) {
 				if  (!node.isDirectAncestor())  {
 					Node fossilParent = node.getParent();
-					if (SRcombinedTree.getHeightOfNode(i) > 0.000000000005 || rho == 0.) {
-						logP += Math.log(psi) + log_p0s(SRcombinedTree.getHeightOfNode(i), c1, c2);
+					if (combinedTree.getHeightOfNode(i) > EXTANT_TIP_HEIGHT_THRESHOLD || rho == 0.) {
+						logP += Math.log(psi) + log_p0s(combinedTree.getHeightOfNode(i), c1, c2);
 
 						if (((SRTree)tree).belongToSameSRange(i, fossilParent.getNr())) {
-							logP -= log_q_tilde(SRcombinedTree.getHeightOfNode(i));
+							logP -= log_q_tilde(combinedTree.getHeightOfNode(i));
 						} else {
-							logP -= log_q(SRcombinedTree.getHeightOfNode(i), c1, c2);
+							logP -= log_q(combinedTree.getHeightOfNode(i), c1, c2);
 						}
 					} else {
 						logP += Math.log(rho);
@@ -146,13 +156,13 @@ public class SRangesBirthDeathModel extends SABirthDeathModel {
 					Node child = node.getNonDirectAncestorChild();
 					Node DAchild = node.getDirectAncestorChild();
 					if (parent != null && ((SRTree)tree).belongToSameSRange(parent.getNr(),DAchild.getNr())) {
-						logP += - log_q_tilde(SRcombinedTree.getHeightOfNode(i)) + log_q(SRcombinedTree.getHeightOfNode(i), c1, c2);
+						logP += - log_q_tilde(combinedTree.getHeightOfNode(i)) + log_q(combinedTree.getHeightOfNode(i), c1, c2);
 					}
 					if (child != null && ((SRTree)tree).belongToSameSRange(i,child.getNr())) {
-						logP += - log_q(SRcombinedTree.getHeightOfNode(i), c1, c2) +  log_q_tilde(SRcombinedTree.getHeightOfNode(i));
+						logP += - log_q(combinedTree.getHeightOfNode(i), c1, c2) +  log_q_tilde(combinedTree.getHeightOfNode(i));
 					}
 				} else {
-					logP += birthNodeContribution(node) + log_q(SRcombinedTree.getHeightOfNode(i), c1, c2);
+					logP += birthNodeContribution(node) + log_q(combinedTree.getHeightOfNode(i), c1, c2);
 				}
 			}
 		}
@@ -169,14 +179,14 @@ public class SRangesBirthDeathModel extends SABirthDeathModel {
 			
 			Node first =  tree.getNode(range.getNodeNrs().get(0));
 			if (!range.isSingleFossilRange()) {
-				double tFirst = SRcombinedTree.getHeightOfNode(first.getNr());
-				double tLast = SRcombinedTree.getHeightOfNode(range.getNodeNrs().get(range.getNodeNrs().size()-1));
+				double tFirst = combinedTree.getHeightOfNode(first.getNr());
+				double tLast = combinedTree.getHeightOfNode(range.getNodeNrs().get(range.getNodeNrs().size()-1));
 				logP += psi*(tFirst - tLast);
 			}
 			Node ancestralLast = findAncestralRangeLastNode(first);
 			if (ancestralLast != null) {
-				double tOld = SRcombinedTree.getHeightOfNode(ancestralLast.getNr());
-				double tYoung = SRcombinedTree.getHeightOfNode(first.getNr());
+				double tOld = combinedTree.getHeightOfNode(ancestralLast.getNr());
+				double tYoung = combinedTree.getHeightOfNode(first.getNr());
 				logP += Math.log(1-q(tYoung, c1, c2)/q_tilde(tYoung)*q_tilde(tOld)/q(tOld, c1, c2));
 			}
 		}
