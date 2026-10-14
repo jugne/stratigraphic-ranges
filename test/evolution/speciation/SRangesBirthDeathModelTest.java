@@ -81,6 +81,7 @@ public class SRangesBirthDeathModelTest extends TestCase {
 
 		// Sanity check on the mixed model
 		MixedSRangesBirthDeathModel mixedModel = new MixedSRangesBirthDeathModel();
+		tree.setInputValue("mixed", true);
 		mixedModel.setInputValue("tree", tree);
 		mixedModel.setInputValue("origin", new RealParameter("7.0"));
 		mixedModel.setInputValue("birthRate", new RealParameter("1.5"));
