@@ -467,7 +467,12 @@ public class SRTree extends Tree implements TreeInterface {
         }
         try {
             parser.offsetInput.setValue(0, parser);
-            setRoot(parser.parseNewick(newick));
+            // Keep the node numbering from the state file. The operators use
+            // setRootOnly, so the root is not necessarily the last node, and
+            // Tree.setRoot would renumber two nodes if m_nodes were allocated.
+            final Node parsedRoot = parser.parseNewick(newick);
+            setRootOnly(parsedRoot);
+            nodeCount = parsedRoot.getNodeCount();
         } catch (Exception e) {
             e.printStackTrace();
         }
