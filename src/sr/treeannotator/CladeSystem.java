@@ -17,8 +17,8 @@ import java.util.*;
  * which type of node is the MRCA, one of three clade types arises:</p>
  *
  * <ol>
- *     <li>Bifurcation event not within a range: (T1, T2) - {@link BifurcationClade}.</li>
- *     <li>Bifurcation event within a range: (A, T1, T2) - {@link WithinRangeBifurcationClade}.</li>
+ *     <li>Bifurcation event not within a range: (T1, T2) - {@link BuddingClade}.</li>
+ *     <li>Bifurcation event within a range: (A, T1, T2) - {@link WithinRangeBuddingClade}.</li>
  *     <li>SA range (last occurrence) or SA singleton: (A, T) - {@link SampledAncestorClade}.</li>
  * </ol>
  *
@@ -31,12 +31,12 @@ import java.util.*;
  */
 public class CladeSystem implements TreeSummarizer {
 
-    private final Map<BifurcationClade, BifurcationClade> bifurcationMap = new HashMap<>();
-    private final Map<WithinRangeBifurcationClade, WithinRangeBifurcationClade> withinRangeMap = new HashMap<>();
+    private final Map<BuddingClade, BuddingClade> bifurcationMap = new HashMap<>();
+    private final Map<WithinRangeBuddingClade, WithinRangeBuddingClade> withinRangeMap = new HashMap<>();
     private final Map<SampledAncestorClade, SampledAncestorClade> sampledAncestorMap = new HashMap<>();
 
-    private final Map<BifurcationClade, List<Double>> bifurcationHeights = new HashMap<>();
-    private final Map<WithinRangeBifurcationClade, List<Double>> withinRangeHeights = new HashMap<>();
+    private final Map<BuddingClade, List<Double>> bifurcationHeights = new HashMap<>();
+    private final Map<WithinRangeBuddingClade, List<Double>> withinRangeHeights = new HashMap<>();
     private final Map<SampledAncestorClade, List<Double>> sampledAncestorHeights = new HashMap<>();
 
     @Override
@@ -153,14 +153,14 @@ public class CladeSystem implements TreeSummarizer {
                     t1.remove(rangeTaxon);
                     t2.remove(rangeTaxon);
 
-                    WithinRangeBifurcationClade clade = new WithinRangeBifurcationClade(rangeTaxon, t1, t2);
+                    WithinRangeBuddingClade clade = new WithinRangeBuddingClade(rangeTaxon, t1, t2);
                     addWithinRangeClade(clade);
                     if (collectHeights) {
                         recordHeight(withinRangeHeights, withinRangeMap.get(clade), node.getHeight());
                     }
                 } else {
                     // Clade type 1: bifurcation not within a range.
-                    BifurcationClade clade = new BifurcationClade(leftTaxa, rightTaxa);
+                    BuddingClade clade = new BuddingClade(leftTaxa, rightTaxa);
                     addBifurcationClade(clade);
                     if (collectHeights) {
                         recordHeight(bifurcationHeights, bifurcationMap.get(clade), node.getHeight());
@@ -192,8 +192,8 @@ public class CladeSystem implements TreeSummarizer {
         return Objects.equals(node.getID(), range.getFirstOccurrenceID());
     }
 
-    private void addBifurcationClade(BifurcationClade clade) {
-        BifurcationClade existing = bifurcationMap.get(clade);
+    private void addBifurcationClade(BuddingClade clade) {
+        BuddingClade existing = bifurcationMap.get(clade);
         if (existing == null) {
             bifurcationMap.put(clade, clade);
             clade.setCount(1);
@@ -202,8 +202,8 @@ public class CladeSystem implements TreeSummarizer {
         }
     }
 
-    private void addWithinRangeClade(WithinRangeBifurcationClade clade) {
-        WithinRangeBifurcationClade existing = withinRangeMap.get(clade);
+    private void addWithinRangeClade(WithinRangeBuddingClade clade) {
+        WithinRangeBuddingClade existing = withinRangeMap.get(clade);
         if (existing == null) {
             withinRangeMap.put(clade, clade);
             clade.setCount(1);
@@ -248,10 +248,10 @@ public class CladeSystem implements TreeSummarizer {
 
     @Override
     public void calculatePosteriorProbabilities(int totalTrees) {
-        for (BifurcationClade clade : bifurcationMap.values()) {
+        for (BuddingClade clade : bifurcationMap.values()) {
             clade.setProbability((double) clade.getCount() / totalTrees);
         }
-        for (WithinRangeBifurcationClade clade : withinRangeMap.values()) {
+        for (WithinRangeBuddingClade clade : withinRangeMap.values()) {
             clade.setProbability((double) clade.getCount() / totalTrees);
         }
         for (SampledAncestorClade clade : sampledAncestorMap.values()) {
@@ -265,12 +265,12 @@ public class CladeSystem implements TreeSummarizer {
         temp.add(tree, false);
 
         double logScore = 0.0;
-        for (BifurcationClade clade : temp.bifurcationMap.keySet()) {
-            BifurcationClade known = bifurcationMap.get(clade);
+        for (BuddingClade clade : temp.bifurcationMap.keySet()) {
+            BuddingClade known = bifurcationMap.get(clade);
             logScore += (known != null && known.getProbability() > 0) ? Math.log(known.getProbability()) : Math.log(1e-100);
         }
-        for (WithinRangeBifurcationClade clade : temp.withinRangeMap.keySet()) {
-            WithinRangeBifurcationClade known = withinRangeMap.get(clade);
+        for (WithinRangeBuddingClade clade : temp.withinRangeMap.keySet()) {
+            WithinRangeBuddingClade known = withinRangeMap.get(clade);
             logScore += (known != null && known.getProbability() > 0) ? Math.log(known.getProbability()) : Math.log(1e-100);
         }
         for (SampledAncestorClade clade : temp.sampledAncestorMap.keySet()) {
@@ -286,12 +286,12 @@ public class CladeSystem implements TreeSummarizer {
         temp.add(tree, false);
 
         double sumScore = 0.0;
-        for (BifurcationClade clade : temp.bifurcationMap.keySet()) {
-            BifurcationClade known = bifurcationMap.get(clade);
+        for (BuddingClade clade : temp.bifurcationMap.keySet()) {
+            BuddingClade known = bifurcationMap.get(clade);
             if (known != null) sumScore += known.getProbability();
         }
-        for (WithinRangeBifurcationClade clade : temp.withinRangeMap.keySet()) {
-            WithinRangeBifurcationClade known = withinRangeMap.get(clade);
+        for (WithinRangeBuddingClade clade : temp.withinRangeMap.keySet()) {
+            WithinRangeBuddingClade known = withinRangeMap.get(clade);
             if (known != null) sumScore += known.getProbability();
         }
         for (SampledAncestorClade clade : temp.sampledAncestorMap.keySet()) {
@@ -305,11 +305,11 @@ public class CladeSystem implements TreeSummarizer {
     public String getSummary() {
         StringBuilder sb = new StringBuilder();
         sb.append("Bifurcation clades (T1, T2):\n");
-        for (BifurcationClade clade : bifurcationMap.values()) {
+        for (BuddingClade clade : bifurcationMap.values()) {
             sb.append(String.format("  %s: count=%d, prob=%.4f%n", clade, clade.getCount(), clade.getProbability()));
         }
         sb.append("\nWithin-range bifurcation clades (A, T1, T2):\n");
-        for (WithinRangeBifurcationClade clade : withinRangeMap.values()) {
+        for (WithinRangeBuddingClade clade : withinRangeMap.values()) {
             sb.append(String.format("  %s: count=%d, prob=%.4f%n", clade, clade.getCount(), clade.getProbability()));
         }
         sb.append("\nSampled ancestor clades (A, T):\n");
@@ -382,7 +382,7 @@ public class CladeSystem implements TreeSummarizer {
                     t1.remove(rangeTaxon);
                     t2.remove(rangeTaxon);
 
-                    WithinRangeBifurcationClade clade = withinRangeMap.get(new WithinRangeBifurcationClade(rangeTaxon, t1, t2));
+                    WithinRangeBuddingClade clade = withinRangeMap.get(new WithinRangeBuddingClade(rangeTaxon, t1, t2));
                     if (clade != null) {
                         node.setMetaData("posterior", clade.getProbability());
                         if (details) {
@@ -394,7 +394,7 @@ public class CladeSystem implements TreeSummarizer {
                         annotateHeightStatistics(node, withinRangeHeights.get(clade));
                     }
                 } else {
-                    BifurcationClade clade = bifurcationMap.get(new BifurcationClade(leftTaxa, rightTaxa));
+                    BuddingClade clade = bifurcationMap.get(new BuddingClade(leftTaxa, rightTaxa));
                     if (clade != null) {
                         node.setMetaData("posterior", clade.getProbability());
                         if (details) {
@@ -485,11 +485,11 @@ public class CladeSystem implements TreeSummarizer {
     //  Accessors
     // ------------------------------------------------------------------
 
-    public Map<BifurcationClade, BifurcationClade> getBifurcationMap() {
+    public Map<BuddingClade, BuddingClade> getBifurcationMap() {
         return bifurcationMap;
     }
 
-    public Map<WithinRangeBifurcationClade, WithinRangeBifurcationClade> getWithinRangeMap() {
+    public Map<WithinRangeBuddingClade, WithinRangeBuddingClade> getWithinRangeMap() {
         return withinRangeMap;
     }
 

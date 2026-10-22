@@ -5,28 +5,34 @@ import java.util.Set;
 import java.util.TreeSet;
 
 /**
- * Clade type 1: a bifurcation event that is not within a range.
+ * Clade type 2: a budding event within a range.
  *
- * Denoted (T1, T2), where T = T1 U T2 is monophyletic and the MRCA of T is a bifurcation
- * event at which the taxa T1 are descendants of the ancestral (left) lineage and the taxa T2
- * are descendants of the descendant (right) lineage.
+ * Denoted (A, T1, T2), where {A} ∪ T is monophyletic (T = T1 ∪ T2), the MRCA of {A} ∪ T is
+ * within the range of A, the taxa T1 are descendants of the ancestral (left) lineage that
+ * continues the range of A, and the taxa T2 are descendants of the descendant (right) lineage.
  *
  * Orientation matters: T1 is ancestral, T2 is descendant.
  *
  * @author Alexandra Gavryushkina
  */
-public class BifurcationClade implements SRClade {
+public class WithinRangeBuddingClade implements SRClade {
 
+    private final String rangeTaxon;          // A - the range within which the budding occurs
     private final Set<String> ancestralTaxa;  // T1 - ancestral (left) lineage
     private final Set<String> descendantTaxa; // T2 - descendant (right) lineage
     private int count;
     private double probability;
 
-    public BifurcationClade(Set<String> ancestralTaxa, Set<String> descendantTaxa) {
+    public WithinRangeBuddingClade(String rangeTaxon, Set<String> ancestralTaxa, Set<String> descendantTaxa) {
+        this.rangeTaxon = rangeTaxon;
         this.ancestralTaxa = new TreeSet<>(ancestralTaxa);
         this.descendantTaxa = new TreeSet<>(descendantTaxa);
         this.count = 0;
         this.probability = 0.0;
+    }
+
+    public String getRangeTaxon() {
+        return rangeTaxon;
     }
 
     public Set<String> getAncestralTaxa() {
@@ -39,7 +45,7 @@ public class BifurcationClade implements SRClade {
 
     @Override
     public String getType() {
-        return "bifurcation";
+        return "within_range_budding";
     }
 
     @Override
@@ -71,19 +77,19 @@ public class BifurcationClade implements SRClade {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        BifurcationClade that = (BifurcationClade) o;
-        // Order matters: T1 is ancestral, T2 is descendant
-        return Objects.equals(ancestralTaxa, that.ancestralTaxa) &&
+        WithinRangeBuddingClade that = (WithinRangeBuddingClade) o;
+        return Objects.equals(rangeTaxon, that.rangeTaxon) &&
+               Objects.equals(ancestralTaxa, that.ancestralTaxa) &&
                Objects.equals(descendantTaxa, that.descendantTaxa);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(ancestralTaxa, descendantTaxa);
+        return Objects.hash(rangeTaxon, ancestralTaxa, descendantTaxa);
     }
 
     @Override
     public String toString() {
-        return "(" + ancestralTaxa + ", " + descendantTaxa + ")";
+        return "(" + rangeTaxon + ", " + ancestralTaxa + ", " + descendantTaxa + ")";
     }
 }
