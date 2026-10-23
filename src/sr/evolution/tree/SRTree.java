@@ -475,7 +475,7 @@ public class SRTree extends Tree implements TreeInterface {
             Node XMLRoot = parser.parseNewick(newick);
             m_nodes = new SRNode[nodeCount]; 
     		initFromNode(XMLRoot, (SRNode) root);
-    		setRoot(root);
+    		setRootOnly(root);
         } catch (Exception e) {
             e.printStackTrace();
         }

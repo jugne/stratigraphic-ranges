@@ -7,10 +7,10 @@ import org.junit.Test;
 import sr.evolution.sranges.StratigraphicRange;
 import sr.evolution.tree.SRNode;
 import sr.evolution.tree.SRTree;
-import sr.treeannotator.BifurcationClade;
+import sr.treeannotator.BuddingClade;
 import sr.treeannotator.CladeSystem;
 import sr.treeannotator.SampledAncestorClade;
-import sr.treeannotator.WithinRangeBifurcationClade;
+import sr.treeannotator.WithinRangeBuddingClade;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -132,10 +132,10 @@ public class MccCladeSystemTest {
                         + system.getWithinRangeMap().size()
                         + system.getSampledAncestorMap().size() == 59);
         // every probability is count/10, so it must lie in (0, 1]
-        for (BifurcationClade c : system.getBifurcationMap().values()) {
+        for (BuddingClade c : system.getBifurcationMap().values()) {
             assertTrue(c.getProbability() > 0.0 && c.getProbability() <= 1.0);
         }
-        for (WithinRangeBifurcationClade c : system.getWithinRangeMap().values()) {
+        for (WithinRangeBuddingClade c : system.getWithinRangeMap().values()) {
             assertTrue(c.getProbability() > 0.0 && c.getProbability() <= 1.0);
         }
         for (SampledAncestorClade c : system.getSampledAncestorMap().values()) {

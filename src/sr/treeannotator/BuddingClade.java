@@ -5,34 +5,28 @@ import java.util.Set;
 import java.util.TreeSet;
 
 /**
- * Clade type 2: a bifurcation event within a range.
+ * Clade type 1: a budding event that is not within a range.
  *
- * Denoted (A, T1, T2), where {A} ∪ T is monophyletic (T = T1 ∪ T2), the MRCA of {A} ∪ T is
- * within the range of A, the taxa T1 are descendants of the ancestral (left) lineage that
- * continues the range of A, and the taxa T2 are descendants of the descendant (right) lineage.
+ * Denoted (T1, T2), where T = T1 U T2 is monophyletic and the MRCA of T is a budding
+ * event at which the taxa T1 are descendants of the ancestral (left) lineage and the taxa T2
+ * are descendants of the descendant (right) lineage.
  *
  * Orientation matters: T1 is ancestral, T2 is descendant.
  *
  * @author Alexandra Gavryushkina
  */
-public class WithinRangeBifurcationClade implements SRClade {
+public class BuddingClade implements SRClade {
 
-    private final String rangeTaxon;          // A - the range within which the bifurcation occurs
     private final Set<String> ancestralTaxa;  // T1 - ancestral (left) lineage
     private final Set<String> descendantTaxa; // T2 - descendant (right) lineage
     private int count;
     private double probability;
 
-    public WithinRangeBifurcationClade(String rangeTaxon, Set<String> ancestralTaxa, Set<String> descendantTaxa) {
-        this.rangeTaxon = rangeTaxon;
+    public BuddingClade(Set<String> ancestralTaxa, Set<String> descendantTaxa) {
         this.ancestralTaxa = new TreeSet<>(ancestralTaxa);
         this.descendantTaxa = new TreeSet<>(descendantTaxa);
         this.count = 0;
         this.probability = 0.0;
-    }
-
-    public String getRangeTaxon() {
-        return rangeTaxon;
     }
 
     public Set<String> getAncestralTaxa() {
@@ -45,7 +39,7 @@ public class WithinRangeBifurcationClade implements SRClade {
 
     @Override
     public String getType() {
-        return "within_range_bifurcation";
+        return "budding";
     }
 
     @Override
@@ -77,19 +71,19 @@ public class WithinRangeBifurcationClade implements SRClade {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        WithinRangeBifurcationClade that = (WithinRangeBifurcationClade) o;
-        return Objects.equals(rangeTaxon, that.rangeTaxon) &&
-               Objects.equals(ancestralTaxa, that.ancestralTaxa) &&
+        BuddingClade that = (BuddingClade) o;
+        // Order matters: T1 is ancestral, T2 is descendant
+        return Objects.equals(ancestralTaxa, that.ancestralTaxa) &&
                Objects.equals(descendantTaxa, that.descendantTaxa);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(rangeTaxon, ancestralTaxa, descendantTaxa);
+        return Objects.hash(ancestralTaxa, descendantTaxa);
     }
 
     @Override
     public String toString() {
-        return "(" + rangeTaxon + ", " + ancestralTaxa + ", " + descendantTaxa + ")";
+        return "(" + ancestralTaxa + ", " + descendantTaxa + ")";
     }
 }

@@ -10,7 +10,7 @@ import sr.evolution.sranges.StratigraphicRange;
 import sr.evolution.tree.SRTree;
 import sr.treeannotator.CladeSystem;
 import sr.treeannotator.SampledAncestorClade;
-import sr.treeannotator.WithinRangeBifurcationClade;
+import sr.treeannotator.WithinRangeBuddingClade;
 
 import java.util.*;
 
@@ -60,7 +60,7 @@ public class WithinRangeCladeTest extends TestCase {
         assertEquals("no plain bifurcation clades", 0, system.getBifurcationMap().size());
         assertEquals("no sampled-ancestor clades", 0, system.getSampledAncestorMap().size());
 
-        WithinRangeBifurcationClade clade = wrb(system, "F", set(), set("G"));
+        WithinRangeBuddingClade clade = wrb(system, "F", set(), set("G"));
         assertNotNull("(F, {}, {G}) should exist", clade);
         assertEquals("count", 1, clade.getCount());
         assertEquals("probability", 1.0, clade.getProbability(), TOLERANCE);
@@ -205,11 +205,11 @@ public class WithinRangeCladeTest extends TestCase {
     //  Helpers
     // ------------------------------------------------------------------
 
-    private WithinRangeBifurcationClade wrb(CladeSystem system, String a, Set<String> t1, Set<String> t2) {
-        return system.getWithinRangeMap().get(new WithinRangeBifurcationClade(a, t1, t2));
+    private WithinRangeBuddingClade wrb(CladeSystem system, String a, Set<String> t1, Set<String> t2) {
+        return system.getWithinRangeMap().get(new WithinRangeBuddingClade(a, t1, t2));
     }
 
-    private void assertCount(WithinRangeBifurcationClade clade, int expectedCount, double expectedProb) {
+    private void assertCount(WithinRangeBuddingClade clade, int expectedCount, double expectedProb) {
         assertNotNull("clade should exist", clade);
         assertEquals("count", expectedCount, clade.getCount());
         assertEquals("probability", expectedProb, clade.getProbability(), TOLERANCE);
