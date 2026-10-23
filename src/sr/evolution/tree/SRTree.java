@@ -374,6 +374,7 @@ public class SRTree extends Tree implements TreeInterface {
             Node src = otherNodes[i];
             sink.setHeight(src.getHeight());
             sink.setParent(m_nodes[src.getParent().getNr()]);
+            ((SRNode) sink).setBudding(((SRNode) src).isBudding());
             if (src.getLeft() != null) {
                 sink.setLeft(m_nodes[src.getLeft().getNr()]);
                 if (src.getRight() != null) {
