@@ -2,6 +2,8 @@ package sr.util;
 
 import beast.base.evolution.tree.Node;
 import beast.base.evolution.tree.Tree;
+import sr.evolution.tree.SRNode;
+
 import java.util.*;
 
 public class Tools {
@@ -32,17 +34,15 @@ public class Tools {
 	public static void orientateNodeChildren(int subtreeRootNr, Tree tree) {
 		Node subTreeRoot = tree.getNode(subtreeRootNr);
 		if (!subTreeRoot.isLeaf()) {
-//			if(subTreeRoot.getChild(0).metaDataString == null){
-//				return;
-			if ((!subTreeRoot.isFake() && subTreeRoot.getChild(0).metaDataString != null && !subTreeRoot.getChild(0).metaDataString.contains("orientation=ancestor"))
+			((SRNode) subTreeRoot).setBudding(!subTreeRoot.metaDataString.contains("budding=false"));
+			
+			if ((!subTreeRoot.isFake() && ((SRNode) subTreeRoot).isBudding() 
+					&& subTreeRoot.getChild(0).metaDataString != null && !subTreeRoot.getChild(0).metaDataString.contains("orientation=ancestor"))
 					|| (subTreeRoot.isFake() && subTreeRoot.getChild(1).getHeight() != subTreeRoot.getHeight())) {
+				
 				Node left = subTreeRoot.getChild(1);
 				Node right = subTreeRoot.getChild(0);
-
 				subTreeRoot.removeAllChildren(false);
-
-//                subTreeRoot.setLeft(left);
-//                subTreeRoot.setRight(right);
 				subTreeRoot.addChild(left);
 				subTreeRoot.addChild(right);
 			}

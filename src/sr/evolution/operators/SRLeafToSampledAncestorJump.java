@@ -49,6 +49,7 @@ public class SRLeafToSampledAncestorJump extends SRTreeOperator {
 
         SRTree tree = (SRTree) treeInput.get();
 
+        // only fossils which are alone in their range can be moved
 		Integer[] fitLeafNodeNrs = getFitToMoveNodeNrs(tree);
 		if (fitLeafNodeNrs.length == 0)
 			return Double.NEGATIVE_INFINITY;
@@ -57,7 +58,7 @@ public class SRLeafToSampledAncestorJump extends SRTreeOperator {
         SRNode parent = (SRNode) leaf.getParent();
 
         if (leaf.isDirectAncestor()) {
-            oldRange = 1;
+            oldRange = 1.0;
             if (parent.isRoot()) {
                 final double randomNumber = Randomizer.nextExponential(1);
                 newHeight = parent.getHeight() + randomNumber;
@@ -73,9 +74,10 @@ public class SRLeafToSampledAncestorJump extends SRTreeOperator {
                 categoriesInput.get().setValue(index, newValue);
             }
 
-            SRNode otherChild = (SRNode) getOtherChild(parent,leaf);
-            sameRange = tree.getSharedRange(otherChild.getNr(),leaf.getNr());
-            if (sameRange==null && Randomizer.nextBoolean()){
+            SRNode otherChild = (SRNode) getOtherChild(parent, leaf);
+            // TODO check if this can ever be true (since leaf is alone on its range)
+            sameRange = tree.getSharedRange(otherChild.getNr(), leaf.getNr());
+            if (sameRange == null && Randomizer.nextBoolean()) {
                 parent.removeAllChildren(true);
                 parent.addChild(leaf);
                 parent.addChild(otherChild);
@@ -83,14 +85,14 @@ public class SRLeafToSampledAncestorJump extends SRTreeOperator {
                 parent.removeAllChildren(true);
                 parent.addChild(otherChild);
                 parent.addChild(leaf);
-                if (sameRange!=null)
+                if (sameRange != null)
                     sameRange.removeNodeNr(tree, parent.getNr());
             }
             parent.makeAllDirty(Tree.IS_FILTHY);
-            if (sameRange==null)
+            if (sameRange == null)
                 orientationCoefficient*=2.;
         } else {
-            newRange = 1;
+            newRange = 1.0;
             SRNode otherChild = (SRNode) getOtherChild(parent,leaf);
             //make sure that the branch where a new sampled node to appear is not above that sampled node
             if (otherChild.getHeight() >= leaf.getHeight() )
@@ -106,15 +108,16 @@ public class SRLeafToSampledAncestorJump extends SRTreeOperator {
 
                 oldRange = parent.getParent().getHeight() - leaf.getHeight();
             }
+            
             newHeight = leaf.getHeight();
             if  (categoriesInput.get() != null) {
                 int index = leaf.getNr();
                 categoriesInput.get().setValue(index, -1);
             }
 
-            sameRange = tree.getSharedRange(otherChild.getNr(),leaf.getNr());
+            sameRange = tree.getSharedRange(otherChild.getNr(), leaf.getNr());
             StratigraphicRange leafRange = tree.getRangeOfNode(leaf);
-            if (parent.getChild(0).getNr()!=otherChild.getNr()){
+            if (parent.getChild(0).getNr() != otherChild.getNr()){
                 parent.removeAllChildren(true);
                 parent.addChild(otherChild);
                 parent.addChild(leaf);
@@ -126,8 +129,9 @@ public class SRLeafToSampledAncestorJump extends SRTreeOperator {
                         "Please report this to the developers!");
                 System.exit(1);
             }
-            leafRange.removeNodeNr(tree, parent.getNr());
+            leafRange.removeNodeNr(tree, parent.getNr()); //TODO check if this is needed - parent should not be in leafRange in the first place
             parent.makeAllDirty(Tree.IS_FILTHY);
+            parent.setBudding(true);
         }
         parent.setHeight(newHeight);
 
@@ -138,10 +142,11 @@ public class SRLeafToSampledAncestorJump extends SRTreeOperator {
 
         return Math.log(orientationCoefficient*newRange/oldRange);
     }
-
+    
+    // TODO check if the last fossil of a range should also be allowed to move
 	private Integer[] getFitToMoveNodeNrs(SRTree tree) {
 		Set<Integer> fitNodeNrs = new HashSet<Integer>();
-        for (StratigraphicRange range : tree.getSRanges()){
+        for (StratigraphicRange range : tree.getSRanges()) {
             if (range.isSingleFossilRange())
                 fitNodeNrs.add(range.getNodeNrs().get(0));
         }

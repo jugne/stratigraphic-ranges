@@ -1,6 +1,5 @@
 package sr.evolution.tree;
 
-import beast.base.core.Function;
 import beast.base.core.Input;
 import beast.base.core.Loggable;
 import beast.base.evolution.tree.Node;
@@ -70,7 +69,7 @@ public class TipAgeLogger extends CalculationNode implements Loggable {
         } else if (simpleTreeInput.get() != null) {
             Tree simpleTree = simpleTreeInput.get();
             if (simpleTree != null) {
-                for (Node n : tree.getExternalNodes()){
+                for (Node n : simpleTree.getExternalNodes()){
                     out.print(n.getHeight() + "\t");
                 }
             }

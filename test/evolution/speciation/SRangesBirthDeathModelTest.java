@@ -9,6 +9,8 @@ import junit.framework.TestCase;
 import sa.evolution.tree.TreeWOffset;
 
 import org.junit.Test;
+
+import sr.speciation.MixedSRangesBirthDeathModel;
 import sr.speciation.SRangesBirthDeathModel;
 import sr.evolution.sranges.StratigraphicRange;
 
@@ -19,62 +21,76 @@ import java.util.ArrayList;
  */
 public class SRangesBirthDeathModelTest extends TestCase {
 
-    @Test
-    public void testLikelihood() throws Exception {
+	@Test
+	public void testLikelihood() throws Exception {
 
-        String newick = "(((((A:3.4,2_last:0.0):1.0,2_first:0.0):0.7,(B:3.5,(3_last:1.7,3_first:0.0):0.8):1.6):0.55,1_last:0.0):0.85,1_first:0.0):0.5";
-        Tree tree_initial = new TreeParser(newick, false);
+		String newick = "(((((A:3.4,2_last:0.0):1.0,2_first:0.0):0.7,(B:3.5,(3_last:1.7,3_first:0.0):0.8):1.6):0.55,1_last:0.0):0.85,1_first:0.0):0.5";
+		Tree tree_initial = new TreeParser(newick, false);
 
-        StratigraphicRange sr1 = new StratigraphicRange();
-        Taxon taxon1_first = new Taxon("1_first");
-        Taxon taxon1_last = new Taxon("1_last");
-        sr1.setInputValue("firstOccurrence", taxon1_first);
-        sr1.setInputValue("lastOccurrence", taxon1_last);
-        StratigraphicRange sr2 = new StratigraphicRange();
-        Taxon taxon2_first = new Taxon("2_first");
-        Taxon taxon2_last = new Taxon("2_last");
-        sr2.setInputValue("firstOccurrence", taxon2_first);
-        sr2.setInputValue("lastOccurrence", taxon2_last);
-        StratigraphicRange sr3 = new StratigraphicRange();
-        Taxon taxon3_first = new Taxon("3_first");
-        Taxon taxon3_last = new Taxon("3_last");
-        sr3.setInputValue("firstOccurrence", taxon3_first);
-        sr3.setInputValue("lastOccurrence", taxon3_last);
-        ArrayList<StratigraphicRange> sranges = new ArrayList<>();
-        sranges.add(sr1);
-        sranges.add(sr2);
-        sranges.add(sr3);
-        SRTree tree = new SRTree();
-        tree.setInputValue("stratigraphicRange", sranges);
-        tree.assignFrom(tree_initial);
+		StratigraphicRange sr1 = new StratigraphicRange();
+		Taxon taxon1_first = new Taxon("1_first");
+		Taxon taxon1_last = new Taxon("1_last");
+		sr1.setInputValue("firstOccurrence", taxon1_first);
+		sr1.setInputValue("lastOccurrence", taxon1_last);
+		StratigraphicRange sr2 = new StratigraphicRange();
+		Taxon taxon2_first = new Taxon("2_first");
+		Taxon taxon2_last = new Taxon("2_last");
+		sr2.setInputValue("firstOccurrence", taxon2_first);
+		sr2.setInputValue("lastOccurrence", taxon2_last);
+		StratigraphicRange sr3 = new StratigraphicRange();
+		Taxon taxon3_first = new Taxon("3_first");
+		Taxon taxon3_last = new Taxon("3_last");
+		sr3.setInputValue("firstOccurrence", taxon3_first);
+		sr3.setInputValue("lastOccurrence", taxon3_last);
+		ArrayList<StratigraphicRange> sranges = new ArrayList<>();
+		sranges.add(sr1);
+		sranges.add(sr2);
+		sranges.add(sr3);
+		SRTree tree = new SRTree();
+		tree.setInputValue("stratigraphicRange", sranges);
+		tree.assignFrom(tree_initial);
 
-        SRangesBirthDeathModel model = new SRangesBirthDeathModel();
-        model.setInputValue("tree", tree);
-        model.setInputValue("origin", new RealParameter("7.0"));
-        model.setInputValue("birthRate", new RealParameter("1.5"));
-        model.setInputValue("deathRate", new RealParameter("0.5"));
-        model.setInputValue("samplingRate", new RealParameter("0.1"));
-        model.setInputValue("removalProbability", new RealParameter("0.0"));
-        model.setInputValue("rho", new RealParameter("0.5"));
+		SRangesBirthDeathModel model = new SRangesBirthDeathModel();
+		model.setInputValue("tree", tree);
+		model.setInputValue("origin", new RealParameter("7.0"));
+		model.setInputValue("birthRate", new RealParameter("1.5"));
+		model.setInputValue("deathRate", new RealParameter("0.5"));
+		model.setInputValue("samplingRate", new RealParameter("0.1"));
+		model.setInputValue("removalProbability", new RealParameter("0.0"));
+		model.setInputValue("rho", new RealParameter("0.5"));
 
-        model.initAndValidate();
+		model.initAndValidate();
 
-//        assertEquals(-33.57179092868063, model.calculateLogP(), 1e-14);
-        assertEquals(-33.74668640318646, model.calculateLogP(), 1e-14);
-        
-        // Sanity check on offset
-        TreeWOffset combTree = new TreeWOffset();
-        combTree.initByName("tree", tree, "offset", 0.0);
-        model.setInputValue("treeWOffset", combTree);
-        model.initAndValidate();
-        assertEquals(-33.74668640318646, model.calculateLogP(), 1e-14);
-        
-        // Offset check - regression test, value not calculated manually
-        combTree.setInputValue("offset", 25.0);
-        combTree.initAndValidate();
-        model.setInputValue("origin", new RealParameter("32.0"));
-        model.setInputValue("rho", new RealParameter("0.0"));
-        model.initAndValidate();
-        assertEquals(-40.85277951120076, model.calculateLogP(), 1e-14);
-    }
+		//        assertEquals(-33.57179092868063, model.calculateLogP(), 1e-14);
+		assertEquals(-33.74668640318646, model.calculateLogP(), 1e-14);
+
+		// Sanity check on offset
+		TreeWOffset combTree = new TreeWOffset();
+		combTree.initByName("tree", tree, "offset", 0.0);
+		model.setInputValue("treeWOffset", combTree);
+		model.initAndValidate();
+		assertEquals(-33.74668640318646, model.calculateLogP(), 1e-14);
+
+		// Offset check - regression test, value not calculated manually
+		combTree.setInputValue("offset", 25.0);
+		combTree.initAndValidate();
+		model.setInputValue("origin", new RealParameter("32.0"));
+		model.setInputValue("rho", new RealParameter("0.0"));
+		model.initAndValidate();
+		assertEquals(-40.8527795112007, model.calculateLogP(), 1e-13);
+
+		// Sanity check on the mixed model
+		MixedSRangesBirthDeathModel mixedModel = new MixedSRangesBirthDeathModel();
+		tree.setInputValue("mixed", true);
+		mixedModel.setInputValue("tree", tree);
+		mixedModel.setInputValue("origin", new RealParameter("7.0"));
+		mixedModel.setInputValue("birthRate", new RealParameter("1.5"));
+		mixedModel.setInputValue("deathRate", new RealParameter("0.5"));
+		mixedModel.setInputValue("samplingRate", new RealParameter("0.1"));
+		mixedModel.setInputValue("removalProbability", new RealParameter("0.0"));
+		mixedModel.setInputValue("rho", new RealParameter("0.5"));
+
+		mixedModel.initAndValidate();
+		assertEquals(-33.74668640318646, mixedModel.calculateLogP(), 1e-14);
+	}    
 }

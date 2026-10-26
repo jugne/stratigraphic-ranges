@@ -5,6 +5,7 @@ import beast.base.evolution.tree.Tree;
 import beast.base.inference.util.InputUtil;
 import beast.base.util.Randomizer;
 import sr.evolution.sranges.StratigraphicRange;
+import sr.evolution.tree.SRNode;
 import sr.evolution.tree.SRTree;
 
 import java.util.ArrayList;
@@ -17,167 +18,155 @@ import java.util.List;
  */
 public class SRWilsonBalding extends SRTreeOperator {
 
-    @Override
-    public void initAndValidate() {
-    }
+	private boolean useMixedSpeciation;
 
-    /**
-     * @return log of Hastings Ratio, or Double.NEGATIVE_INFINITY if proposal should not be accepted *
-     */
-    @Override
-    public double proposal() {
+	@Override
+	public void initAndValidate() {
+		useMixedSpeciation = treeInput.get().useMixedSpeciationInput.get();
+	}
 
-        SRTree tree = (SRTree) InputUtil.get(treeInput, this);
-        //double x0 = 10;
+	/**
+	 * @return log of Hastings Ratio, or Double.NEGATIVE_INFINITY if proposal should not be accepted *
+	 */
+	@Override
+	public double proposal() {
 
-        double oldMinAge, newMinAge, newRange, oldRange, newAge, fHastingsRatio, dimensionCoefficient, orientationCoefficient;
-        int newDimension, oldDimension;
+		SRTree tree = (SRTree) InputUtil.get(treeInput, this);
 
-        // choose a random node avoiding root and leaves that are direct ancestors
-        int nodeCount = tree.getNodeCount();
+		double oldMinAge, newMinAge, newRange, oldRange, newAge, fHastingsRatio, dimensionCoefficient, orientationCoefficient = 1.0, mixedCoefficient = 1.0;
+		int newDimension, oldDimension;
 
-        ArrayList<Integer> allowableNodeIndices = new ArrayList<>();
+		// choose a random node avoiding root and leaves that are direct ancestors
+		int nodeCount = tree.getNodeCount();
+
+		ArrayList<Integer> allowableNodeIndices = new ArrayList<>();
         boolean[] isRangeInternal = getRangeInternalNodeFlags(tree, nodeCount);
 
-        for (int index=0; index<nodeCount; index++) {
-            Node node = tree.getNode(index);
-            //the node is not the root, it is not a sampled ancestor on a zero branch, it is not an internal node of a
-            // stratigraphic range
+		for (int index=0; index < nodeCount; index++) {
+			Node node = tree.getNode(index);
+			//the node is not the root, it is not a sampled ancestor on a zero branch, it is not an internal node of a
+			// stratigraphic range
 
             if (!node.isRoot() && !node.isDirectAncestor() && !isRangeInternal[node.getNr()]
-                && !(node.isFake()&&isRangeInternal[node.getDirectAncestorChild().getNr()]))
-                allowableNodeIndices.add(index);
-        }
+                && !(node.isFake() && isRangeInternal[node.getDirectAncestorChild().getNr()]))
+				allowableNodeIndices.add(index);
+		}
 
-        Node i;
+		int allowableNodeCount = allowableNodeIndices.size();
 
-        int allowableNodeCount = allowableNodeIndices.size();
+		if (allowableNodeCount == 0) {
+			return Double.NEGATIVE_INFINITY;
+		}
 
-        if (allowableNodeCount == 0) {
-            return Double.NEGATIVE_INFINITY;
-        }
+		Node i = tree.getNode(allowableNodeIndices.get(Randomizer.nextInt(allowableNodeCount)));
 
-        i=tree.getNode(allowableNodeIndices.get(Randomizer.nextInt(allowableNodeCount)));
+		Node iP = i.getParent();
+		Node CiP;
+		if (iP.getLeft().getNr() == i.getNr()) {
+			CiP = iP.getRight();
+		} else {
+			CiP = iP.getLeft();
+		}
 
-        Node iP = i.getParent();
-        Node CiP;
-        if (iP.getLeft().getNr() == i.getNr()) {
-            CiP = iP.getRight();
-        } else {
-            CiP = iP.getLeft();
-        }
+		// make sure that there is at least one candidate edge to attach node iP to
+		if (iP.getParent() == null && CiP.getHeight() <= i.getHeight()) {
+			return Double.NEGATIVE_INFINITY;
+		}
 
-        // make sure that there is at least one candidate edge to attach node iP to
-        if (iP.getParent() == null && CiP.getHeight() <= i.getHeight()) {
-            return Double.NEGATIVE_INFINITY;
-        }
+		// choose another random node to insert i above or to attach i to this node if it is a leaf
+		Node j;
+		Node jP;
 
-        // choose another random node to insert i above or to attach i to this node if it is a leaf
-        Node j;
-        Node jP;
-
-        final int leafNodeCount = tree.getLeafNodeCount();
+		final int leafNodeCount = tree.getLeafNodeCount();
         final List<Node> externalNodes = tree.getExternalNodes();
 
-        // make sure that the target branch <jP, j> or target leaf j is above the subtree being moved
-
-        int nodeNumber;
-        double newParentHeight;
-        boolean attachingToLeaf;
+		// make sure that the target branch <jP, j> or target leaf j is above the subtree being moved
+		int nodeNumber;
+		double newParentHeight;
+		boolean attachingToLeaf;
         boolean adjacentEdge;
-        //boolean adjacentLeaf;
-        do {
+		do {
             adjacentEdge = false;
-            //adjacentLeaf = false;
-            nodeNumber = Randomizer.nextInt(nodeCount + leafNodeCount);
+			nodeNumber = Randomizer.nextInt(nodeCount + leafNodeCount);
             if (nodeNumber < nodeCount) {
-                j = tree.getNode(nodeNumber);
-                jP = j.getParent();
-                if (jP != null)
-                    newParentHeight = jP.getHeight();
-                else newParentHeight = Double.POSITIVE_INFINITY;
-                if (!CiP.isDirectAncestor())
-                    adjacentEdge = (CiP.getNr() == j.getNr() || iP.getNr() == j.getNr());
+				j = tree.getNode(nodeNumber);
+				jP = j.getParent();
+				if (jP != null)	newParentHeight = jP.getHeight();
+				else newParentHeight = Double.POSITIVE_INFINITY;
+                
+				if (!CiP.isDirectAncestor()) adjacentEdge = (CiP.getNr() == j.getNr() || iP.getNr() == j.getNr());
                 attachingToLeaf = false;
-            } else {
+			} else {
                 j = externalNodes.get(nodeNumber - nodeCount);
-                jP = j.getParent();
-                newParentHeight = j.getHeight();
+				jP = j.getParent();
+				newParentHeight = j.getHeight();
                 attachingToLeaf = true;
-                //adjacentLeaf = (iP.getNr() == j.getNr());
-            }
-        } while (j.isDirectAncestor() || (newParentHeight <= i.getHeight()) || (i.getNr() == j.getNr()) || adjacentEdge /*|| adjacentLeaf */);
+			}
+        } while (j.isDirectAncestor() || (newParentHeight <= i.getHeight()) || (i.getNr() == j.getNr()) || adjacentEdge);
 
 
-        if (attachingToLeaf && iP.getNr() == j.getNr()) {
-            System.out.println("Proposal failed because j = iP");
-            return Double.NEGATIVE_INFINITY;
-        }
+		if (attachingToLeaf && iP.getNr() == j.getNr()) { //TODO that should never happen since j is a leaf and iP not a leaf
+			System.out.println("Proposal failed because j = iP");
+			return Double.NEGATIVE_INFINITY;
+		}
 
-        if (jP != null && jP.getNr() == i.getNr()) {
-            System.out.println("Proposal failed because jP = i. Heights of i = " + i.getHeight() + " Height of jP = " + jP.getHeight());
-            return Double.NEGATIVE_INFINITY;
-        }
+		if (jP != null && jP.getNr() == i.getNr()) {
+			System.out.println("Proposal failed because jP = i. Heights of i = " + i.getHeight() + " Height of jP = " + jP.getHeight());
+			return Double.NEGATIVE_INFINITY;
+		}
 
+		oldDimension = allowableNodeCount;
+		StratigraphicRange pruningRange = null;
+		StratigraphicRange attachingRange = null;
 
+		//classify the type of move being performed before changing the tree structure
+		boolean pruningFromSA = CiP.isDirectAncestor();
+		boolean randomAttach = false;
+		boolean pruningFromSRange = false;
+		
+		if (!CiP.isDirectAncestor()) {
+			pruningRange = tree.getSharedRange(iP.getNr(), CiP.getNr());
+			pruningFromSRange = pruningRange != null;
+		}
+		
+		boolean randomPrune = !pruningFromSA && !pruningFromSRange;
+		boolean attachingToSRange = false;
+		if (!attachingToLeaf && jP != null){
+			attachingRange = tree.getSharedRange(jP.getNr(), j.getNr());
+			attachingToSRange = attachingRange!=null;
+		}
 
-        //oldDimension = nodeCount - tree.getDirectAncestorNodeCount() - 1;
-        oldDimension = allowableNodeCount;
-        orientationCoefficient = 1.0;
-        StratigraphicRange pruningRange = null;
-        StratigraphicRange attachingRange = null;
+		//Hastings numerator calculation + newAge of iP
+		if (attachingToLeaf) {
+			newRange = 1;
+			newAge = j.getHeight();
+		} else {
+			if (jP != null) {
+				newMinAge = Math.max(i.getHeight(), j.getHeight());
+				newRange = jP.getHeight() - newMinAge;
+				newAge = newMinAge + (Randomizer.nextDouble() * newRange);
+			} else {
+				double randomNumberFromExponential;
+				randomNumberFromExponential = Randomizer.nextExponential(1);
+				newRange = Math.exp(randomNumberFromExponential);
+				newAge = j.getHeight() + randomNumberFromExponential;
+			}
+		}
 
-        //classify the type of move being performed before changing the tree structure
-        boolean pruningFromSA = CiP.isDirectAncestor();
-//        boolean pruningFromSRange = !CiP.isDirectAncestor() && sRangeInternalNodeNrs.contains(iP.getNr());
-        boolean randomAttach = false;
-        boolean pruningFromSRange = false;
-        if (!CiP.isDirectAncestor()) {
-            pruningRange = tree.getSharedRange(iP.getNr(), CiP.getNr());
-            pruningFromSRange = pruningRange != null;
-        }
-        boolean randomPrune = !pruningFromSA && !pruningFromSRange;
-        boolean attachingToSRange = false;
-        if (!attachingToLeaf && jP != null){
-            attachingRange = tree.getSharedRange(jP.getNr(),j.getNr());
-            attachingToSRange = attachingRange!=null;
-        }
+		Node PiP = iP.getParent();
 
-
-        //Hastings numerator calculation + newAge of iP
-        if (attachingToLeaf) {
-            newRange = 1;
-            newAge = j.getHeight();
-        } else {
-            if (jP != null) {
-                newMinAge = Math.max(i.getHeight(), j.getHeight());
-                newRange = jP.getHeight() - newMinAge;
-                newAge = newMinAge + (Randomizer.nextDouble() * newRange);
-            } else {
-                double randomNumberFromExponential;
-                randomNumberFromExponential = Randomizer.nextExponential(1);
-                newRange = Math.exp(randomNumberFromExponential);
-                newAge = j.getHeight() + randomNumberFromExponential;
-            }
-        }
-
-        Node PiP = iP.getParent();
-
-
-
-        //Hastings denominator calculation
-        if (CiP.isDirectAncestor()) {
-            oldRange = 1;
-        }
-        else {
-            oldMinAge = Math.max(i.getHeight(), CiP.getHeight());
-            if (PiP != null) {
-                oldRange = PiP.getHeight() - oldMinAge;
-            } else {
-                oldRange = Math.exp(iP.getHeight() - oldMinAge);
-                //oldRange = x0 - oldMinAge;
-            }
-        }
+		//Hastings denominator calculation
+		if (CiP.isDirectAncestor()) {
+			oldRange = 1;
+		}
+		else {
+			oldMinAge = Math.max(i.getHeight(), CiP.getHeight());
+			if (PiP != null) {
+				oldRange = PiP.getHeight() - oldMinAge;
+			} else {
+				oldRange = Math.exp(iP.getHeight() - oldMinAge);
+			}
+		}
 
         //update
         if (iP.getNr() != j.getNr() && CiP.getNr() != j.getNr()) { // special case 1: iP = j when pruning from sampled ancestor iP and attaching to the branch above (PiP, iP)
@@ -185,117 +174,132 @@ public class SRWilsonBalding extends SRTreeOperator {
                                                                     // In both cases the internal tree structure does not change, only the height of iP
             iP.removeChild(CiP); //remove <iP, CiP>
 
-            if (PiP != null) {
-                boolean left = PiP.getLeft().getNr() == iP.getNr();
-                Node anotherChild;
-                if (left) {
-                    anotherChild = PiP.getRight();
-                } else {
-                    anotherChild = PiP.getLeft();
-                }
-                PiP.removeChild(iP);   // remove <PiP,iP>
-                CiP.setParent(PiP);
-                if (left) {
-                    PiP.setLeft(CiP);
-                    PiP.setRight(anotherChild);
-                } else {
-                    PiP.setLeft(anotherChild);
-                    PiP.setRight(CiP);
-                }  // add <PiP, CiP> at random orientation
-                PiP.makeDirty(Tree.IS_FILTHY);
-                CiP.makeDirty(Tree.IS_FILTHY);
-            } else {
-                CiP.setParent(null); // completely remove <iP, CiP>
-                tree.setRootOnly(CiP);
-            }
+			if (PiP != null) {
+				boolean left = PiP.getLeft().getNr() == iP.getNr();
+				Node anotherChild;
+				if (left) {
+					anotherChild = PiP.getRight();
+				} else {
+					anotherChild = PiP.getLeft();
+				}
+				PiP.removeChild(iP);   // remove <PiP,iP>
+				CiP.setParent(PiP);
+				if (left) {
+					PiP.setLeft(CiP);
+					PiP.setRight(anotherChild);
+				} else {
+					PiP.setLeft(anotherChild);
+					PiP.setRight(CiP);
+				}  // add <PiP, CiP> at random orientation
+				PiP.makeDirty(Tree.IS_FILTHY);
+				CiP.makeDirty(Tree.IS_FILTHY);
+			} else {
+				CiP.setParent(null); // completely remove <iP, CiP>
+				tree.setRootOnly(CiP);
+			}
 
-            boolean jLeft= (jP != null) && jP.getLeft().getNr() == j.getNr();
+			boolean jLeft= (jP != null) && jP.getLeft().getNr() == j.getNr();
 
-            if (jP != null) {
-                Node CjP;
-                if (jLeft) {
-                    CjP = jP.getRight();
-                } else {
-                    CjP = jP.getLeft();
-                }
-                jP.removeChild(j);  // remove <jP, j>
-                iP.setParent(jP);
-                if (jLeft) {
-                    jP.setLeft(iP);
-                    jP.setRight(CjP);
-                } else {
-                    jP.setLeft(CjP);
-                    jP.setRight(iP);
-                } // add <jP, iP> choosing the random orientation
+			if (jP != null) {
+				Node CjP;
+				if (jLeft) {
+					CjP = jP.getRight();
+				} else {
+					CjP = jP.getLeft();
+				}
+				jP.removeChild(j);  // remove <jP, j>
+				iP.setParent(jP);
+				if (jLeft) {
+					jP.setLeft(iP);
+					jP.setRight(CjP);
+				} else {
+					jP.setLeft(CjP);
+					jP.setRight(iP);
+				} // add <jP, iP> choosing the random orientation
 
-                jP.makeDirty(Tree.IS_FILTHY);
-            } else {
-                iP.setParent(null); // completely remove <PiP, iP>
-                tree.setRootOnly(iP);
-            }
-            j.setParent(iP);
-            if (!attachingToSRange && !attachingToLeaf)
-                randomAttach = true;
-            if (attachingToSRange || (!attachingToLeaf && Randomizer.nextBoolean())) {
-                iP.setLeft(j);
-                iP.setRight(i);
-            } else {
-                iP.setLeft(i);
-                iP.setRight(j);
-            }
-            iP.makeDirty(Tree.IS_FILTHY);
-            j.makeDirty(Tree.IS_FILTHY);
-        } else {
-            if (iP.getNr() == j.getNr()) {
-                if (!attachingToSRange)
-                    randomAttach = true;
-                if (attachingToSRange || Randomizer.nextBoolean()) { //in special case 1: when attaching to the range
-                                                                     //make i right
-                                                                     //otherwise choose randomly
-                    iP.setLeft(CiP);
-                    iP.setRight(i);
-                } else {
-                    iP.setLeft(i);
-                    iP.setRight(CiP);
-                }
-            }
-            if (CiP.getNr() == j.getNr()) {//in special case 2: always make i left
-                    iP.setLeft(i);
-                    iP.setRight(CiP);
-            }
-        }
-        iP.setHeight(newAge);
+				jP.makeDirty(Tree.IS_FILTHY);
+			} else {
+				iP.setParent(null); // completely remove <PiP, iP>
+				tree.setRootOnly(iP);
+			}
+			
+			j.setParent(iP);
+			if (!attachingToSRange && !attachingToLeaf) {
+				randomAttach = true;
+				if(useMixedSpeciation) ((SRNode) iP).setBudding(Randomizer.nextBoolean());
+			}
+			if (attachingToSRange || (!attachingToLeaf && Randomizer.nextBoolean())) {
+				iP.setLeft(j);
+				iP.setRight(i);
+				if (attachingToSRange && useMixedSpeciation) ((SRNode) iP).setBudding(true);
+			} else {
+				iP.setLeft(i);
+				iP.setRight(j);
+				if (attachingToLeaf && useMixedSpeciation) ((SRNode) iP).setBudding(true);
+			}
+			iP.makeDirty(Tree.IS_FILTHY);
+			j.makeDirty(Tree.IS_FILTHY);
+		} else {
+			if (iP.getNr() == j.getNr()) {
+				if (!attachingToSRange) {
+					randomAttach = true;
+					if(useMixedSpeciation) ((SRNode) iP).setBudding(Randomizer.nextBoolean());
+				}
+				if (attachingToSRange || Randomizer.nextBoolean()) { //in special case 1: when attaching to the range
+					//make i right
+					//otherwise choose randomly
+					iP.setLeft(CiP);
+					iP.setRight(i);
+					if (attachingToSRange && useMixedSpeciation) ((SRNode) iP).setBudding(true);
+				} else {
+					iP.setLeft(i);
+					iP.setRight(CiP);
+				}
+			}
+			if (CiP.getNr() == j.getNr()) {//in special case 2: always make i left
+				iP.setLeft(i);
+				iP.setRight(CiP);
+				if (attachingToLeaf && useMixedSpeciation) ((SRNode) iP).setBudding(true);
+			}
+		}
+		iP.setHeight(newAge);
 
-        // remove or add nodes to the ranges and calculate the orientation coefficient
-        if (pruningFromSRange) {
-            pruningRange.removeNodeNr(tree, iP.getNr());
-        }
-        if (attachingToSRange) {
-            attachingRange.addNodeNrAfter(tree, jP.getNr(), iP.getNr());
-        }
-        if (randomAttach){
-            orientationCoefficient *= 2.0;
-        }
-        if (randomPrune){
-            orientationCoefficient *= 0.5;
-        }
+		// remove or add nodes to the ranges and calculate the orientation coefficient
+		if (pruningFromSRange) {
+			pruningRange.removeNodeNr(tree, iP.getNr());
+		}
+		if (attachingToSRange) {
+			attachingRange.addNodeNrAfter(tree, jP.getNr(), iP.getNr());
+		}
+		if (randomAttach) {
+			orientationCoefficient *= 2.0;
+			if(useMixedSpeciation) {
+				mixedCoefficient *= 2.0;
+			}
+		}
+		if (randomPrune) {
+			orientationCoefficient *= 0.5;
+			if(useMixedSpeciation) {
+				mixedCoefficient *= 0.5;
+			}		
+		}
 
-        newDimension = 0;
+		newDimension = 0;
         isRangeInternal = getRangeInternalNodeFlags(tree, nodeCount); // rebuild: the move may have changed range membership
-        for (int index=0; index<nodeCount; index++) {
-            Node node = tree.getNode(index);
-            //the node is not the root, it is not a sampled ancestor on a zero branch, it is not an internal node of a stratigraphic range
+		for (int index=0; index<nodeCount; index++) {
+			Node node = tree.getNode(index);
+			//the node is not the root, it is not a sampled ancestor on a zero branch, it is not an internal node of a stratigraphic range
             if (!node.isRoot() && !node.isDirectAncestor() && !isRangeInternal[node.getNr()]
-                    && !(node.isFake()&&isRangeInternal[node.getDirectAncestorChild().getNr()]))
-                newDimension++;
-        }
-        dimensionCoefficient = (double) oldDimension / newDimension;
+                    && !(node.isFake() && isRangeInternal[node.getDirectAncestorChild().getNr()]))
+				newDimension++;
+		}
+		dimensionCoefficient = (double) oldDimension / newDimension;
 
-        fHastingsRatio = Math.abs(orientationCoefficient * dimensionCoefficient * newRange / oldRange);
+		fHastingsRatio = Math.abs(mixedCoefficient * orientationCoefficient * dimensionCoefficient * newRange / oldRange);
 
-        return Math.log(fHastingsRatio);
+		return Math.log(fHastingsRatio);
 
-    }
+	}
 
     /**
      * @return flags indexed by node number, true for internal nodes of stratigraphic ranges,

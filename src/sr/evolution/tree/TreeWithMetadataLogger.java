@@ -17,7 +17,7 @@ import static sr.util.Tools.removeLastSubstring;
 
 @Description("Based on the SpeciesTreeLogger class, but without node sorting")
 public class TreeWithMetadataLogger extends CalculationNode implements Loggable  {
-	final public Input<SRTree> srTeeInput = new Input<>("tree",
+	final public Input<SRTree> srTreeInput = new Input<>("tree",
 			"The range tree to be logged.", Input.Validate.REQUIRED);
     final public Input<BranchRateModel> clockModelInput = new Input<>("branchratemodel", "rate to be logged with branches of the tree");
     final public Input<Boolean> substitutionsInput = new Input<>("substitutions", "report branch lengths as substitutions (branch length times clock rate for the branch)", false);
@@ -41,17 +41,18 @@ public class TreeWithMetadataLogger extends CalculationNode implements Loggable 
 
     boolean someMetaDataNeedsLogging;
     boolean substitutions = false;
-    boolean relog;
-    boolean logRanges;
-
+    boolean relog, logRanges, logMode;
     private DecimalFormat df;
 
     @Override
     public void initAndValidate() {
         relog = relogInput.get();
         logRanges = logRangesInput.get();
+        
+        logMode = srTreeInput.get().useMixedSpeciationInput.get(); 
+        
 		if (parameterInput.get().size() == 0 && clockModelInput.get() == null
-                && !logOrientationInput.get() && !logRangesInput.get()) {
+                && !logOrientationInput.get() && !logRangesInput.get() && !logMode) {
             someMetaDataNeedsLogging = false;
             return;
         }
@@ -78,14 +79,14 @@ public class TreeWithMetadataLogger extends CalculationNode implements Loggable 
 
     @Override
     public void init(PrintStream out) {
-		SRTree srTree = srTeeInput.get();
+		SRTree srTree = srTreeInput.get();
         srTree.init(out);
     }
 
     @Override
     public void log(long nSample, PrintStream out) {
         // make sure we get the current version of the inputs
-        final SRTree srTree = (SRTree) srTeeInput.get().getCurrent();
+        final SRTree srTree = (SRTree) srTreeInput.get().getCurrent();
         if (relog && logRanges){
             srTree.orientateTree();
             srTree.initSRanges();
@@ -228,7 +229,7 @@ public class TreeWithMetadataLogger extends CalculationNode implements Loggable 
 
     @Override
     public void close(PrintStream out) {
-		SRTree tree = srTeeInput.get();
+		SRTree tree = srTreeInput.get();
         tree.close(out);
     }
 

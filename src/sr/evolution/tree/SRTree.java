@@ -27,6 +27,8 @@ public class SRTree extends Tree implements TreeInterface {
     public Input<List<StratigraphicRange>> stratigraphicRangeInput = new Input<>("stratigraphicRange", "all stratigraphic ranges", new ArrayList<>());
 
     public Input<Tree> treeInput = new Input<>("tree", "tree to start with");
+    
+    public Input<Boolean> useMixedSpeciationInput = new Input<>("mixed", "whether to account for mixed speciation, default false", false);
 
     protected ArrayList<StratigraphicRange> sRanges;
     protected ArrayList<StratigraphicRange> storedSRanges;
@@ -372,6 +374,7 @@ public class SRTree extends Tree implements TreeInterface {
             Node src = otherNodes[i];
             sink.setHeight(src.getHeight());
             sink.setParent(m_nodes[src.getParent().getNr()]);
+            ((SRNode) sink).setBudding(((SRNode) src).isBudding());
             if (src.getLeft() != null) {
                 sink.setLeft(m_nodes[src.getLeft().getNr()]);
                 if (src.getRight() != null) {
@@ -390,6 +393,7 @@ public class SRTree extends Tree implements TreeInterface {
     protected void store() {
         storeNodes(0, nodeCount);
         storedRoot = m_storedNodes[root.getNr()];
+        
         for (int index = 0; index < sRanges.size(); index++) {
             StratigraphicRange range_sink = storedSRanges.get(index);
             range_sink.removeAllNodeNrs();
@@ -449,6 +453,8 @@ public class SRTree extends Tree implements TreeInterface {
                     //sink.addChild(c);
                 }
             }
+            
+            sink.budding = src.budding;
         }
     }
 
@@ -467,31 +473,25 @@ public class SRTree extends Tree implements TreeInterface {
         }
         try {
             parser.offsetInput.setValue(0, parser);
-            // Keep the node numbering from the state file. The operators use
-            // setRootOnly, so the root is not necessarily the last node, and
-            // Tree.setRoot would renumber two nodes if m_nodes were allocated.
-            final Node parsedRoot = parser.parseNewick(newick);
-            setRootOnly(parsedRoot);
-            nodeCount = parsedRoot.getNodeCount();
+            Node XMLRoot = parser.parseNewick(newick);
+            m_nodes = new SRNode[nodeCount]; 
+    		initFromNode(XMLRoot, (SRNode) root);
+    		setRootOnly(root);
         } catch (Exception e) {
             e.printStackTrace();
         }
+        
         initArrays();
         orientateTree();
-//        for (StratigraphicRange range : this.getSRanges()) {
-//            int firstNr = range.getNodeNrs().get(0);
-//            Node first = this.getNode(range.getNodeNrs().get(0));
-//            first = first.isDirectAncestor() ? first.getParent() : first;
-//            Node last = this.getNode(range.getNodeNrs().get(range.getNodeNrs().size() - 1));
-//            while (!range.isSingleFossilRange() && firstNr !=last.getNr()){
-//                if (first.isLeaf())
-//                    System.out.println();
-//                int nr = first.getLeft().isFake() ? first.getLeft().getDirectAncestorChild().getNr(): first.getLeft().getNr();
-//                range.addNodeNrAfter(this, first.getNr(), nr);
-//                firstNr = nr;
-//                first = this.getNode(nr).isDirectAncestor() ? this.getNode(nr).getParent(): this.getNode(nr);
-//            }
-//        }
+    }
+    
+    void initFromNode(Node node, SRNode srNode) {
+    	if(!node.isLeaf()) {
+    		initFromNode(node.getLeft(), new SRNode());
+    		initFromNode(node.getRight(), new SRNode());
+    	}
+    	srNode.assignFrom(m_nodes, node);
+    	m_nodes[node.getNr()] = srNode;
     }
 
     /**
@@ -623,7 +623,7 @@ public class SRTree extends Tree implements TreeInterface {
     }
 
     /**
-     * Add orientation metadata to each node. Left (0) child is always a ancestor species.
+     * Add orientation metadata to each node. If the node is budding, then left (0) child is always a ancestor species.
      * Right (1) child is always a descendant species. Allows for: - tree state to be stored
      * and restored from file even when BEAST applies sorting. - metadata can be
      * used to color the output tree lineages for donors and recipients.
@@ -642,15 +642,22 @@ public class SRTree extends Tree implements TreeInterface {
                 subRoot.getRight().metaDataString = subRoot.metaDataString;
             } else if (subRoot.getChildCount()==1){
                 subRoot.getLeft().metaDataString = subRoot.metaDataString;
-            } else {
+            } else if(((SRNode) subRoot).isBudding()) {
                 subRoot.getLeft().metaDataString = "orientation=ancestor";
                 subRoot.getRight().metaDataString = "orientation=descendant";
+            } else {
+            	subRoot.getLeft().metaDataString = "orientation=descendant";
+            	subRoot.getRight().metaDataString = "orientation=descendant";
             }
 
             addOrientationMetadataNode(subRoot.getLeft().getNr());
-            if(subRoot.getChildCount()!=1){
+            if(subRoot.getChildCount()!=1) {
                 addOrientationMetadataNode(subRoot.getRight().getNr());
             }
+        }
+        
+        if(useMixedSpeciationInput.get()) {
+        	subRoot.metaDataString = subRoot.metaDataString + ",budding=" + ((SRNode) subRoot).isBudding();
         }
     }
 
@@ -664,7 +671,7 @@ public class SRTree extends Tree implements TreeInterface {
         out.print("tree STATE_" + sample + " = ");
         // Don't sort, this can confuse CalculationNodes relying on the tree
         //tree.getRoot().sort();
-        final String newick = ((SRNode) tree.getRoot()).toShortNewickForLog(false);
+        final String newick = ((SRNode) tree.getRoot()).toShortNewickForLog(false, useMixedSpeciationInput.get());
         out.print(newick);
         out.print(";");
     }

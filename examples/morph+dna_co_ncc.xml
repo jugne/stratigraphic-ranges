@@ -349,7 +349,7 @@
 <map name="OneOnX">beast.base.inference.distribution.OneOnX</map>
 
 
-<run chainLength="150000000" id="mcmc" spec="MCMC">
+<run chainLength="15000000" id="mcmc" spec="MCMC">
     <state id="state" storeEvery="5000">
         <tree id="Tree.t:tree" spec="sr.evolution.tree.SRTree" nodetype="sr.evolution.tree.SRNode" name="stateNode">
             <trait id="dateTrait.t:tree" spec="beast.base.evolution.tree.TraitSet" traitname="date-backward" value="
@@ -931,7 +931,7 @@
         <log idref="freqParameter_16srna"/>
     </logger>
 
-    <logger id="screenlog" logEvery="100">
+    <logger id="screenlog" logEvery="10000">
         <log idref="posterior"/>
         <log arg="@posterior" id="ESS.0" spec="util.ESS"/>
         <log idref="likelihood"/>

@@ -290,7 +290,7 @@ public class SRTreeAnnotator extends Runnable {
         // matching the translate block, with metadata annotations preserved
         stream.println();
         stream.print("tree MCC_tree = ");
-        stream.print(((SRNode) tree.getRoot()).toShortNewickForLog(false));
+        stream.print(((SRNode) tree.getRoot()).toShortNewickForLog(false, tree.useMixedSpeciationInput.get()));
         stream.println(";");
         stream.println("End;");
 

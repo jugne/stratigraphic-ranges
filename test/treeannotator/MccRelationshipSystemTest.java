@@ -98,7 +98,7 @@ public class MccRelationshipSystemTest {
         //  - its oriented, node-numbered Newick (node numbers are 1-based and map to the
         //    Translate block of the trees file).
         String mccState = mccTree.getID();
-        String mccNewick = ((SRNode) mccTree.getRoot()).toShortNewickForLog(false);
+        String mccNewick = ((SRNode) mccTree.getRoot()).toShortNewickForLog(false, false);
 
         system.annotateMCCTree(mccTree, true);
 
